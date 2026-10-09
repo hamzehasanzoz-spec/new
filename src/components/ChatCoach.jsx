@@ -16,14 +16,23 @@ export default function ChatCoach({ profile }) {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
 
-  const setLastAssistant = (content) => {
+  // ─────────────────────────────────────────
+  // دالة مساعدة: تحديث آخر رسالة للمساعد
+  // ─────────────────────────────────────────
+  const updateLastAssistant = (content) => {
     setMessages(prev => {
+      if (prev.length === 0) return prev;
       const copy = [...prev];
-      copy[copy.length - 1] = { role: 'assistant', content };
+      const lastIdx = copy.length - 1;
+      if (copy[lastIdx].role !== 'assistant') return prev;
+      copy[lastIdx] = { role: 'assistant', content };
       return copy;
     });
   };
 
+  // ─────────────────────────────────────────
+  // الدالة الرئيسية: إرسال + بث الرد
+  // ─────────────────────────────────────────
   const handleSend = async (e) => {
     e.preventDefault();
     if (!input.trim() || loading) return;
@@ -36,7 +45,10 @@ export default function ChatCoach({ profile }) {
     setMessages([...withUser, { role: 'assistant', content: '' }]);
     setLoading(true);
 
+    let reader = null;
+
     try {
+      // 1. بناء system prompt + آخر 10 رسائل
       const systemPrompt = buildSystemPrompt(profile);
       const recent = withUser.slice(-10);
       const payload = [
@@ -44,11 +56,18 @@ export default function ChatCoach({ profile }) {
         ...recent.map(m => ({ role: m.role, content: m.content })),
       ];
 
+      // 2. مهلة 60 ثانية كحد أقصى
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000);
+
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages: payload }),
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
 
       if (!res.ok) {
         let errMsg = `HTTP ${res.status}`;
@@ -60,13 +79,14 @@ export default function ChatCoach({ profile }) {
         throw new Error(errMsg);
       }
 
-      if (!res.body) throw new Error('لا يوجد بث');
+      if (!res.body) throw new Error('لا يوجد بث من الخدمة');
 
-      const reader = res.body.getReader();
+      // 3. قراءة البث
+      reader = res.body.getReader();
       const decoder = new TextDecoder();
       let buffer = '';
       let assistantText = '';
-      let gotFirstChunk = false;
+      let gotContent = false;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -80,39 +100,60 @@ export default function ChatCoach({ profile }) {
           const trimmed = line.trim();
           if (!trimmed.startsWith('data:')) continue;
           const data = trimmed.slice(5).trim();
-          if (data === '[DONE]') continue;
+          if (data === '[DONE]' || data.startsWith(':')) continue;
 
           try {
             const parsed = JSON.parse(data);
-            const delta = parsed.choices?.[0]?.delta?.content;
-            if (delta) {
-              gotFirstChunk = true;
-              assistantText += delta;
-              setLastAssistant(assistantText);
+            const delta = parsed.choices?.[0]?.delta;
+
+            // ✅ نأخذ content فقط — نتجاهل reasoning
+            if (delta?.content) {
+              gotContent = true;
+              assistantText += delta.content;
+              updateLastAssistant(assistantText);
             }
           } catch {
-            // تجاهل
+            // تجاهل الأسطر المشوّشة
           }
         }
       }
 
-      if (!gotFirstChunk) {
-        setLastAssistant('لم يصل رد من الخدمة. حاول مجددًا.');
+      // 4. إذا لم يصل أي محتوى
+      if (!gotContent) {
+        updateLastAssistant(
+          '⚠️ لم يصل رد من النموذج.\n\nجرّب:\n• صياغة السؤال بشكل أوضح\n• تقسيم السؤال إلى أجزاء أصغر\n• إعادة المحاولة'
+        );
       }
     } catch (err) {
       console.error('Chat error:', err);
-      setLastAssistant('⚠️ عذرًا، حدث خطأ:\n' + err.message);
+
+      let msg;
+      if (err.name === 'AbortError') {
+        msg = '⏱️ استغرق الرد وقتًا طويلًا. جرّب سؤالًا أقصر.';
+      } else if (err.message?.includes('fetch')) {
+        msg = '🌐 تعذّر الاتصال بالسيرفر. تحقق من الإنترنت.';
+      } else {
+        msg = '⚠️ حدث خطأ:\n' + err.message;
+      }
+
+      updateLastAssistant(msg);
     } finally {
+      // تنظيف
+      try { reader?.releaseLock(); } catch {}
       setLoading(false);
     }
   };
 
+  // ─────────────────────────────────────────
+  // Render
+  // ─────────────────────────────────────────
   return (
     <div style={{
       maxWidth: 900, margin: '20px auto', background: '#fff', borderRadius: 16,
       boxShadow: '0 4px 20px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column',
       height: '75vh', direction: 'rtl',
     }}>
+      {/* Header */}
       <div style={{
         padding: 18, background: '#2A5C82', color: '#fff',
         borderTopLeftRadius: 16, borderTopRightRadius: 16,
@@ -127,6 +168,7 @@ export default function ChatCoach({ profile }) {
         </div>
       </div>
 
+      {/* Messages */}
       <div style={{
         flex: 1, padding: 20, overflowY: 'auto',
         display: 'flex', flexDirection: 'column', gap: 15, background: '#F8FAFC',
@@ -152,6 +194,7 @@ export default function ChatCoach({ profile }) {
         <div ref={bottomRef} />
       </div>
 
+      {/* Input */}
       <form onSubmit={handleSend} style={{
         padding: 15, borderTop: '1px solid #E2E8F0', display: 'flex', gap: 10,
       }}>
@@ -176,7 +219,7 @@ export default function ChatCoach({ profile }) {
             cursor: loading ? 'not-allowed' : 'pointer',
           }}
         >
-          إرسال
+          {loading ? '...' : 'إرسال'}
         </button>
       </form>
     </div>
