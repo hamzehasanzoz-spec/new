@@ -1,8 +1,0 @@
-* { box-sizing: border-box; }
-body {
-  margin: 0;
-  font-family: 'Segoe UI', Tahoma, system-ui, sans-serif;
-  background: #F8FAFC;
-  color: #1E293B;
-}
-input, select, button { font-family: inherit; }
