@@ -13,8 +13,7 @@ export default async function handler(req) {
     body = await req.json();
   } catch {
     return new Response(JSON.stringify({ error: 'Invalid JSON' }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' },
+      status: 400, headers: { 'Content-Type': 'application/json' },
     });
   }
 
@@ -27,26 +26,24 @@ export default async function handler(req) {
       { role: 'user', content: body.prompt },
     ];
   } else {
-    return new Response(JSON.stringify({ error: 'messages or prompt is required' }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' },
+    return new Response(JSON.stringify({ error: 'messages is required' }), {
+      status: 400, headers: { 'Content-Type': 'application/json' },
     });
   }
 
   const key = process.env.OPENROUTER_KEY;
   if (!key) {
     return new Response(JSON.stringify({ error: 'OPENROUTER_KEY مفقود' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
+      status: 500, headers: { 'Content-Type': 'application/json' },
     });
   }
 
-  // الأسرع أولًا
+  // ✅ نماذج غير Reasoning — تبدأ الإجابة فورًا
   const models = [
-    'nvidia/nemotron-3.5-lightning:free',
-    'nvidia/nemotron-3-super:free',
-    'thinkingmachines/inkling-small:free',
     'thinkingmachines/inkling:free',
+    'thinkingmachines/inkling-small:free',
+    'nvidia/nemotron-3-super:free',
+    'nvidia/nemotron-3-ultra:free',
   ];
 
   const errors = [];
@@ -68,16 +65,17 @@ export default async function handler(req) {
           top_p: 0.9,
           max_tokens: 2500,
           stream: true,
+          // ✅ تعطيل reasoning للنماذج التي تدعمه
+          reasoning: { enabled: false },
         }),
       });
 
       if (!r.ok) {
         const txt = await r.text().catch(() => '');
-        errors.push(`${model}: HTTP ${r.status} ${txt.slice(0, 80)}`);
+        errors.push(`${model}: HTTP ${r.status} ${txt.slice(0, 100)}`);
         continue;
       }
 
-      // مرّر البث مباشرة
       return new Response(r.body, {
         status: 200,
         headers: {
