@@ -38,12 +38,13 @@ export default async function handler(req) {
     });
   }
 
-  // ✅ نماذج غير Reasoning — تبدأ الإجابة فورًا
+  // ✅ قائمة نماذج جديدة: الأسرع أولاً، مع دعم جيد للعربية
   const models = [
-    'thinkingmachines/inkling:free',
-    'thinkingmachines/inkling-small:free',
-    'nvidia/nemotron-3-super:free',
-    'nvidia/nemotron-3-ultra:free',
+    'arcee-ai/trinity-mini:free',            // الأسرع (~0.5 ثانية)
+    'nvidia/nemotron-3-nano-30b-a3b:free',   // أداء ممتاز وسريع (~0.5 ثانية)
+    'stepfun/step-3.5-flash:free',           // موثوقية 100% (~2.9 ثانية)
+    'meta-llama/llama-3.3-70b-instruct:free',// توازن جيد بين السرعة والجودة
+    'google/gemma-3-27b-it:free',            // دعم ممتاز للعربية
   ];
 
   const errors = [];
@@ -65,7 +66,12 @@ export default async function handler(req) {
           top_p: 0.9,
           max_tokens: 2500,
           stream: true,
-          // ✅ تعطيل reasoning للنماذج التي تدعمه
+          // ✅ إعدادات لضمان السرعة
+          provider: {
+            sort: 'throughput', // اطلب من OpenRouter اختيار المزود الأسرع
+            preferred_min_throughput: 30, // اطلب حدًا أدنى من السرعة (30 توكن/ثانية)
+          },
+          // ✅ تعطيل التفكير للنماذج التي تدعمه
           reasoning: { enabled: false },
         }),
       });
