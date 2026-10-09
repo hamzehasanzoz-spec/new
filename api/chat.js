@@ -39,13 +39,12 @@ export default async function handler(req) {
   }
 
   // ✅ أسماء صحيحة من قائمة OpenRouter الحالية
-  // رتبت: Gemma أولًا (سريع + عربي ممتاز) ثم Nemotron Super ثم Ultra
   const models = [
-    'google/gemma-4-26b-a4b-it:free',           // ⚡ أسرع
-    'google/gemma-4-31b-it:free',               // ⭐ جودة أعلى
-    'nvidia/nemotron-3-super-120b-a12b:free',   // بديل قوي
-    'nvidia/nemotron-3-ultra-550b-a55b:free',   // جودة عالية جدًا
-    'apodex/apodex-1.1-mini:free',              // احتياطي
+    'google/gemma-4-26b-a4b-it:free',
+    'google/gemma-4-31b-it:free',
+    'nvidia/nemotron-3-super-120b-a12b:free',
+    'nvidia/nemotron-3-ultra-550b-a55b:free',
+    'apodex/apodex-1.1-mini:free',
   ];
 
   const errors = [];
