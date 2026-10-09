@@ -38,13 +38,14 @@ export default async function handler(req) {
     });
   }
 
-  // ✅ قائمة نماذج جديدة: الأسرع أولاً، مع دعم جيد للعربية
+  // ✅ أسماء صحيحة من قائمة OpenRouter الحالية
+  // رتبت: Gemma أولًا (سريع + عربي ممتاز) ثم Nemotron Super ثم Ultra
   const models = [
-    'arcee-ai/trinity-mini:free',            // الأسرع (~0.5 ثانية)
-    'nvidia/nemotron-3-nano-30b-a3b:free',   // أداء ممتاز وسريع (~0.5 ثانية)
-    'stepfun/step-3.5-flash:free',           // موثوقية 100% (~2.9 ثانية)
-    'meta-llama/llama-3.3-70b-instruct:free',// توازن جيد بين السرعة والجودة
-    'google/gemma-3-27b-it:free',            // دعم ممتاز للعربية
+    'google/gemma-4-26b-a4b-it:free',           // ⚡ أسرع
+    'google/gemma-4-31b-it:free',               // ⭐ جودة أعلى
+    'nvidia/nemotron-3-super-120b-a12b:free',   // بديل قوي
+    'nvidia/nemotron-3-ultra-550b-a55b:free',   // جودة عالية جدًا
+    'apodex/apodex-1.1-mini:free',              // احتياطي
   ];
 
   const errors = [];
@@ -66,13 +67,6 @@ export default async function handler(req) {
           top_p: 0.9,
           max_tokens: 2500,
           stream: true,
-          // ✅ إعدادات لضمان السرعة
-          provider: {
-            sort: 'throughput', // اطلب من OpenRouter اختيار المزود الأسرع
-            preferred_min_throughput: 30, // اطلب حدًا أدنى من السرعة (30 توكن/ثانية)
-          },
-          // ✅ تعطيل التفكير للنماذج التي تدعمه
-          reasoning: { enabled: false },
         }),
       });
 

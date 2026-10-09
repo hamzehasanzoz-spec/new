@@ -1,112 +1,101 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from './lib/supabase';
-import Questionnaire from './components/Questionnaire';
-import Dashboard from './components/Dashboard';
-import ChatCoach from './components/ChatCoach';
+export const config = { runtime: 'edge' };
 
-export default function App() {
-  const [session, setSession] = useState(null);
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isSignUp, setIsSignUp] = useState(false);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session) fetchProfile(session.user.id);
-      else setLoading(false);
+export default async function handler(req) {
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+      status: 405,
+      headers: { 'Content-Type': 'application/json' },
     });
+  }
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
-      setSession(session);
-      if (session) fetchProfile(session.user.id);
-      else { setProfile(null); setLoading(false); }
+  let body;
+  try {
+    body = await req.json();
+  } catch {
+    return new Response(JSON.stringify({ error: 'Invalid JSON' }), {
+      status: 400, headers: { 'Content-Type': 'application/json' },
     });
-    return () => subscription.unsubscribe();
-  }, []);
+  }
 
-  const fetchProfile = async (userId) => {
-    try {
-      const { data } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle();
-      setProfile(data || null);
-    } catch (err) {
-      console.error('Error fetching profile:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  let messages = [];
+  if (Array.isArray(body?.messages)) {
+    messages = body.messages;
+  } else if (body?.prompt) {
+    messages = [
+      { role: 'system', content: body.systemPrompt || '' },
+      { role: 'user', content: body.prompt },
+    ];
+  } else {
+    return new Response(JSON.stringify({ error: 'messages is required' }), {
+      status: 400, headers: { 'Content-Type': 'application/json' },
+    });
+  }
 
-  const handleAuth = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+  const key = process.env.OPENROUTER_KEY;
+  if (!key) {
+    return new Response(JSON.stringify({ error: 'OPENROUTER_KEY مفقود' }), {
+      status: 500, headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  // ✅ قائمة نماذج جديدة: الأسرع أولاً
+  const models = [
+    'trinity/trinity-mini:free', // الأسرع على الإطلاق (~0.5 ثانية)
+    'nvidia/nemotron-30b-instruct:free', // أداء ممتاز وسريع جداً (~0.5 ثانية)
+    'stepfun-ai/step-3.5-flash:free', // موثوقية 100% وسرعة جيدة
+    'meta-llama/llama-4-maverick:free', // توازن ممتاز بين السرعة والجودة
+  ];
+
+  const errors = [];
+
+  for (const model of models) {
     try {
-      if (isSignUp) {
-        const { error } = await supabase.auth.signUp({ email, password });
-        if (error) throw error;
-        alert('تم التسجيل! إذا طُلب تأكيد البريد راجع إيميلك، وإلا سجّل الدخول مباشرة.');
-        setIsSignUp(false);
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+      const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${key}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': process.env.SITE_URL || 'https://new-udf9.vercel.app',
+          'X-Title': 'Coach AI',
+        },
+        body: JSON.stringify({
+          model,
+          messages,
+          temperature: 0.4,
+          top_p: 0.9,
+          max_tokens: 2500,
+          stream: true,
+          // ✅ إعدادات لضمان السرعة
+          provider: {
+            sort: 'throughput', // اطلب من OpenRouter اختيار المزود الأسرع
+            preferred_min_throughput: 30, // اطلب حدًا أدنى من السرعة (30 توكن/ثانية)
+          },
+          reasoning: { enabled: false }, // تعطيل التفكير للنماذج التي تدعمه
+        }),
+      });
+
+      if (!r.ok) {
+        const txt = await r.text().catch(() => '');
+        errors.push(`${model}: HTTP ${r.status} ${txt.slice(0, 100)}`);
+        continue;
       }
+
+      return new Response(r.body, {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/event-stream; charset=utf-8',
+          'Cache-Control': 'no-cache, no-transform',
+          'Connection': 'keep-alive',
+          'X-Accel-Buffering': 'no',
+        },
+      });
     } catch (err) {
-      alert('خطأ في المصادقة: ' + err.message);
-    } finally {
-      setLoading(false);
+      errors.push(`${model}: ${err.message}`);
     }
-  };
-
-  if (loading) return <div style={{ textAlign:'center', padding:'100px', color:'#2A5C82' }}>جاري التحميل...</div>;
-
-  if (!session) {
-    return (
-      <div style={{ maxWidth: 400, margin: '80px auto', padding: 30, background: '#fff', borderRadius: 16, boxShadow: '0 4px 20px rgba(0,0,0,0.05)', direction: 'rtl' }}>
-        <h2 style={{ color:'#2A5C82', textAlign:'center' }}>منصة كوتش AI 🩺</h2>
-        <p style={{ color:'#64748B', textAlign:'center', fontSize:'0.9em' }}>بوابتك للامتحان الوطني للطب في سوريا</p>
-        <form onSubmit={handleAuth} style={{ display:'flex', flexDirection:'column', gap:15 }}>
-          <input type="email" required placeholder="البريد الإلكتروني" value={email} onChange={e=>setEmail(e.target.value)}
-            style={{ padding:10, borderRadius:8, border:'1px solid #E2E8F0' }} />
-          <input type="password" required placeholder="كلمة المرور" value={password} onChange={e=>setPassword(e.target.value)}
-            style={{ padding:10, borderRadius:8, border:'1px solid #E2E8F0' }} />
-          <button type="submit" style={{ background:'#2A5C82', color:'#fff', padding:12, border:'none', borderRadius:8, fontWeight:'bold', cursor:'pointer' }}>
-            {isSignUp ? 'إنشاء حساب جديد' : 'تسجيل الدخول'}
-          </button>
-        </form>
-        <p style={{ textAlign:'center', marginTop:15, fontSize:'0.9em' }}>
-          {isSignUp ? 'لديك حساب؟' : 'ليس لديك حساب؟'}{' '}
-          <span onClick={()=>setIsSignUp(!isSignUp)} style={{ color:'#2A5C82', cursor:'pointer', fontWeight:'bold' }}>
-            {isSignUp ? 'تسجيل الدخول' : 'أنشئ حساباً الآن'}
-          </span>
-        </p>
-      </div>
-    );
   }
 
-  if (!profile || !profile.questionnaire_completed) {
-    return <Questionnaire session={session} onComplete={() => fetchProfile(session.user.id)} />;
-  }
-
-  return (
-    <div style={{ minHeight:'100vh', background:'#F8FAFC' }}>
-      <nav style={{ background:'#fff', padding:'15px 30px', borderBottom:'1px solid #E2E8F0', display:'flex', justifyContent:'space-between', alignItems:'center', direction:'rtl' }}>
-        <h2 style={{ color:'#2A5C82', margin:0 }}>كوتش AI 🩺</h2>
-        <div style={{ display:'flex', gap:10 }}>
-          <button onClick={()=>setActiveTab('dashboard')} style={{ background: activeTab==='dashboard'?'#2A5C82':'transparent', color: activeTab==='dashboard'?'#fff':'#1E293B', border:'none', padding:'8px 16px', borderRadius:8, cursor:'pointer', fontWeight:'bold' }}>الرئيسية</button>
-          <button onClick={()=>setActiveTab('chat')} style={{ background: activeTab==='chat'?'#2A5C82':'transparent', color: activeTab==='chat'?'#fff':'#1E293B', border:'none', padding:'8px 16px', borderRadius:8, cursor:'pointer', fontWeight:'bold' }}>الدردشة الذكية</button>
-          <button onClick={()=>supabase.auth.signOut()} style={{ background:'#EF4444', color:'#fff', border:'none', padding:'8px 16px', borderRadius:8, cursor:'pointer', fontWeight:'bold' }}>خروج</button>
-        </div>
-      </nav>
-      <main style={{ padding:20 }}>
-        {activeTab==='dashboard' && <Dashboard profile={profile} />}
-        {activeTab==='chat' && <ChatCoach profile={profile} />}
-      </main>
-    </div>
+  return new Response(
+    JSON.stringify({ error: 'تعذر الاتصال بجميع النماذج', details: errors }),
+    { status: 502, headers: { 'Content-Type': 'application/json' } }
   );
 }
