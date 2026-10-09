@@ -1,32 +1,58 @@
 import React from 'react';
 
-export default function Dashboard({ session, profile }) {
+export default function Dashboard({ profile }) {
+  const hardest = Array.isArray(profile?.hardest_subjects)
+    ? profile.hardest_subjects.filter(h => h?.subject)
+    : [];
+
   return (
-    <div style={{ maxWidth: '900px', margin: '30px auto', padding: '25px', direction: 'rtl', textAlign: 'right' }}>
-      <div style={{ background: 'linear-gradient(135deg, #2A5C82 0%, #3B7BA8 100%)', color: '#fff', padding: '30px', borderRadius: '16px', marginBottom: '25px' }}>
-        <h1 style={{ margin: '0 0 10px 0' }}>أهلاً بك، د. {profile?.full_name || 'زُميلنا العزيز'} 👋</h1>
-        <p style={{ margin: 0, opacity: 0.9 }}>جاهز لتحقيق أعلى علامة في الامتحان الوطني للطب في سوريا؟</p>
+    <div style={{ maxWidth:900, margin:'30px auto', padding:25, direction:'rtl', textAlign:'right' }}>
+      <div style={{ background:'linear-gradient(135deg,#2A5C82 0%,#3B7BA8 100%)', color:'#fff', padding:30, borderRadius:16, marginBottom:25 }}>
+        <h1 style={{ margin:'0 0 10px' }}>أهلاً بك، {profile?.full_name || 'زُميلنا'} 👋</h1>
+        <p style={{ margin:0, opacity:0.9 }}>
+          {profile?.current_stage} — {profile?.university || 'جامعتك'}
+        </p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
-        <div style={{ background: '#fff', padding: '20px', borderRadius: '12px', border: '1px solid #E2E8F0', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
-          <h3 style={{ color: '#2A5C82', marginBottom: '8px' }}>أسلوب الدراسة</h3>
-          <p style={{ color: '#64748B', margin: 0 }}>{profile?.study_style || 'غير محدد'}</p>
-        </div>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(220px,1fr))', gap:16 }}>
+        <Card title="🎯 هدفك"> {profile?.score_goal || 'غير محدد'} </Card>
+        <Card title="⏰ ساعاتك اليومية">{profile?.daily_hours || 'غير محدد'}</Card>
+        <Card title="📚 طريقتك">{profile?.study_methods?.join(' / ') || 'غير محدد'}</Card>
+        <Card title="🧠 لغة الشرح">{profile?.preferred_language || 'غير محدد'}</Card>
+      </div>
 
-        <div style={{ background: '#fff', padding: '20px', borderRadius: '12px', border: '1px solid #E2E8F0', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
-          <h3 style={{ color: '#2A5C82', marginBottom: '8px' }}>المواد المستهدفة بالتركيز</h3>
-          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '8px' }}>
-            {profile?.weak_subjects?.length > 0 ? (
-              profile.weak_subjects.map(subj => (
-                <span key={subj} style={{ background: '#FEF3C7', color: '#92400E', padding: '4px 10px', borderRadius: '6px', fontSize: '0.85em' }}>{subj}</span>
-              ))
-            ) : (
-              <span style={{ color: '#64748B' }}>لم تحدد مواد بعد</span>
-            )}
+      {hardest.length > 0 && (
+        <div style={{ marginTop:24, background:'#fff', padding:20, borderRadius:12, border:'1px solid #E2E8F0' }}>
+          <h3 style={{ color:'#2A5C82', marginTop:0 }}>أصعب المواد عندك</h3>
+          <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+            {hardest.map((h, i) => (
+              <div key={i} style={{ padding:'10px 14px', background:'#FEF3C7', borderRadius:8 }}>
+                <strong>{h.subject}</strong> — <span style={{ color:'#92400E' }}>{h.reason || 'بدون سبب محدد'}</span>
+              </div>
+            ))}
           </div>
         </div>
-      </div>
+      )}
+
+      {profile?.biggest_obstacles?.length > 0 && (
+        <div style={{ marginTop:20, background:'#fff', padding:20, borderRadius:12, border:'1px solid #E2E8F0' }}>
+          <h3 style={{ color:'#2A5C82', marginTop:0 }}>أكبر عوائقك</h3>
+          <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+            {profile.biggest_obstacles.map(o => (
+              <span key={o} style={{ background:'#FEE2E2', color:'#991B1B', padding:'5px 12px', borderRadius:6, fontSize:'0.85em' }}>{o}</span>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Card({ title, children }) {
+  return (
+    <div style={{ background:'#fff', padding:18, borderRadius:12, border:'1px solid #E2E8F0' }}>
+      <div style={{ color:'#64748B', fontSize:'0.82em', marginBottom:6 }}>{title}</div>
+      <div style={{ color:'#1E293B', fontWeight:'bold' }}>{children}</div>
     </div>
   );
 }
