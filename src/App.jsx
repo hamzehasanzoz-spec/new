@@ -34,7 +34,7 @@ export default function App() {
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .maybeSingle();          // ← لا يرمي خطأ إذا لم يوجد
+        .maybeSingle();
       setProfile(data || null);
     } catch (err) {
       console.error('Error fetching profile:', err);
@@ -105,7 +105,7 @@ export default function App() {
       </nav>
       <main style={{ padding:20 }}>
         {activeTab==='dashboard' && <Dashboard profile={profile} />}
-        {activeTab==='chat' && <ChatCoach />}
+        {activeTab==='chat' && <ChatCoach profile={profile} />}
       </main>
     </div>
   );
