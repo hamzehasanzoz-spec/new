@@ -16,6 +16,14 @@ export default function ChatCoach({ profile }) {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
 
+  const setLastAssistant = (content) => {
+    setMessages(prev => {
+      const copy = [...prev];
+      copy[copy.length - 1] = { role: 'assistant', content };
+      return copy;
+    });
+  };
+
   const handleSend = async (e) => {
     e.preventDefault();
     if (!input.trim() || loading) return;
@@ -25,8 +33,6 @@ export default function ChatCoach({ profile }) {
 
     const userMsg = { role: 'user', content: userMessage };
     const withUser = [...messages, userMsg];
-
-    // أضف رسالة مساعدة فارغة فورًا
     setMessages([...withUser, { role: 'assistant', content: '' }]);
     setLoading(true);
 
@@ -44,14 +50,23 @@ export default function ChatCoach({ profile }) {
         body: JSON.stringify({ messages: payload }),
       });
 
-      if (!res.ok || !res.body) {
-        throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        let errMsg = `HTTP ${res.status}`;
+        try {
+          const errJson = await res.json();
+          if (errJson.error) errMsg = errJson.error;
+          if (errJson.details) errMsg += '\n' + errJson.details.join('\n');
+        } catch {}
+        throw new Error(errMsg);
       }
+
+      if (!res.body) throw new Error('لا يوجد بث');
 
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let buffer = '';
       let assistantText = '';
+      let gotFirstChunk = false;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -59,39 +74,34 @@ export default function ChatCoach({ profile }) {
 
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n');
-        buffer = lines.pop();
+        buffer = lines.pop() || '';
 
         for (const line of lines) {
-          if (!line.startsWith('data: ')) continue;
-          const data = line.slice(6).trim();
+          const trimmed = line.trim();
+          if (!trimmed.startsWith('data:')) continue;
+          const data = trimmed.slice(5).trim();
           if (data === '[DONE]') continue;
 
           try {
             const parsed = JSON.parse(data);
             const delta = parsed.choices?.[0]?.delta?.content;
             if (delta) {
+              gotFirstChunk = true;
               assistantText += delta;
-              setMessages(prev => {
-                const copy = [...prev];
-                copy[copy.length - 1] = { role: 'assistant', content: assistantText };
-                return copy;
-              });
+              setLastAssistant(assistantText);
             }
           } catch {
-            // تجاهل الأجزاء غير المكتملة
+            // تجاهل
           }
         }
       }
+
+      if (!gotFirstChunk) {
+        setLastAssistant('لم يصل رد من الخدمة. حاول مجددًا.');
+      }
     } catch (err) {
       console.error('Chat error:', err);
-      setMessages(prev => {
-        const copy = [...prev];
-        copy[copy.length - 1] = {
-          role: 'assistant',
-          content: 'عذراً، حدث خطأ في الاتصال. حاول مجدداً.',
-        };
-        return copy;
-      });
+      setLastAssistant('⚠️ عذرًا، حدث خطأ:\n' + err.message);
     } finally {
       setLoading(false);
     }
@@ -122,7 +132,7 @@ export default function ChatCoach({ profile }) {
         display: 'flex', flexDirection: 'column', gap: 15, background: '#F8FAFC',
       }}>
         {messages.map((msg, i) => {
-          const isEmpty = msg.role === 'assistant' && msg.content === '';
+          const isEmpty = msg.role === 'assistant' && msg.content === '' && loading;
           return (
             <div key={i} style={{
               alignSelf: msg.role === 'user' ? 'flex-start' : 'flex-end',
@@ -134,7 +144,7 @@ export default function ChatCoach({ profile }) {
               <p style={{
                 margin: 0, whiteSpace: 'pre-wrap', lineHeight: 1.7, fontSize: '0.95em',
               }}>
-                {isEmpty ? '...' : msg.content}
+                {isEmpty ? '● ● ●' : msg.content}
               </p>
             </div>
           );

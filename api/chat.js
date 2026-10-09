@@ -1,30 +1,52 @@
-export const config = { maxDuration: 60 };
+export const config = { runtime: 'edge' };
 
-export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+export default async function handler(req) {
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+      status: 405,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  let body;
+  try {
+    body = await req.json();
+  } catch {
+    return new Response(JSON.stringify({ error: 'Invalid JSON' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 
   let messages = [];
-  if (Array.isArray(req.body?.messages)) {
-    messages = req.body.messages;
-  } else if (req.body?.prompt) {
+  if (Array.isArray(body?.messages)) {
+    messages = body.messages;
+  } else if (body?.prompt) {
     messages = [
-      { role: 'system', content: req.body.systemPrompt || '' },
-      { role: 'user', content: req.body.prompt },
+      { role: 'system', content: body.systemPrompt || '' },
+      { role: 'user', content: body.prompt },
     ];
   } else {
-    return res.status(400).json({ error: 'messages or prompt is required' });
+    return new Response(JSON.stringify({ error: 'messages or prompt is required' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   const key = process.env.OPENROUTER_KEY;
-  if (!key) return res.status(500).json({ error: 'OPENROUTER_KEY مفقود' });
+  if (!key) {
+    return new Response(JSON.stringify({ error: 'OPENROUTER_KEY مفقود' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 
   // الأسرع أولًا
   const models = [
-    'nvidia/nemotron-3.5-lightning:free',   // ⚡ الأسرع
+    'nvidia/nemotron-3.5-lightning:free',
     'nvidia/nemotron-3-super:free',
     'thinkingmachines/inkling-small:free',
     'thinkingmachines/inkling:free',
-    'nvidia/nemotron-3-ultra:free',
   ];
 
   const errors = [];
@@ -45,41 +67,33 @@ export default async function handler(req, res) {
           temperature: 0.4,
           top_p: 0.9,
           max_tokens: 2500,
-          stream: true,   // ← بث مباشر
+          stream: true,
         }),
       });
 
       if (!r.ok) {
-        const errText = await r.text().catch(() => '');
-        errors.push(`${model}: HTTP ${r.status} ${errText.slice(0, 100)}`);
+        const txt = await r.text().catch(() => '');
+        errors.push(`${model}: HTTP ${r.status} ${txt.slice(0, 80)}`);
         continue;
       }
 
-      // إعدادات البث
-      res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
-      res.setHeader('Cache-Control', 'no-cache, no-transform');
-      res.setHeader('Connection', 'keep-alive');
-      res.setHeader('X-Accel-Buffering', 'no');
-
-      // إرسال اسم المزود كأول حدث
-      res.write(`data: ${JSON.stringify({ provider: model })}\n\n`);
-
-      // نقل البث مباشرة
-      const reader = r.body.getReader();
-      const decoder = new TextDecoder();
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        res.write(decoder.decode(value, { stream: true }));
-      }
-
-      res.end();
-      return;
+      // مرّر البث مباشرة
+      return new Response(r.body, {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/event-stream; charset=utf-8',
+          'Cache-Control': 'no-cache, no-transform',
+          'Connection': 'keep-alive',
+          'X-Accel-Buffering': 'no',
+        },
+      });
     } catch (err) {
       errors.push(`${model}: ${err.message}`);
     }
   }
 
-  res.status(502).json({ error: 'تعذر الاتصال بجميع النماذج', details: errors });
+  return new Response(
+    JSON.stringify({ error: 'تعذر الاتصال بجميع النماذج', details: errors }),
+    { status: 502, headers: { 'Content-Type': 'application/json' } }
+  );
 }
