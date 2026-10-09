@@ -11,7 +11,21 @@ export default async function handler(req, res) {
     try {
       const key = process.env.GEMINI_KEY;
       const model = 'gemini-3.8-flash'; // ✅ النموذج الجديد
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+      const url = `curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent" \
+  -H 'Content-Type: application/json' \
+  -H 'X-goog-api-key: AQ.Ab8RN6I1O3tb_fCoBXrLTvSfO0tz-CzPS-2eUsj4Ccejq3bDgA' \
+  -X POST \
+  -d '{
+    "contents": [
+      {
+        "parts": [
+          {
+            "text": "Explain how AI works in a few words"
+          }
+        ]
+      }
+    ]
+  }'`;
       const body = {
         contents: [{ role: 'user', parts: [{ text: `${systemText}\n\n---\n\n${prompt}` }] }]
       };
