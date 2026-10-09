@@ -1,7 +1,8 @@
+export const config = { maxDuration: 60 };
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  // يدعم شكلين: { messages: [...] } الجديد، أو { prompt, systemPrompt } القديم
   let messages = [];
   if (Array.isArray(req.body?.messages)) {
     messages = req.body.messages;
@@ -15,16 +16,15 @@ export default async function handler(req, res) {
   }
 
   const key = process.env.OPENROUTER_KEY;
-  if (!key) {
-    return res.status(500).json({ error: 'OPENROUTER_KEY مفقود في Vercel' });
-  }
+  if (!key) return res.status(500).json({ error: 'OPENROUTER_KEY مفقود' });
 
+  // الأسرع أولًا
   const models = [
+    'nvidia/nemotron-3.5-lightning:free',   // ⚡ الأسرع
     'nvidia/nemotron-3-super:free',
+    'thinkingmachines/inkling-small:free',
     'thinkingmachines/inkling:free',
     'nvidia/nemotron-3-ultra:free',
-    'nvidia/nemotron-3.5-lightning:free',
-    'thinkingmachines/inkling-small:free',
   ];
 
   const errors = [];
@@ -44,27 +44,42 @@ export default async function handler(req, res) {
           messages,
           temperature: 0.4,
           top_p: 0.9,
-          max_tokens: 4000,
+          max_tokens: 2500,
+          stream: true,   // ← بث مباشر
         }),
       });
 
-      const data = await r.json();
-
-      if (r.ok && data?.choices?.[0]?.message?.content) {
-        return res.status(200).json({
-          text: data.choices[0].message.content,
-          provider: model,
-        });
+      if (!r.ok) {
+        const errText = await r.text().catch(() => '');
+        errors.push(`${model}: HTTP ${r.status} ${errText.slice(0, 100)}`);
+        continue;
       }
 
-      errors.push(`${model}: ${data?.error?.message || 'HTTP ' + r.status}`);
+      // إعدادات البث
+      res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
+      res.setHeader('Cache-Control', 'no-cache, no-transform');
+      res.setHeader('Connection', 'keep-alive');
+      res.setHeader('X-Accel-Buffering', 'no');
+
+      // إرسال اسم المزود كأول حدث
+      res.write(`data: ${JSON.stringify({ provider: model })}\n\n`);
+
+      // نقل البث مباشرة
+      const reader = r.body.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        res.write(decoder.decode(value, { stream: true }));
+      }
+
+      res.end();
+      return;
     } catch (err) {
       errors.push(`${model}: ${err.message}`);
     }
   }
 
-  return res.status(502).json({
-    error: 'تعذر الاتصال بجميع النماذج',
-    details: errors,
-  });
+  res.status(502).json({ error: 'تعذر الاتصال بجميع النماذج', details: errors });
 }

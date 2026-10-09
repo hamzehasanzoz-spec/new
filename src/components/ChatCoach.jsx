@@ -1,19 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { askAI } from '../lib/aiProviders';
 import { buildSystemPrompt } from '../lib/buildSystemPrompt';
 
 export default function ChatCoach({ profile }) {
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      content: `أهلاً ${profile?.full_name ? profile.full_name : 'يا زميلي'}! 👋\nأنا كوتش AI، جاهز لمساعدتك في التحضير للامتحان الوطني. اسألني أي سؤال طبي.`,
+      content: `أهلاً ${profile?.full_name ? profile.full_name : 'يا زميلي'}! 👋\nأنا كوتش AI، جاهز لمساعدتك. اسألني أي سؤال طبي.`,
     },
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef(null);
 
-  // تمرير تلقائي لآخر رسالة
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
@@ -25,73 +23,91 @@ export default function ChatCoach({ profile }) {
     const userMessage = input.trim();
     setInput('');
 
-    const newUserMsg = { role: 'user', content: userMessage };
-    const updatedMessages = [...messages, newUserMsg];
-    setMessages(updatedMessages);
+    const userMsg = { role: 'user', content: userMessage };
+    const withUser = [...messages, userMsg];
+
+    // أضف رسالة مساعدة فارغة فورًا
+    setMessages([...withUser, { role: 'assistant', content: '' }]);
     setLoading(true);
 
     try {
-      // 1. بناء system prompt مخصص من بيانات الطالب
       const systemPrompt = buildSystemPrompt(profile);
-
-      // 2. آخر 10 رسائل فقط (لتسريع الاستجابة)
-      const recentHistory = updatedMessages
-        .filter(m => m.role !== 'system')
-        .slice(-10);
-
-      // 3. تجميع الرسائل للإرسال
+      const recent = withUser.slice(-10);
       const payload = [
         { role: 'system', content: systemPrompt },
-        ...recentHistory.map(m => ({ role: m.role, content: m.content })),
+        ...recent.map(m => ({ role: m.role, content: m.content })),
       ];
 
-      const response = await askAI(payload);
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: payload }),
+      });
 
-      setMessages(prev => [
-        ...prev,
-        { role: 'assistant', content: response.text },
-      ]);
+      if (!res.ok || !res.body) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let assistantText = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop();
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          const data = line.slice(6).trim();
+          if (data === '[DONE]') continue;
+
+          try {
+            const parsed = JSON.parse(data);
+            const delta = parsed.choices?.[0]?.delta?.content;
+            if (delta) {
+              assistantText += delta;
+              setMessages(prev => {
+                const copy = [...prev];
+                copy[copy.length - 1] = { role: 'assistant', content: assistantText };
+                return copy;
+              });
+            }
+          } catch {
+            // تجاهل الأجزاء غير المكتملة
+          }
+        }
+      }
     } catch (err) {
       console.error('Chat error:', err);
-      setMessages(prev => [
-        ...prev,
-        {
+      setMessages(prev => {
+        const copy = [...prev];
+        copy[copy.length - 1] = {
           role: 'assistant',
-          content: 'عذراً، حدث خطأ في الاتصال بالخدمة الذكية. حاول مجدداً.',
-        },
-      ]);
+          content: 'عذراً، حدث خطأ في الاتصال. حاول مجدداً.',
+        };
+        return copy;
+      });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div
-      style={{
-        maxWidth: 900,
-        margin: '20px auto',
-        background: '#fff',
-        borderRadius: 16,
-        boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
-        display: 'flex',
-        flexDirection: 'column',
-        height: '75vh',
-        direction: 'rtl',
-      }}
-    >
-      {/* Header */}
-      <div
-        style={{
-          padding: 18,
-          background: '#2A5C82',
-          color: '#fff',
-          borderTopLeftRadius: 16,
-          borderTopRightRadius: 16,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 10,
-        }}
-      >
+    <div style={{
+      maxWidth: 900, margin: '20px auto', background: '#fff', borderRadius: 16,
+      boxShadow: '0 4px 20px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column',
+      height: '75vh', direction: 'rtl',
+    }}>
+      <div style={{
+        padding: 18, background: '#2A5C82', color: '#fff',
+        borderTopLeftRadius: 16, borderTopRightRadius: 16,
+        display: 'flex', alignItems: 'center', gap: 10,
+      }}>
         <span style={{ fontSize: '1.4em' }}>🩺</span>
         <div>
           <div style={{ fontWeight: 'bold' }}>Coach AI</div>
@@ -101,71 +117,34 @@ export default function ChatCoach({ profile }) {
         </div>
       </div>
 
-      {/* Messages */}
-      <div
-        style={{
-          flex: 1,
-          padding: 20,
-          overflowY: 'auto',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 15,
-          background: '#F8FAFC',
-        }}
-      >
-        {messages.map((msg, i) => (
-          <div
-            key={i}
-            style={{
+      <div style={{
+        flex: 1, padding: 20, overflowY: 'auto',
+        display: 'flex', flexDirection: 'column', gap: 15, background: '#F8FAFC',
+      }}>
+        {messages.map((msg, i) => {
+          const isEmpty = msg.role === 'assistant' && msg.content === '';
+          return (
+            <div key={i} style={{
               alignSelf: msg.role === 'user' ? 'flex-start' : 'flex-end',
               background: msg.role === 'user' ? '#EFF6FF' : '#fff',
-              color: '#1E293B',
-              padding: '12px 18px',
-              borderRadius: 12,
-              maxWidth: '78%',
-              boxShadow: '0 2px 5px rgba(0,0,0,0.02)',
-              border: '1px solid #E2E8F0',
-              textAlign: 'right',
-            }}
-          >
-            <p
-              style={{
-                margin: 0,
-                whiteSpace: 'pre-wrap',
-                lineHeight: 1.7,
-                fontSize: '0.95em',
-              }}
-            >
-              {msg.content}
-            </p>
-          </div>
-        ))}
-
-        {loading && (
-          <div
-            style={{
-              alignSelf: 'flex-end',
-              color: '#64748B',
-              fontStyle: 'italic',
-              fontSize: '0.9em',
-            }}
-          >
-            كوتش AI يكتب...
-          </div>
-        )}
+              color: '#1E293B', padding: '12px 18px', borderRadius: 12,
+              maxWidth: '78%', boxShadow: '0 2px 5px rgba(0,0,0,0.02)',
+              border: '1px solid #E2E8F0', textAlign: 'right',
+            }}>
+              <p style={{
+                margin: 0, whiteSpace: 'pre-wrap', lineHeight: 1.7, fontSize: '0.95em',
+              }}>
+                {isEmpty ? '...' : msg.content}
+              </p>
+            </div>
+          );
+        })}
         <div ref={bottomRef} />
       </div>
 
-      {/* Input */}
-      <form
-        onSubmit={handleSend}
-        style={{
-          padding: 15,
-          borderTop: '1px solid #E2E8F0',
-          display: 'flex',
-          gap: 10,
-        }}
-      >
+      <form onSubmit={handleSend} style={{
+        padding: 15, borderTop: '1px solid #E2E8F0', display: 'flex', gap: 10,
+      }}>
         <input
           type="text"
           value={input}
@@ -173,12 +152,8 @@ export default function ChatCoach({ profile }) {
           placeholder="اكتب سؤالك الطبي..."
           disabled={loading}
           style={{
-            flex: 1,
-            padding: 12,
-            borderRadius: 8,
-            border: '1px solid #E2E8F0',
-            outline: 'none',
-            fontSize: '0.95em',
+            flex: 1, padding: 12, borderRadius: 8,
+            border: '1px solid #E2E8F0', outline: 'none', fontSize: '0.95em',
           }}
         />
         <button
@@ -186,11 +161,8 @@ export default function ChatCoach({ profile }) {
           disabled={loading}
           style={{
             background: loading ? '#94A3B8' : '#2A5C82',
-            color: '#fff',
-            border: 'none',
-            padding: '0 24px',
-            borderRadius: 8,
-            fontWeight: 'bold',
+            color: '#fff', border: 'none', padding: '0 24px',
+            borderRadius: 8, fontWeight: 'bold',
             cursor: loading ? 'not-allowed' : 'pointer',
           }}
         >
