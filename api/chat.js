@@ -13,12 +13,12 @@ export default async function handler(req, res) {
 
   // النماذج بالترتيب — يجرب الأول، إن فشل ينتقل للتالي
   const models = [
-    'thinkingmachines/inkling',
-    'nvidia/nemotron-3-super',
-    'nvidia/nemotron-3-ultra',
-    'nvidia/nemotron-3.5-lightning',
-    'thinkingmachines/inkling-small',
-  ];
+  'thinkingmachines/inkling:free',
+  'nvidia/nemotron-3-super:free',
+  'nvidia/nemotron-3-ultra:free',
+  'nvidia/nemotron-3.5-lightning:free',
+  'thinkingmachines/inkling-small:free',
+];
 
   const errors = [];
 
