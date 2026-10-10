@@ -29,9 +29,8 @@ export default function MyFiles({ session }) {
     if (!file) return;
     e.target.value = '';
 
-    // تحقق من الحجم
-    if (file.size > 10 * 1024 * 1024) {
-      setError('حجم الملف يتجاوز 10 ميجابايت');
+    if (file.size > 15 * 1024 * 1024) {
+      setError('حجم الملف يتجاوز 15 ميجابايت');
       return;
     }
 
@@ -40,30 +39,34 @@ export default function MyFiles({ session }) {
     setUploadProgress('📖 قراءة الملف...');
 
     try {
-      // 1. استخراج النص
       const text = await extractText(file);
 
       if (!text || text.trim().length < 50) {
         throw new Error('لم يتم العثور على نص كافٍ في الملف');
       }
 
-      setUploadProgress(`✂️ جاري تقطيع النص وتوليد المتجهات...`);
+      setUploadProgress('✂️ جاري التقطيع وتوليد المتجهات...');
 
-      // 2. الحصول على access token
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
-      const accessToken = currentSession?.access_token;
-      if (!accessToken) throw new Error('انتهت الجلسة، سجّل الدخول مجددًا');
+      // الحصول على جلسة حديثة (مهم!)
+      const { data: { session: freshSession }, error: sessionError } =
+        await supabase.auth.getSession();
 
-      // 3. إرسال إلى /api/upload
+      if (sessionError || !freshSession?.access_token) {
+        throw new Error('انتهت الجلسة. الرجاء تسجيل الدخول مجددًا.');
+      }
+
+      // إرسال التوكن في Authorization header
       const res = await fetch('/api/upload', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${freshSession.access_token}`,
+        },
         body: JSON.stringify({
           filename: file.name,
           text,
           fileSize: file.size,
           fileType: file.type || 'application/pdf',
-          accessToken,
         }),
       });
 
@@ -76,7 +79,7 @@ export default function MyFiles({ session }) {
       setUploadProgress(`✅ تم الرفع (${data.numChunks} جزء)`);
       await loadDocuments();
 
-      setTimeout(() => setUploadProgress(''), 2500);
+      setTimeout(() => setUploadProgress(''), 3000);
 
     } catch (err) {
       console.error('Upload error:', err);
@@ -102,8 +105,6 @@ export default function MyFiles({ session }) {
 
   return (
     <div style={{ maxWidth: 900, margin: '30px auto', padding: 25, direction: 'rtl', textAlign: 'right' }}>
-
-      {/* Header */}
       <div style={{
         background: 'linear-gradient(135deg, #2A5C82 0%, #3B7BA8 100%)',
         color: '#fff', padding: 30, borderRadius: 16, marginBottom: 25,
@@ -114,19 +115,14 @@ export default function MyFiles({ session }) {
         </p>
       </div>
 
-      {/* Upload zone */}
       <div style={{
-        background: '#fff',
-        padding: 30,
-        borderRadius: 14,
-        border: '2px dashed #CBD5E1',
-        textAlign: 'center',
-        marginBottom: 25,
+        background: '#fff', padding: 30, borderRadius: 14,
+        border: '2px dashed #CBD5E1', textAlign: 'center', marginBottom: 25,
       }}>
         <div style={{ fontSize: '3em', marginBottom: 10 }}>📄</div>
         <h3 style={{ color: '#2A5C82', marginTop: 0 }}>ارفع ملفًا جديدًا</h3>
         <p style={{ color: '#64748B', fontSize: '0.9em' }}>
-          PDF أو TXT — الحد الأقصى 10 ميجابايت
+          PDF أو TXT — الحد الأقصى 15 ميجابايت
         </p>
 
         <input
@@ -142,9 +138,7 @@ export default function MyFiles({ session }) {
           style={{
             display: 'inline-block',
             background: uploading ? '#94A3B8' : '#2A5C82',
-            color: '#fff',
-            padding: '12px 32px',
-            borderRadius: 8,
+            color: '#fff', padding: '12px 32px', borderRadius: 8,
             fontWeight: 'bold',
             cursor: uploading ? 'not-allowed' : 'pointer',
             marginTop: 12,
@@ -160,19 +154,14 @@ export default function MyFiles({ session }) {
         )}
         {error && (
           <p style={{
-            marginTop: 16,
-            color: '#EF4444',
-            background: '#FEF2F2',
-            padding: '10px 16px',
-            borderRadius: 8,
-            fontSize: '0.88em',
+            marginTop: 16, color: '#EF4444', background: '#FEF2F2',
+            padding: '10px 16px', borderRadius: 8, fontSize: '0.88em',
           }}>
             ⚠️ {error}
           </p>
         )}
       </div>
 
-      {/* Files list */}
       <h2 style={{ color: '#2A5C82', fontSize: '1.2em' }}>
         📋 الملفات المرفوعة ({documents.length})
       </h2>
@@ -182,25 +171,17 @@ export default function MyFiles({ session }) {
           background: '#fff', padding: 40, borderRadius: 14,
           border: '1px solid #E2E8F0', textAlign: 'center', color: '#94A3B8',
         }}>
-          لا توجد ملفات بعد. ارفع ملفك الأول ليبدأ الذكاء الاصطناعي بالاستفادة منه.
+          لا توجد ملفات بعد.
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {documents.map(doc => (
-            <div
-              key={doc.id}
-              style={{
-                background: '#fff',
-                padding: 16,
-                borderRadius: 12,
-                border: '1px solid #E2E8F0',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: 12,
-                flexWrap: 'wrap',
-              }}
-            >
+            <div key={doc.id} style={{
+              background: '#fff', padding: 16, borderRadius: 12,
+              border: '1px solid #E2E8F0',
+              display: 'flex', alignItems: 'center',
+              justifyContent: 'space-between', gap: 12, flexWrap: 'wrap',
+            }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{
                   fontWeight: 'bold', color: '#1E293B',
@@ -218,26 +199,24 @@ export default function MyFiles({ session }) {
 
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <span style={{
-                  padding: '4px 12px',
-                  borderRadius: 99,
-                  fontSize: '0.78em',
-                  fontWeight: 'bold',
-                  background: doc.status === 'ready' ? '#D1FAE5' : doc.status === 'failed' ? '#FEE2E2' : '#FEF3C7',
-                  color: doc.status === 'ready' ? '#065F46' : doc.status === 'failed' ? '#991B1B' : '#92400E',
+                  padding: '4px 12px', borderRadius: 99,
+                  fontSize: '0.78em', fontWeight: 'bold',
+                  background: doc.status === 'ready' ? '#D1FAE5'
+                    : doc.status === 'failed' ? '#FEE2E2' : '#FEF3C7',
+                  color: doc.status === 'ready' ? '#065F46'
+                    : doc.status === 'failed' ? '#991B1B' : '#92400E',
                 }}>
-                  {doc.status === 'ready' ? '✅ جاهز' : doc.status === 'failed' ? '❌ فشل' : '⏳ قيد المعالجة'}
+                  {doc.status === 'ready' ? '✅ جاهز'
+                    : doc.status === 'failed' ? '❌ فشل' : '⏳ قيد المعالجة'}
                 </span>
 
                 <button
                   onClick={() => handleDelete(doc)}
                   style={{
                     background: 'transparent',
-                    border: '1px solid #EF4444',
-                    color: '#EF4444',
-                    padding: '6px 12px',
-                    borderRadius: 6,
-                    cursor: 'pointer',
-                    fontSize: '0.85em',
+                    border: '1px solid #EF4444', color: '#EF4444',
+                    padding: '6px 12px', borderRadius: 6,
+                    cursor: 'pointer', fontSize: '0.85em',
                   }}
                 >
                   🗑 حذف

@@ -1,6 +1,6 @@
 export const config = { runtime: 'edge' };
 
-// تقطيع النص إلى chunks
+// تقطيع النص
 function chunkText(text, chunkSize = 1000, overlap = 150) {
   const clean = text.replace(/\s+/g, ' ').trim();
   const chunks = [];
@@ -13,32 +13,45 @@ function chunkText(text, chunkSize = 1000, overlap = 150) {
     if (end >= clean.length) break;
     start = end - overlap;
   }
-
   return chunks;
 }
 
-// توليد embedding عبر Gemini
-async function embedText(text, apiKey) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=${apiKey}`;
-  const r = await fetch(url, {
+// توليد embeddings دفعة واحدة عبر Voyage
+async function embedBatch(texts, apiKey) {
+  const r = await fetch('https://api.voyageai.com/v1/embeddings', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
     body: JSON.stringify({
-      model: 'models/text-embedding-004',
-      content: { parts: [{ text }] },
+      model: 'voyage-multilingual-2',
+      input: texts,
+      input_type: 'document',
     }),
   });
   const data = await r.json();
   if (!r.ok) {
-    throw new Error(data?.error?.message || `Embedding failed: ${r.status}`);
+    throw new Error(
+      data?.detail || data?.error?.message || `Voyage HTTP ${r.status}`
+    );
   }
-  return data.embedding.values;
+  return data.data.map(d => d.embedding);
 }
 
 export default async function handler(req) {
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
       status: 405, headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  // 1. قراءة التوكن من Authorization header
+  const authHeader = req.headers.get('authorization') || '';
+  const accessToken = authHeader.replace('Bearer ', '').trim();
+  if (!accessToken) {
+    return new Response(JSON.stringify({ error: 'Authorization header مفقود' }), {
+      status: 401, headers: { 'Content-Type': 'application/json' },
     });
   }
 
@@ -51,16 +64,16 @@ export default async function handler(req) {
     });
   }
 
-  const { filename, text, fileSize, fileType, accessToken } = body;
-  if (!filename || !text || !accessToken) {
-    return new Response(JSON.stringify({ error: 'filename, text, accessToken مطلوبة' }), {
+  const { filename, text, fileSize, fileType } = body;
+  if (!filename || !text) {
+    return new Response(JSON.stringify({ error: 'filename and text مطلوبان' }), {
       status: 400, headers: { 'Content-Type': 'application/json' },
     });
   }
 
-  const geminiKey = process.env.GEMINI_KEY;
-  if (!geminiKey) {
-    return new Response(JSON.stringify({ error: 'GEMINI_KEY مفقود في Vercel' }), {
+  const voyageKey = process.env.VOYAGE_API_KEY;
+  if (!voyageKey) {
+    return new Response(JSON.stringify({ error: 'VOYAGE_API_KEY مفقود في Vercel' }), {
       status: 500, headers: { 'Content-Type': 'application/json' },
     });
   }
@@ -73,28 +86,34 @@ export default async function handler(req) {
     });
   }
 
-  const headers = {
-    apikey: supabaseAnonKey,
-    Authorization: `Bearer ${accessToken}`,
-    'Content-Type': 'application/json',
-    Prefer: 'return=representation',
-  };
-
   try {
-    // 1. الحصول على user_id من التوكن
+    // 2. التحقق من المستخدم
     const userRes = await fetch(`${supabaseUrl}/auth/v1/user`, {
-      headers: { apikey: supabaseAnonKey, Authorization: `Bearer ${accessToken}` },
+      headers: {
+        apikey: supabaseAnonKey,
+        Authorization: `Bearer ${accessToken}`,
+      },
     });
     const userData = await userRes.json();
     if (!userRes.ok || !userData?.id) {
-      throw new Error('توكن المستخدم غير صالح');
+      return new Response(JSON.stringify({
+        error: 'توكن المستخدم غير صالح',
+        details: userData,
+      }), {
+        status: 401, headers: { 'Content-Type': 'application/json' },
+      });
     }
     const userId = userData.id;
 
-    // 2. إنشاء document
+    // 3. إنشاء document
     const docRes = await fetch(`${supabaseUrl}/rest/v1/documents`, {
       method: 'POST',
-      headers,
+      headers: {
+        apikey: supabaseAnonKey,
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=representation',
+      },
       body: JSON.stringify({
         user_id: userId,
         filename,
@@ -109,40 +128,38 @@ export default async function handler(req) {
     }
     const documentId = docArr[0].id;
 
-    // 3. تقطيع النص
+    // 4. تقطيع النص
     const chunks = chunkText(text);
     if (chunks.length === 0) {
       throw new Error('لم يتم استخراج نص كافٍ من الملف');
     }
 
-    // 4. توليد embeddings + إدراج chunks
-    const chunkRows = [];
-    for (let i = 0; i < chunks.length; i++) {
-      try {
-        const embedding = await embedText(chunks[i], geminiKey);
-        chunkRows.push({
-          document_id: documentId,
-          chunk_index: i,
-          content: chunks[i],
-          embedding: `[${embedding.join(',')}]`,
-        });
-      } catch (err) {
-        console.error(`Chunk ${i} failed:`, err.message);
-      }
-      // تأخير بسيط لتجنب rate limit
-      if ((i + 1) % 10 === 0) {
-        await new Promise(r => setTimeout(r, 200));
-      }
+    // 5. توليد embeddings دفعة واحدة (Voyage يدعم حتى 128 نص)
+    const BATCH_SIZE = 128;
+    const allEmbeddings = [];
+    for (let i = 0; i < chunks.length; i += BATCH_SIZE) {
+      const batch = chunks.slice(i, i + BATCH_SIZE);
+      const embeddings = await embedBatch(batch, voyageKey);
+      allEmbeddings.push(...embeddings);
     }
 
-    if (chunkRows.length === 0) {
-      throw new Error('فشل توليد embeddings لكل الأجزاء');
-    }
+    // 6. بناء صفوف الإدراج
+    const chunkRows = chunks.map((content, i) => ({
+      document_id: documentId,
+      chunk_index: i,
+      content,
+      embedding: `[${allEmbeddings[i].join(',')}]`,
+    }));
 
-    // 5. إدراج كل الـ chunks
+    // 7. إدراج كل الـ chunks
     const insRes = await fetch(`${supabaseUrl}/rest/v1/document_chunks`, {
       method: 'POST',
-      headers,
+      headers: {
+        apikey: supabaseAnonKey,
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=minimal',
+      },
       body: JSON.stringify(chunkRows),
     });
     if (!insRes.ok) {
@@ -150,10 +167,14 @@ export default async function handler(req) {
       throw new Error(`فشل إدراج الأجزاء: ${errTxt.slice(0, 200)}`);
     }
 
-    // 6. تحديث عدد الأجزاء والحالة
+    // 8. تحديث الحالة
     await fetch(`${supabaseUrl}/rest/v1/documents?id=eq.${documentId}`, {
       method: 'PATCH',
-      headers,
+      headers: {
+        apikey: supabaseAnonKey,
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify({
         num_chunks: chunkRows.length,
         status: 'ready',
@@ -169,6 +190,7 @@ export default async function handler(req) {
     });
 
   } catch (err) {
+    console.error('Upload error:', err);
     return new Response(JSON.stringify({
       error: err.message,
     }), {
