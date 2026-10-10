@@ -110,7 +110,7 @@ export default function ChatCoach({ profile, session }) {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${freshSession.access_token}`,
         },
-        body: JSON.stringify({ query, matchCount: 5, threshold: 0.35 }),
+                body: JSON.stringify({ query, matchCount: 5, threshold: 0.1 }),
       });
 
       if (!res.ok) return [];
@@ -160,7 +160,8 @@ export default function ChatCoach({ profile, session }) {
     try {
       // ⭐ 1. البحث في ملفات الطالب
       setRagStatus('📚 جاري البحث في ملفاتك...');
-      const relevantChunks = await searchUserDocuments(userMessage);
+            const relevantChunks = await searchUserDocuments(userMessage);
+      console.log('🔍 Search results:', relevantChunks.length, relevantChunks);
 
       // ⭐ 2. بناء System Prompt مع النتائج
       let systemPrompt = buildSystemPrompt(profile);

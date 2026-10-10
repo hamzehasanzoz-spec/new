@@ -28,7 +28,7 @@ export default async function handler(req, res) {
   }
   const userId = payload.sub;
 
-  const { query, matchCount = 5, threshold = 0.3 } = req.body || {};
+  const { query, matchCount = 5, threshold = 0.1 } = req.body || {};
   if (!query || query.trim().length < 3) {
     return res.status(400).json({ error: 'query مطلوب (3 أحرف على الأقل)' });
   }
