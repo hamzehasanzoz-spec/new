@@ -3,6 +3,7 @@ import { supabase } from './lib/supabase';
 import Questionnaire from './components/Questionnaire';
 import Dashboard from './components/Dashboard';
 import ChatCoach from './components/ChatCoach';
+import Profile from './components/Profile';
 
 export default function App() {
   const [session, setSession] = useState(null);
@@ -114,39 +115,87 @@ export default function App() {
   return (
     <div style={{ minHeight: '100vh', background: '#F8FAFC' }}>
       <nav style={{
-        background: '#fff', padding: '15px 30px', borderBottom: '1px solid #E2E8F0',
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center', direction: 'rtl'
+        background: '#fff',
+        padding: '15px 30px',
+        borderBottom: '1px solid #E2E8F0',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        direction: 'rtl',
+        flexWrap: 'wrap',
+        gap: 10,
       }}>
         <h2 style={{ color: '#2A5C82', margin: 0 }}>كوتش AI 🩺</h2>
-        <div style={{ display: 'flex', gap: 10 }}>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           <button
             onClick={() => setActiveTab('dashboard')}
             style={{
               background: activeTab === 'dashboard' ? '#2A5C82' : 'transparent',
               color: activeTab === 'dashboard' ? '#fff' : '#1E293B',
-              border: 'none', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 'bold'
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: 8,
+              cursor: 'pointer',
+              fontWeight: 'bold',
             }}
-          >الرئيسية</button>
+          >
+            الرئيسية
+          </button>
           <button
             onClick={() => setActiveTab('chat')}
             style={{
               background: activeTab === 'chat' ? '#2A5C82' : 'transparent',
               color: activeTab === 'chat' ? '#fff' : '#1E293B',
-              border: 'none', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 'bold'
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: 8,
+              cursor: 'pointer',
+              fontWeight: 'bold',
             }}
-          >الدردشة الذكية</button>
+          >
+            الدردشة الذكية
+          </button>
+          <button
+            onClick={() => setActiveTab('profile')}
+            style={{
+              background: activeTab === 'profile' ? '#2A5C82' : 'transparent',
+              color: activeTab === 'profile' ? '#fff' : '#1E293B',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: 8,
+              cursor: 'pointer',
+              fontWeight: 'bold',
+            }}
+          >
+            👤 بروفايلي
+          </button>
           <button
             onClick={() => supabase.auth.signOut()}
             style={{
-              background: '#EF4444', color: '#fff', border: 'none',
-              padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 'bold'
+              background: '#EF4444',
+              color: '#fff',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: 8,
+              cursor: 'pointer',
+              fontWeight: 'bold',
             }}
-          >خروج</button>
+          >
+            خروج
+          </button>
         </div>
       </nav>
+
       <main style={{ padding: 20 }}>
         {activeTab === 'dashboard' && <Dashboard profile={profile} />}
         {activeTab === 'chat' && <ChatCoach profile={profile} session={session} />}
+        {activeTab === 'profile' && (
+          <Profile
+            profile={profile}
+            session={session}
+            onProfileUpdate={() => fetchProfile(session.user.id)}
+          />
+        )}
       </main>
     </div>
   );
