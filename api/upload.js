@@ -5,7 +5,6 @@ function chunkText(text, chunkSize = 1000, overlap = 150) {
   const clean = text.replace(/\s+/g, ' ').trim();
   const chunks = [];
   let start = 0;
-
   while (start < clean.length) {
     const end = Math.min(start + chunkSize, clean.length);
     const chunk = clean.slice(start, end).trim();
@@ -16,7 +15,27 @@ function chunkText(text, chunkSize = 1000, overlap = 150) {
   return chunks;
 }
 
-// توليد embeddings دفعة واحدة عبر Voyage
+// فك الـ JWT محليًا لاستخراج user_id
+function decodeJWT(token) {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const base64Url = parts[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const pad = base64.length % 4;
+    const padded = pad ? base64 + '='.repeat(4 - pad) : base64;
+    const jsonPayload = decodeURIComponent(
+      atob(padded).split('').map(c =>
+        '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+      ).join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch {
+    return null;
+  }
+}
+
+// توليد embeddings دفعة واحدة
 async function embedBatch(texts, apiKey) {
   const r = await fetch('https://api.voyageai.com/v1/embeddings', {
     method: 'POST',
@@ -46,7 +65,7 @@ export default async function handler(req) {
     });
   }
 
-  // 1. قراءة التوكن من Authorization header
+  // 1. التوكن من Authorization header
   const authHeader = req.headers.get('authorization') || '';
   const accessToken = authHeader.replace('Bearer ', '').trim();
   if (!accessToken) {
@@ -54,6 +73,28 @@ export default async function handler(req) {
       status: 401, headers: { 'Content-Type': 'application/json' },
     });
   }
+
+  // 2. فك التوكن محليًا
+  const payload = decodeJWT(accessToken);
+  if (!payload || !payload.sub) {
+    return new Response(JSON.stringify({
+      error: 'توكن غير صالح',
+      details: 'لا يمكن قراءة user_id من التوكن'
+    }), {
+      status: 401, headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  // 3. تحقق من انتهاء الصلاحية
+  if (payload.exp && payload.exp * 1000 < Date.now()) {
+    return new Response(JSON.stringify({
+      error: 'انتهت صلاحية الجلسة. سجّل الدخول مجددًا.'
+    }), {
+      status: 401, headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  const userId = payload.sub;
 
   let body;
   try {
@@ -73,7 +114,7 @@ export default async function handler(req) {
 
   const voyageKey = process.env.VOYAGE_API_KEY;
   if (!voyageKey) {
-    return new Response(JSON.stringify({ error: 'VOYAGE_API_KEY مفقود في Vercel' }), {
+    return new Response(JSON.stringify({ error: 'VOYAGE_API_KEY مفقود' }), {
       status: 500, headers: { 'Content-Type': 'application/json' },
     });
   }
@@ -81,39 +122,26 @@ export default async function handler(req) {
   const supabaseUrl = process.env.VITE_SUPABASE_URL;
   const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
   if (!supabaseUrl || !supabaseAnonKey) {
-    return new Response(JSON.stringify({ error: 'Supabase env مفقود' }), {
+    return new Response(JSON.stringify({
+      error: 'متغيرات Supabase مفقودة',
+      hasUrl: !!supabaseUrl,
+      hasKey: !!supabaseAnonKey,
+    }), {
       status: 500, headers: { 'Content-Type': 'application/json' },
     });
   }
 
-  try {
-    // 2. التحقق من المستخدم
-    const userRes = await fetch(`${supabaseUrl}/auth/v1/user`, {
-      headers: {
-        apikey: supabaseAnonKey,
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-    const userData = await userRes.json();
-    if (!userRes.ok || !userData?.id) {
-      return new Response(JSON.stringify({
-        error: 'توكن المستخدم غير صالح',
-        details: userData,
-      }), {
-        status: 401, headers: { 'Content-Type': 'application/json' },
-      });
-    }
-    const userId = userData.id;
+  const apiHeaders = {
+    apikey: supabaseAnonKey,
+    Authorization: `Bearer ${accessToken}`,
+    'Content-Type': 'application/json',
+  };
 
-    // 3. إنشاء document
+  try {
+    // 4. إنشاء document
     const docRes = await fetch(`${supabaseUrl}/rest/v1/documents`, {
       method: 'POST',
-      headers: {
-        apikey: supabaseAnonKey,
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-        Prefer: 'return=representation',
-      },
+      headers: { ...apiHeaders, Prefer: 'return=representation' },
       body: JSON.stringify({
         user_id: userId,
         filename,
@@ -128,13 +156,13 @@ export default async function handler(req) {
     }
     const documentId = docArr[0].id;
 
-    // 4. تقطيع النص
+    // 5. تقطيع
     const chunks = chunkText(text);
     if (chunks.length === 0) {
-      throw new Error('لم يتم استخراج نص كافٍ من الملف');
+      throw new Error('لم يتم استخراج نص كافٍ');
     }
 
-    // 5. توليد embeddings دفعة واحدة (Voyage يدعم حتى 128 نص)
+    // 6. embeddings (batch 128)
     const BATCH_SIZE = 128;
     const allEmbeddings = [];
     for (let i = 0; i < chunks.length; i += BATCH_SIZE) {
@@ -143,7 +171,7 @@ export default async function handler(req) {
       allEmbeddings.push(...embeddings);
     }
 
-    // 6. بناء صفوف الإدراج
+    // 7. إدراج chunks
     const chunkRows = chunks.map((content, i) => ({
       document_id: documentId,
       chunk_index: i,
@@ -151,15 +179,9 @@ export default async function handler(req) {
       embedding: `[${allEmbeddings[i].join(',')}]`,
     }));
 
-    // 7. إدراج كل الـ chunks
     const insRes = await fetch(`${supabaseUrl}/rest/v1/document_chunks`, {
       method: 'POST',
-      headers: {
-        apikey: supabaseAnonKey,
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-        Prefer: 'return=minimal',
-      },
+      headers: { ...apiHeaders, Prefer: 'return=minimal' },
       body: JSON.stringify(chunkRows),
     });
     if (!insRes.ok) {
@@ -170,15 +192,8 @@ export default async function handler(req) {
     // 8. تحديث الحالة
     await fetch(`${supabaseUrl}/rest/v1/documents?id=eq.${documentId}`, {
       method: 'PATCH',
-      headers: {
-        apikey: supabaseAnonKey,
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        num_chunks: chunkRows.length,
-        status: 'ready',
-      }),
+      headers: apiHeaders,
+      body: JSON.stringify({ num_chunks: chunkRows.length, status: 'ready' }),
     });
 
     return new Response(JSON.stringify({
@@ -191,9 +206,7 @@ export default async function handler(req) {
 
   } catch (err) {
     console.error('Upload error:', err);
-    return new Response(JSON.stringify({
-      error: err.message,
-    }), {
+    return new Response(JSON.stringify({ error: err.message }), {
       status: 500, headers: { 'Content-Type': 'application/json' },
     });
   }
