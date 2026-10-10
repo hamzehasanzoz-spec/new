@@ -4,6 +4,7 @@ import Questionnaire from './components/Questionnaire';
 import Dashboard from './components/Dashboard';
 import ChatCoach from './components/ChatCoach';
 import Profile from './components/Profile';
+import MyFiles from './components/MyFiles';
 
 export default function App() {
   const [session, setSession] = useState(null);
@@ -156,6 +157,20 @@ export default function App() {
             الدردشة الذكية
           </button>
           <button
+            onClick={() => setActiveTab('files')}
+            style={{
+              background: activeTab === 'files' ? '#2A5C82' : 'transparent',
+              color: activeTab === 'files' ? '#fff' : '#1E293B',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: 8,
+              cursor: 'pointer',
+              fontWeight: 'bold',
+            }}
+          >
+            📚 ملفاتي
+          </button>
+          <button
             onClick={() => setActiveTab('profile')}
             style={{
               background: activeTab === 'profile' ? '#2A5C82' : 'transparent',
@@ -189,6 +204,7 @@ export default function App() {
       <main style={{ padding: 20 }}>
         {activeTab === 'dashboard' && <Dashboard profile={profile} />}
         {activeTab === 'chat' && <ChatCoach profile={profile} session={session} />}
+        {activeTab === 'files' && <MyFiles session={session} />}
         {activeTab === 'profile' && (
           <Profile
             profile={profile}
