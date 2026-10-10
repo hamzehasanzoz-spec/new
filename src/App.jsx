@@ -146,7 +146,7 @@ export default function App() {
       </nav>
       <main style={{ padding: 20 }}>
         {activeTab === 'dashboard' && <Dashboard profile={profile} />}
-        {activeTab === 'chat' && <ChatCoach profile={profile} />}
+        {activeTab === 'chat' && <ChatCoach profile={profile} session={session} />}
       </main>
     </div>
   );

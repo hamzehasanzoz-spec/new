@@ -1,24 +1,98 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { buildSystemPrompt } from '../lib/buildSystemPrompt';
+import {
+  createConversation,
+  listConversations,
+  loadMessages,
+  saveMessage,
+  updateConversationTitle,
+  deleteConversation,
+} from '../lib/chatStorage';
+import ConversationsSidebar from './ConversationsSidebar';
 
-export default function ChatCoach({ profile }) {
-  const [messages, setMessages] = useState([
-    {
-      role: 'assistant',
-      content: `أهلاً ${profile?.full_name ? profile.full_name : 'يا زميلي'}! 👋\nأنا كوتش AI، جاهز لمساعدتك. اسألني أي سؤال طبي.`,
-    },
-  ]);
+export default function ChatCoach({ profile, session }) {
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [conversationId, setConversationId] = useState(null);
+  const [conversations, setConversations] = useState([]);
+  const [showSidebar, setShowSidebar] = useState(true);
   const bottomRef = useRef(null);
 
+  const userId = session?.user?.id;
+
+  // استقبال رسالة ترحيب عند بدء محادثة جديدة
+  const welcomeMessage = {
+    role: 'assistant',
+    content: `أهلاً ${profile?.full_name || 'يا زميلي'}! 👋\nأنا كوتش AI، جاهز لمساعدتك. اسألني أي سؤال طبي.`,
+  };
+
+  // 1. جلب قائمة المحادثات عند التحميل
+  useEffect(() => {
+    if (!userId) return;
+    refreshConversations();
+  }, [userId]);
+
+  // 2. تمرير تلقائي
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
 
-  // ─────────────────────────────────────────
-  // دالة مساعدة: تحديث آخر رسالة للمساعد
-  // ─────────────────────────────────────────
+  const refreshConversations = async () => {
+    try {
+      const list = await listConversations(userId);
+      setConversations(list);
+    } catch (err) {
+      console.error('فشل جلب المحادثات:', err);
+    }
+  };
+
+  // بدء محادثة جديدة (لا ننشئها في DB حتى تُرسل أول رسالة)
+  const handleNewChat = () => {
+    setConversationId(null);
+    setMessages([welcomeMessage]);
+  };
+
+  // تحميل محادثة قديمة
+  const handleSelectConversation = async (id) => {
+    if (id === conversationId) return;
+    try {
+      setLoading(true);
+      const msgs = await loadMessages(id);
+      setConversationId(id);
+      setMessages(
+        msgs.length > 0
+          ? msgs.map(m => ({ role: m.role, content: m.content }))
+          : [welcomeMessage]
+      );
+    } catch (err) {
+      console.error('فشل تحميل المحادثة:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // حذف محادثة
+  const handleDeleteConversation = async (id) => {
+    try {
+      await deleteConversation(id);
+      if (id === conversationId) {
+        setConversationId(null);
+        setMessages([welcomeMessage]);
+      }
+      refreshConversations();
+    } catch (err) {
+      console.error('فشل الحذف:', err);
+    }
+  };
+
+  // عند الدخول بدون محادثة حالية، نعرض الترحيب
+  useEffect(() => {
+    if (messages.length === 0 && !conversationId) {
+      setMessages([welcomeMessage]);
+    }
+  }, []);
+
   const updateLastAssistant = (content) => {
     setMessages(prev => {
       if (prev.length === 0) return prev;
@@ -30,9 +104,6 @@ export default function ChatCoach({ profile }) {
     });
   };
 
-  // ─────────────────────────────────────────
-  // الدالة الرئيسية: إرسال + بث الرد
-  // ─────────────────────────────────────────
   const handleSend = async (e) => {
     e.preventDefault();
     if (!input.trim() || loading) return;
@@ -40,15 +111,36 @@ export default function ChatCoach({ profile }) {
     const userMessage = input.trim();
     setInput('');
 
+    // إذا لم تكن هناك محادثة، ننشئها الآن
+    let currentConvId = conversationId;
+    if (!currentConvId) {
+      try {
+        const title = userMessage.slice(0, 40) + (userMessage.length > 40 ? '...' : '');
+        const newConv = await createConversation(userId, title);
+        currentConvId = newConv.id;
+        setConversationId(currentConvId);
+        refreshConversations();
+      } catch (err) {
+        console.error('فشل إنشاء المحادثة:', err);
+        alert('فشل إنشاء محادثة جديدة');
+        return;
+      }
+    }
+
     const userMsg = { role: 'user', content: userMessage };
     const withUser = [...messages, userMsg];
     setMessages([...withUser, { role: 'assistant', content: '' }]);
     setLoading(true);
 
-    let reader = null;
-
+    // حفظ رسالة المستخدم في DB
     try {
-      // 1. بناء system prompt + آخر 10 رسائل
+      await saveMessage(currentConvId, 'user', userMessage);
+    } catch (err) {
+      console.error('فشل حفظ رسالة المستخدم:', err);
+    }
+
+    let reader = null;
+    try {
       const systemPrompt = buildSystemPrompt(profile);
       const recent = withUser.slice(-10);
       const payload = [
@@ -56,7 +148,6 @@ export default function ChatCoach({ profile }) {
         ...recent.map(m => ({ role: m.role, content: m.content })),
       ];
 
-      // 2. مهلة 60 ثانية كحد أقصى
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 60000);
 
@@ -81,7 +172,6 @@ export default function ChatCoach({ profile }) {
 
       if (!res.body) throw new Error('لا يوجد بث من الخدمة');
 
-      // 3. قراءة البث
       reader = res.body.getReader();
       const decoder = new TextDecoder();
       let buffer = '';
@@ -105,123 +195,182 @@ export default function ChatCoach({ profile }) {
           try {
             const parsed = JSON.parse(data);
             const delta = parsed.choices?.[0]?.delta;
-
-            // ✅ نأخذ content فقط — نتجاهل reasoning
             if (delta?.content) {
               gotContent = true;
               assistantText += delta.content;
               updateLastAssistant(assistantText);
             }
-          } catch {
-            // تجاهل الأسطر المشوّشة
-          }
+          } catch {}
         }
       }
 
-      // 4. إذا لم يصل أي محتوى
       if (!gotContent) {
-        updateLastAssistant(
-          '⚠️ لم يصل رد من النموذج.\n\nجرّب:\n• صياغة السؤال بشكل أوضح\n• تقسيم السؤال إلى أجزاء أصغر\n• إعادة المحاولة'
-        );
+        updateLastAssistant('⚠️ لم يصل رد من النموذج.');
+      } else {
+        // حفظ رد المساعد في DB
+        try {
+          await saveMessage(currentConvId, 'assistant', assistantText);
+        } catch (err) {
+          console.error('فشل حفظ رد المساعد:', err);
+        }
       }
     } catch (err) {
       console.error('Chat error:', err);
-
       let msg;
       if (err.name === 'AbortError') {
-        msg = '⏱️ استغرق الرد وقتًا طويلًا. جرّب سؤالًا أقصر.';
-      } else if (err.message?.includes('fetch')) {
-        msg = '🌐 تعذّر الاتصال بالسيرفر. تحقق من الإنترنت.';
+        msg = '⏱️ استغرق الرد وقتًا طويلًا.';
       } else {
         msg = '⚠️ حدث خطأ:\n' + err.message;
       }
-
       updateLastAssistant(msg);
     } finally {
-      // تنظيف
       try { reader?.releaseLock(); } catch {}
       setLoading(false);
     }
   };
 
-  // ─────────────────────────────────────────
-  // Render
-  // ─────────────────────────────────────────
   return (
     <div style={{
-      maxWidth: 900, margin: '20px auto', background: '#fff', borderRadius: 16,
-      boxShadow: '0 4px 20px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column',
-      height: '75vh', direction: 'rtl',
+      maxWidth: 1100,
+      margin: '20px auto',
+      display: 'flex',
+      gap: 0,
+      direction: 'rtl',
     }}>
-      {/* Header */}
+      {/* Sidebar */}
+      {showSidebar && (
+        <ConversationsSidebar
+          conversations={conversations}
+          activeId={conversationId}
+          onSelect={handleSelectConversation}
+          onNew={handleNewChat}
+          onDelete={handleDeleteConversation}
+        />
+      )}
+
+      {/* Chat Area */}
       <div style={{
-        padding: 18, background: '#2A5C82', color: '#fff',
-        borderTopLeftRadius: 16, borderTopRightRadius: 16,
-        display: 'flex', alignItems: 'center', gap: 10,
+        flex: 1,
+        background: '#fff',
+        borderRadius: showSidebar ? '16px 0 0 16px' : 16,
+        boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+        display: 'flex',
+        flexDirection: 'column',
+        height: '75vh',
+        overflow: 'hidden',
       }}>
-        <span style={{ fontSize: '1.4em' }}>🩺</span>
-        <div>
-          <div style={{ fontWeight: 'bold' }}>Coach AI</div>
-          <div style={{ fontSize: '0.78em', opacity: 0.85 }}>
-            {profile?.full_name ? `مخصص لـ ${profile.full_name}` : 'مساعدك للامتحان الوطني'}
+        {/* Header */}
+        <div style={{
+          padding: 16,
+          background: '#2A5C82',
+          color: '#fff',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 10,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <button
+              onClick={() => setShowSidebar(s => !s)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#fff',
+                fontSize: '1.3em',
+                cursor: 'pointer',
+                padding: 4,
+              }}
+              title="إظهار/إخفاء القائمة"
+            >
+              ☰
+            </button>
+            <span style={{ fontSize: '1.4em' }}>🩺</span>
+            <div>
+              <div style={{ fontWeight: 'bold' }}>Coach AI</div>
+              <div style={{ fontSize: '0.78em', opacity: 0.85 }}>
+                {profile?.full_name ? `مخصص لـ ${profile.full_name}` : 'مساعدك للامتحان الوطني'}
+              </div>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Messages */}
-      <div style={{
-        flex: 1, padding: 20, overflowY: 'auto',
-        display: 'flex', flexDirection: 'column', gap: 15, background: '#F8FAFC',
-      }}>
-        {messages.map((msg, i) => {
-          const isEmpty = msg.role === 'assistant' && msg.content === '' && loading;
-          return (
-            <div key={i} style={{
-              alignSelf: msg.role === 'user' ? 'flex-start' : 'flex-end',
-              background: msg.role === 'user' ? '#EFF6FF' : '#fff',
-              color: '#1E293B', padding: '12px 18px', borderRadius: 12,
-              maxWidth: '78%', boxShadow: '0 2px 5px rgba(0,0,0,0.02)',
-              border: '1px solid #E2E8F0', textAlign: 'right',
-            }}>
-              <p style={{
-                margin: 0, whiteSpace: 'pre-wrap', lineHeight: 1.7, fontSize: '0.95em',
+        {/* Messages */}
+        <div style={{
+          flex: 1,
+          padding: 20,
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 15,
+          background: '#F8FAFC',
+        }}>
+          {messages.map((msg, i) => {
+            const isEmpty = msg.role === 'assistant' && msg.content === '' && loading;
+            return (
+              <div key={i} style={{
+                alignSelf: msg.role === 'user' ? 'flex-start' : 'flex-end',
+                background: msg.role === 'user' ? '#EFF6FF' : '#fff',
+                color: '#1E293B',
+                padding: '12px 18px',
+                borderRadius: 12,
+                maxWidth: '78%',
+                boxShadow: '0 2px 5px rgba(0,0,0,0.02)',
+                border: '1px solid #E2E8F0',
+                textAlign: 'right',
               }}>
-                {isEmpty ? '● ● ●' : msg.content}
-              </p>
-            </div>
-          );
-        })}
-        <div ref={bottomRef} />
-      </div>
+                <p style={{
+                  margin: 0,
+                  whiteSpace: 'pre-wrap',
+                  lineHeight: 1.7,
+                  fontSize: '0.95em',
+                }}>
+                  {isEmpty ? '● ● ●' : msg.content}
+                </p>
+              </div>
+            );
+          })}
+          <div ref={bottomRef} />
+        </div>
 
-      {/* Input */}
-      <form onSubmit={handleSend} style={{
-        padding: 15, borderTop: '1px solid #E2E8F0', display: 'flex', gap: 10,
-      }}>
-        <input
-          type="text"
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          placeholder="اكتب سؤالك الطبي..."
-          disabled={loading}
-          style={{
-            flex: 1, padding: 12, borderRadius: 8,
-            border: '1px solid #E2E8F0', outline: 'none', fontSize: '0.95em',
-          }}
-        />
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            background: loading ? '#94A3B8' : '#2A5C82',
-            color: '#fff', border: 'none', padding: '0 24px',
-            borderRadius: 8, fontWeight: 'bold',
-            cursor: loading ? 'not-allowed' : 'pointer',
-          }}
-        >
-          {loading ? '...' : 'إرسال'}
-        </button>
-      </form>
+        {/* Input */}
+        <form onSubmit={handleSend} style={{
+          padding: 15,
+          borderTop: '1px solid #E2E8F0',
+          display: 'flex',
+          gap: 10,
+        }}>
+          <input
+            type="text"
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            placeholder="اكتب سؤالك الطبي..."
+            disabled={loading}
+            style={{
+              flex: 1,
+              padding: 12,
+              borderRadius: 8,
+              border: '1px solid #E2E8F0',
+              outline: 'none',
+              fontSize: '0.95em',
+            }}
+          />
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              background: loading ? '#94A3B8' : '#2A5C82',
+              color: '#fff',
+              border: 'none',
+              padding: '0 24px',
+              borderRadius: 8,
+              fontWeight: 'bold',
+              cursor: loading ? 'not-allowed' : 'pointer',
+            }}
+          >
+            {loading ? '...' : 'إرسال'}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
