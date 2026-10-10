@@ -23,9 +23,9 @@ export default function ChatCoach({ profile, session }) {
   const userId = session?.user?.id;
 
   const welcomeMessage = {
-    role: 'assistant',
-    content: `أهلاً ${profile?.full_name || 'يا زميلي'}! 👋\nأنا كوتش AI، جاهز لمساعدتك. اسألني أي سؤال طبي، وسأبحث في ملفاتك المرفوعة إن كانت ذات صلة.`,
-  };
+  role: 'assistant',
+  content: `جاهز. اسألني أي سؤال طبي.`,
+};
 
   useEffect(() => {
     if (!userId) return;

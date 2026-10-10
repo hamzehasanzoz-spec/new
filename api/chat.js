@@ -38,13 +38,12 @@ export default async function handler(req) {
     });
   }
 
-  // ✅ أسماء صحيحة من قائمة OpenRouter الحالية
+  // ✅ ترتيب مُحسّن: الذكاء أولاً، ثم السرعة
   const models = [
-    'google/gemma-4-26b-a4b-it:free',
-    'google/gemma-4-31b-it:free',
-    'nvidia/nemotron-3-super-120b-a12b:free',
-    'nvidia/nemotron-3-ultra-550b-a55b:free',
-    'apodex/apodex-1.1-mini:free',
+    'nvidia/nemotron-3-super-120b-a12b:free',   // ⭐ ذكي + متوسط السرعة
+    'google/gemma-4-31b-it:free',               // ⭐ Google، جودة عالية
+    'google/gemma-4-26b-a4b-it:free',           // ⚡ سريع جدًا
+    'nvidia/nemotron-3-ultra-550b-a55b:free',   // احتياطي قوي
   ];
 
   const errors = [];
@@ -56,15 +55,15 @@ export default async function handler(req) {
         headers: {
           Authorization: `Bearer ${key}`,
           'Content-Type': 'application/json',
-          'HTTP-Referer': process.env.SITE_URL || 'https://new-udf9.vercel.app',
+          'HTTP-Referer': process.env.SITE_URL || 'https://new-theta-five-73.vercel.app',
           'X-Title': 'Coach AI',
         },
         body: JSON.stringify({
           model,
           messages,
-          temperature: 0.4,
-          top_p: 0.9,
-          max_tokens: 2500,
+          temperature: 0.3,       // أدق للطب
+          top_p: 0.85,
+          max_tokens: 4000,       // ✅ أكثر من كافٍ لـ 5 أسئلة مفصلة
           stream: true,
         }),
       });
