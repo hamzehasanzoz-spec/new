@@ -91,7 +91,7 @@ export default async function handler(req, res) {
   }
 
   // 4. تحقق من المتغيرات
-  const voyageKey = process.env.VOYAGE_API_KEY;
+  const voyageKey = process.env.VITE_VOYAGE_API_KEY;
   if (!voyageKey) {
     return res.status(500).json({ error: 'VOYAGE_API_KEY مفقود' });
   }
