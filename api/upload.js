@@ -1,4 +1,4 @@
-export const config = { runtime: 'edge' };
+
 
 // تقطيع النص
 function chunkText(text, chunkSize = 1000, overlap = 150) {
