@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { buildSystemPrompt } from '../lib/buildSystemPrompt';
+import { supabase } from '../lib/supabase';
 import {
   createConversation,
   listConversations,
   loadMessages,
   saveMessage,
-  updateConversationTitle,
   deleteConversation,
 } from '../lib/chatStorage';
 import ConversationsSidebar from './ConversationsSidebar';
@@ -17,26 +17,30 @@ export default function ChatCoach({ profile, session }) {
   const [conversationId, setConversationId] = useState(null);
   const [conversations, setConversations] = useState([]);
   const [showSidebar, setShowSidebar] = useState(true);
+  const [ragStatus, setRagStatus] = useState(''); // يعرض حالة البحث
   const bottomRef = useRef(null);
 
   const userId = session?.user?.id;
 
-  // استقبال رسالة ترحيب عند بدء محادثة جديدة
   const welcomeMessage = {
     role: 'assistant',
-    content: `أهلاً ${profile?.full_name || 'يا زميلي'}! 👋\nأنا كوتش AI، جاهز لمساعدتك. اسألني أي سؤال طبي.`,
+    content: `أهلاً ${profile?.full_name || 'يا زميلي'}! 👋\nأنا كوتش AI، جاهز لمساعدتك. اسألني أي سؤال طبي، وسأبحث في ملفاتك المرفوعة إن كانت ذات صلة.`,
   };
 
-  // 1. جلب قائمة المحادثات عند التحميل
   useEffect(() => {
     if (!userId) return;
     refreshConversations();
   }, [userId]);
 
-  // 2. تمرير تلقائي
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
+
+  useEffect(() => {
+    if (messages.length === 0 && !conversationId) {
+      setMessages([welcomeMessage]);
+    }
+  }, []);
 
   const refreshConversations = async () => {
     try {
@@ -47,13 +51,11 @@ export default function ChatCoach({ profile, session }) {
     }
   };
 
-  // بدء محادثة جديدة (لا ننشئها في DB حتى تُرسل أول رسالة)
   const handleNewChat = () => {
     setConversationId(null);
     setMessages([welcomeMessage]);
   };
 
-  // تحميل محادثة قديمة
   const handleSelectConversation = async (id) => {
     if (id === conversationId) return;
     try {
@@ -72,7 +74,6 @@ export default function ChatCoach({ profile, session }) {
     }
   };
 
-  // حذف محادثة
   const handleDeleteConversation = async (id) => {
     try {
       await deleteConversation(id);
@@ -86,13 +87,6 @@ export default function ChatCoach({ profile, session }) {
     }
   };
 
-  // عند الدخول بدون محادثة حالية، نعرض الترحيب
-  useEffect(() => {
-    if (messages.length === 0 && !conversationId) {
-      setMessages([welcomeMessage]);
-    }
-  }, []);
-
   const updateLastAssistant = (content) => {
     setMessages(prev => {
       if (prev.length === 0) return prev;
@@ -104,6 +98,30 @@ export default function ChatCoach({ profile, session }) {
     });
   };
 
+  // ⭐ دالة جديدة: البحث في ملفات الطالب
+  const searchUserDocuments = async (query) => {
+    try {
+      const { data: { session: freshSession } } = await supabase.auth.getSession();
+      if (!freshSession?.access_token) return [];
+
+      const res = await fetch('/api/search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${freshSession.access_token}`,
+        },
+        body: JSON.stringify({ query, matchCount: 5, threshold: 0.35 }),
+      });
+
+      if (!res.ok) return [];
+      const data = await res.json();
+      return data.matches || [];
+    } catch (err) {
+      console.error('Search error:', err);
+      return [];
+    }
+  };
+
   const handleSend = async (e) => {
     e.preventDefault();
     if (!input.trim() || loading) return;
@@ -111,7 +129,6 @@ export default function ChatCoach({ profile, session }) {
     const userMessage = input.trim();
     setInput('');
 
-    // إذا لم تكن هناك محادثة، ننشئها الآن
     let currentConvId = conversationId;
     if (!currentConvId) {
       try {
@@ -131,8 +148,8 @@ export default function ChatCoach({ profile, session }) {
     const withUser = [...messages, userMsg];
     setMessages([...withUser, { role: 'assistant', content: '' }]);
     setLoading(true);
+    setRagStatus('');
 
-    // حفظ رسالة المستخدم في DB
     try {
       await saveMessage(currentConvId, 'user', userMessage);
     } catch (err) {
@@ -141,7 +158,28 @@ export default function ChatCoach({ profile, session }) {
 
     let reader = null;
     try {
-      const systemPrompt = buildSystemPrompt(profile);
+      // ⭐ 1. البحث في ملفات الطالب
+      setRagStatus('📚 جاري البحث في ملفاتك...');
+      const relevantChunks = await searchUserDocuments(userMessage);
+
+      // ⭐ 2. بناء System Prompt مع النتائج
+      let systemPrompt = buildSystemPrompt(profile);
+
+      if (relevantChunks.length > 0) {
+        setRagStatus(`📚 وجدت ${relevantChunks.length} جزء ذو صلة في ملفاتك`);
+        systemPrompt += '\n\n## مقاطع من ملفات الطالب المرفوعة (استخدمها كمصدر أساسي):';
+        systemPrompt += '\nالمقاطع التالية مأخوذة من ملفات رفعها الطالب. **اعتمد عليها أولًا** في إجابتك، واذكر اسم الملف المصدر.';
+        
+        relevantChunks.forEach((chunk, i) => {
+          systemPrompt += `\n\n### مقطع ${i + 1} — من ملف "${chunk.filename}" (تشابه: ${(chunk.similarity * 100).toFixed(0)}%):\n${chunk.content}`;
+        });
+        
+        systemPrompt += '\n\n**مهم:** إذا كانت المقاطع أعلاه تحتوي على الإجابة، استخدمها كأساس واذكر اسم الملف. إذا لم تكن كافية، أكمل من معرفتك العامة مع التنويه.';
+      } else {
+        setRagStatus('');
+      }
+
+      // 3. إرسال للـ chat
       const recent = withUser.slice(-10);
       const payload = [
         { role: 'system', content: systemPrompt },
@@ -165,12 +203,9 @@ export default function ChatCoach({ profile, session }) {
         try {
           const errJson = await res.json();
           if (errJson.error) errMsg = errJson.error;
-          if (errJson.details) errMsg += '\n' + errJson.details.join('\n');
         } catch {}
         throw new Error(errMsg);
       }
-
-      if (!res.body) throw new Error('لا يوجد بث من الخدمة');
 
       reader = res.body.getReader();
       const decoder = new TextDecoder();
@@ -207,7 +242,6 @@ export default function ChatCoach({ profile, session }) {
       if (!gotContent) {
         updateLastAssistant('⚠️ لم يصل رد من النموذج.');
       } else {
-        // حفظ رد المساعد في DB
         try {
           await saveMessage(currentConvId, 'assistant', assistantText);
         } catch (err) {
@@ -226,6 +260,7 @@ export default function ChatCoach({ profile, session }) {
     } finally {
       try { reader?.releaseLock(); } catch {}
       setLoading(false);
+      setRagStatus('');
     }
   };
 
@@ -237,7 +272,6 @@ export default function ChatCoach({ profile, session }) {
       gap: 0,
       direction: 'rtl',
     }}>
-      {/* Sidebar */}
       {showSidebar && (
         <ConversationsSidebar
           conversations={conversations}
@@ -248,7 +282,6 @@ export default function ChatCoach({ profile, session }) {
         />
       )}
 
-      {/* Chat Area */}
       <div style={{
         flex: 1,
         background: '#fff',
@@ -259,7 +292,6 @@ export default function ChatCoach({ profile, session }) {
         height: '75vh',
         overflow: 'hidden',
       }}>
-        {/* Header */}
         <div style={{
           padding: 16,
           background: '#2A5C82',
@@ -273,12 +305,8 @@ export default function ChatCoach({ profile, session }) {
             <button
               onClick={() => setShowSidebar(s => !s)}
               style={{
-                background: 'transparent',
-                border: 'none',
-                color: '#fff',
-                fontSize: '1.3em',
-                cursor: 'pointer',
-                padding: 4,
+                background: 'transparent', border: 'none', color: '#fff',
+                fontSize: '1.3em', cursor: 'pointer', padding: 4,
               }}
               title="إظهار/إخفاء القائمة"
             >
@@ -292,17 +320,16 @@ export default function ChatCoach({ profile, session }) {
               </div>
             </div>
           </div>
+          {ragStatus && (
+            <div style={{ fontSize: '0.82em', opacity: 0.9 }}>
+              {ragStatus}
+            </div>
+          )}
         </div>
 
-        {/* Messages */}
         <div style={{
-          flex: 1,
-          padding: 20,
-          overflowY: 'auto',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 15,
-          background: '#F8FAFC',
+          flex: 1, padding: 20, overflowY: 'auto',
+          display: 'flex', flexDirection: 'column', gap: 15, background: '#F8FAFC',
         }}>
           {messages.map((msg, i) => {
             const isEmpty = msg.role === 'assistant' && msg.content === '' && loading;
@@ -310,19 +337,12 @@ export default function ChatCoach({ profile, session }) {
               <div key={i} style={{
                 alignSelf: msg.role === 'user' ? 'flex-start' : 'flex-end',
                 background: msg.role === 'user' ? '#EFF6FF' : '#fff',
-                color: '#1E293B',
-                padding: '12px 18px',
-                borderRadius: 12,
-                maxWidth: '78%',
-                boxShadow: '0 2px 5px rgba(0,0,0,0.02)',
-                border: '1px solid #E2E8F0',
-                textAlign: 'right',
+                color: '#1E293B', padding: '12px 18px', borderRadius: 12,
+                maxWidth: '78%', boxShadow: '0 2px 5px rgba(0,0,0,0.02)',
+                border: '1px solid #E2E8F0', textAlign: 'right',
               }}>
                 <p style={{
-                  margin: 0,
-                  whiteSpace: 'pre-wrap',
-                  lineHeight: 1.7,
-                  fontSize: '0.95em',
+                  margin: 0, whiteSpace: 'pre-wrap', lineHeight: 1.7, fontSize: '0.95em',
                 }}>
                   {isEmpty ? '● ● ●' : msg.content}
                 </p>
@@ -332,12 +352,8 @@ export default function ChatCoach({ profile, session }) {
           <div ref={bottomRef} />
         </div>
 
-        {/* Input */}
         <form onSubmit={handleSend} style={{
-          padding: 15,
-          borderTop: '1px solid #E2E8F0',
-          display: 'flex',
-          gap: 10,
+          padding: 15, borderTop: '1px solid #E2E8F0', display: 'flex', gap: 10,
         }}>
           <input
             type="text"
@@ -346,12 +362,8 @@ export default function ChatCoach({ profile, session }) {
             placeholder="اكتب سؤالك الطبي..."
             disabled={loading}
             style={{
-              flex: 1,
-              padding: 12,
-              borderRadius: 8,
-              border: '1px solid #E2E8F0',
-              outline: 'none',
-              fontSize: '0.95em',
+              flex: 1, padding: 12, borderRadius: 8,
+              border: '1px solid #E2E8F0', outline: 'none', fontSize: '0.95em',
             }}
           />
           <button
@@ -359,11 +371,8 @@ export default function ChatCoach({ profile, session }) {
             disabled={loading}
             style={{
               background: loading ? '#94A3B8' : '#2A5C82',
-              color: '#fff',
-              border: 'none',
-              padding: '0 24px',
-              borderRadius: 8,
-              fontWeight: 'bold',
+              color: '#fff', border: 'none', padding: '0 24px',
+              borderRadius: 8, fontWeight: 'bold',
               cursor: loading ? 'not-allowed' : 'pointer',
             }}
           >
