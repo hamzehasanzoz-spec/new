@@ -9,7 +9,7 @@ import {
   computeAccuracy,
   formatWeek,
 } from '../lib/weeklyCheckin';
-
+import { logActivity } from '../lib/streak';
 const MOODS = [
   { value: 'ممتاز', emoji: '😄', color: '#10B981' },
   { value: 'جيد', emoji: '🙂', color: '#2A5C82' },
@@ -83,6 +83,11 @@ export default function WeeklyCheckin({ session, profile }) {
         challenges: form.challenges.trim() || null,
         achievements: form.achievements.trim() || null,
       });
+         // 🔥 سجّل النشاط
+      const { logActivity } = await import('../lib/streak');
+      await logActivity(userId, 'weekly');
+      
+      alert('✅ تم حفظ التقرير');
       alert('✅ تم حفظ التقرير');
       setStage('list');
       setForm({

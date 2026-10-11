@@ -10,6 +10,7 @@ import {
   deleteConversation,
 } from '../lib/chatStorage';
 import ConversationsSidebar from './ConversationsSidebar';
+import { logActivity } from '../lib/streak';
 
 export default function ChatCoach({ profile, session }) {
   const [messages, setMessages] = useState([]);
@@ -162,6 +163,12 @@ export default function ChatCoach({ profile, session }) {
     } catch (err) {
       console.error('فشل حفظ رسالة المستخدم:', err);
     }
+          try {
+        await saveMessage(currentConvId, 'user', userMessage);
+        await logActivity(userId, 'chat');
+      } catch (err) {
+        console.error('فشل حفظ رسالة المستخدم:', err);
+      }
 
     let reader = null;
     try {

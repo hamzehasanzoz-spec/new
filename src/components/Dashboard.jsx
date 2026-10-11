@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { getDashboardStats } from '../lib/dashboardStats';
+import StreakCard from './StreakCard';
 
 export default function Dashboard({ profile, session }) {
   const [stats, setStats] = useState(null);
@@ -110,6 +111,11 @@ export default function Dashboard({ profile, session }) {
           </p>
         )}
       </div>
+            {/* 🔥 Streak Card */}
+      <div style={{ marginBottom: 24 }}>
+        <StreakCard userId={session?.user?.id} />
+      </div>
+
 
       {/* ═══ 4 بطاقات إحصائية ═══ */}
       <div style={{
@@ -143,6 +149,7 @@ export default function Dashboard({ profile, session }) {
           color="#8B5CF6"
         />
       </div>
+      
 
       {/* ═══ Recommendation ═══ */}
       {recommendation && (
