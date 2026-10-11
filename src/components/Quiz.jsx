@@ -6,7 +6,7 @@ const SUBJECTS = [
   'الجراحة العامة', 'الأطفال', 'النسائية والتوليد', 'الفارماكولوجي', 'الباثولوجي',
   'المايكروبيولوجي', 'الفيزيولوجي',
 ];
-
+import { logActivity } from '../lib/streak';
 const DIFFICULTIES = ['سهل', 'متوسط', 'صعب'];
 const NUM_OPTIONS = [5, 10, 15, 20];
 
@@ -110,12 +110,20 @@ export default function Quiz({ profile, setActiveWork }) {
     console.error('فشل حفظ الأخطاء:', err);
   }
 
-      setStage('results');
+          setStage('results');
     if (setActiveWork) setActiveWork(null);
-  };
+    
+    // 🔥 سجّل النشاط
+    try {
+      const { data: { session: s } } = await supabase.auth.getSession();
+      if (s?.user?.id) await logActivity(s.user.id, 'quiz');
+    } catch (err) {
+      console.error(err);
+    }
+  };                                
 
   // ─── إعادة ───
-    const handleReset = () => {
+  const handleReset = () => {
     if (setActiveWork) setActiveWork(null);
     setStage('setup');
     setQuestions([]);

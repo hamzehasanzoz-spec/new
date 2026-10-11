@@ -7,6 +7,7 @@ const SUBJECTS = [
   'الجراحة العامة', 'الأطفال', 'النسائية والتوليد', 'الفارماكولوجي',
   'الباثولوجي', 'المايكروبيولوجي', 'الفيزيولوجي', 'التشريح',
 ];
+import { logActivity } from '../lib/streak';
 
 const EXAM_PRESETS = [
   { label: 'قصير (30 سؤال - 45 د)', numQuestions: 30, minutes: 45 },
@@ -236,6 +237,13 @@ export default function Exam({ profile, session, setActiveWork }) {
         setResult({ score, total, percentage, timeUsed });
     setStage('results');
     if (setActiveWork) setActiveWork(null);
+     // 🔥 سجّل النشاط
+    try {
+      const { data: { session: s } } = await supabase.auth.getSession();
+      if (s?.user?.id) await logActivity(s.user.id, 'exam');
+    } catch (err) {
+      console.error(err);
+    }
   };
 
     const handleReset = () => {
@@ -797,4 +805,5 @@ const selectStyle = {
   border: '1px solid #CBD5E1', fontSize: '0.95em',
   fontFamily: 'inherit', background: '#fff',
   cursor: 'pointer', boxSizing: 'border-box',
+  
 };
