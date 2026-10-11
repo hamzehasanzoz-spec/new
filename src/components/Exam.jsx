@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
+import { useIsMobile } from '../hooks/useMediaQuery';
 import { saveManyWrongAnswers } from '../lib/wrongAnswers';
-
 const SUBJECTS = [
   'الداخلية العصبية', 'الداخلية القلبية', 'الداخلية الهضمية', 'الداخلية الصدرية',
   'الجراحة العامة', 'الأطفال', 'النسائية والتوليد', 'الفارماكولوجي',
@@ -17,6 +17,7 @@ const EXAM_PRESETS = [
 const BATCH_SIZE = 10;
 
 export default function Exam({ profile, session, setActiveWork }) {
+  const isMobile = useIsMobile();
   const [stage, setStage] = useState('setup');
   const [error, setError] = useState('');
 
@@ -423,7 +424,7 @@ export default function Exam({ profile, session, setActiveWork }) {
         {/* الشريط العلوي */}
         <div style={{
           background: '#fff', border: '1px solid #E2E8F0', borderRadius: 14,
-          padding: 16, marginBottom: 12,
+          padding: isMobile ? 12 : 16, marginBottom: 12,
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           flexWrap: 'wrap', gap: 12,
         }}>
@@ -486,7 +487,11 @@ export default function Exam({ profile, session, setActiveWork }) {
           }} />
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 20 }}>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: isMobile ? '1fr' : '2fr 1fr',
+          gap: 20,
+        }}>
           {/* السؤال */}
           <div style={{
             background: '#fff', border: '1px solid #E2E8F0',
@@ -604,7 +609,9 @@ export default function Exam({ profile, session, setActiveWork }) {
           <div style={{
             background: '#fff', border: '1px solid #E2E8F0',
             borderRadius: 14, padding: 16,
-            alignSelf: 'flex-start', position: 'sticky', top: 20,
+            alignSelf: 'flex-start',
+            position: isMobile ? 'static' : 'sticky',
+            top: isMobile ? 'auto' : 20,
           }}>
             <div style={{
               fontSize: '0.85em', fontWeight: 'bold',
