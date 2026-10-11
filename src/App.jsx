@@ -74,9 +74,9 @@ export default function App() {
   };
 
   // 🚦 تغيير التبويب مع الحماية
-  const switchTab = (newTab) => {
+   const switchTab = (newTab) => {
+    console.log('🚦 switchTab called:', { newTab, activeTab, activeWork });
     if (newTab === activeTab) return;
-
     if (activeWork) {
       const confirmed = window.confirm(
         `⚠️ أنت في وسط ${activeWork.type}.\n\n` +
