@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
-
+import { saveManyWrongAnswers } from '../lib/wrongAnswers';
 const SUBJECTS = [
   'الداخلية العصبية', 'الداخلية القلبية', 'الداخلية الهضمية', 'الداخلية الصدرية',
   'الجراحة العامة', 'الأطفال', 'النسائية والتوليد', 'الفارماكولوجي', 'الباثولوجي',
@@ -75,13 +75,42 @@ export default function Quiz({ profile }) {
   };
 
   // ─── إنهاء الاختبار ───
-  const handleSubmit = () => {
-    const unanswered = answers.filter(a => a === -1).length;
-    if (unanswered > 0) {
-      if (!confirm(`لديك ${unanswered} سؤال غير مُجاب. إنهاء الاختبار؟`)) return;
+  const handleSubmit = async () => {
+  const unanswered = answers.filter(a => a === -1).length;
+  if (unanswered > 0) {
+    if (!confirm(`لديك ${unanswered} سؤال غير مُجاب. إنهاء الاختبار؟`)) return;
+  }
+
+  // حفظ الأسئلة الخاطئة في بنك الأخطاء
+  try {
+    const wrongOnes = questions
+      .map((q, i) => ({ q, i, userAns: answers[i] }))
+      .filter(({ q, i }) => answers[i] !== q.correct)
+      .map(({ q, i, userAns }) => ({
+        question: q.q,
+        options: q.options,
+        correctIndex: q.correct,
+        userAnswerIndex: userAns,
+        explanation: q.explanation,
+      }));
+
+    if (wrongOnes.length > 0) {
+      const { data: { session: freshSession } } = await supabase.auth.getSession();
+      if (freshSession?.user?.id) {
+        await saveManyWrongAnswers(
+          freshSession.user.id,
+          wrongOnes,
+          subject,
+          topic
+        );
+      }
     }
-    setStage('results');
-  };
+  } catch (err) {
+    console.error('فشل حفظ الأخطاء:', err);
+  }
+
+  setStage('results');
+};
 
   // ─── إعادة ───
   const handleReset = () => {

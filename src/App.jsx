@@ -6,6 +6,7 @@ import ChatCoach from './components/ChatCoach';
 import Profile from './components/Profile';
 import MyFiles from './components/MyFiles';
 import Quiz from './components/Quiz';
+import QuizBank from './components/QuizBank';
 
 export default function App() {
   const [session, setSession] = useState(null);
@@ -185,6 +186,20 @@ export default function App() {
 >
   🎯 اختبارات
 </button>
+<button
+  onClick={() => setActiveTab('bank')}
+  style={{
+    background: activeTab === 'bank' ? '#2A5C82' : 'transparent',
+    color: activeTab === 'bank' ? '#fff' : '#1E293B',
+    border: 'none',
+    padding: '8px 16px',
+    borderRadius: 8,
+    cursor: 'pointer',
+    fontWeight: 'bold',
+  }}
+>
+  📚 بنك الأخطاء
+</button>
           <button
             onClick={() => setActiveTab('profile')}
             style={{
@@ -221,6 +236,7 @@ export default function App() {
         {activeTab === 'chat' && <ChatCoach profile={profile} session={session} />}
         {activeTab === 'files' && <MyFiles session={session} />}
         {activeTab === 'quiz' && <Quiz profile={profile} />}
+        {activeTab === 'bank' && <QuizBank session={session} />}
         {activeTab === 'profile' && (
           <Profile
             profile={profile}
