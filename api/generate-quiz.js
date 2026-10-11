@@ -120,15 +120,20 @@ export default async function handler(req, res) {
 - شرح كل سؤال في سطر واحد فقط.
 - الأسئلة بصيغة سريرية عملية إن أمكن.${context ? `\n\n## مقاطع من ملفات الطالب (استخدمها كمصدر أساسي للأسئلة)\n\n${context}` : ''}`;
 
-  const userPrompt = `أنشئ ${numQuestions} سؤال MCQ${subject ? ` في مادة **${subject}**` : ''}${topic ? ` عن موضوع "${topic}"` : ''}.
+    const userPrompt = `أنشئ ${numQuestions} سؤال MCQ${subject ? ` في مادة **${subject}**` : ''}${topic ? ` عن موضوع "${topic}"` : ''}.
 مستوى الصعوبة: ${difficulty}.
-التزم بـ ${numQuestions} سؤال بالضبط. أعد JSON فقط.`;
+
+⚠️ **مهم جدًا:**
+- التزم بـ **${numQuestions} سؤال بالضبط** — لا أقل ولا أكثر.
+- عدّ الأسئلة في JSON قبل الإرجاع.
+- إذا وصلت إلى ${numQuestions} سؤال، **توقف**.
+- أعد JSON فقط بدون أي نص خارجه.`;
 
   // ── 3. استدعاء النماذج ──
-  const models = [
-    'nvidia/nemotron-3-super-120b-a12b:free',
-    'google/gemma-4-31b-it:free',
-    'nvidia/nemotron-3-ultra-550b-a55b:free',
+    const models = [
+    'nvidia/nemotron-3-ultra-550b-a55b:free',   // الأقوى (بطيء لكن دقيق)
+    'nvidia/nemotron-3-super-120b-a12b:free',   // متوازن
+    'google/gemma-4-31b-it:free',               // احتياطي
   ];
 
   let lastError = '';
@@ -150,7 +155,7 @@ export default async function handler(req, res) {
             { role: 'user', content: userPrompt },
           ],
           temperature: 0.5,
-          max_tokens: 4000,
+          max_tokens: 10000,
         }),
       });
 

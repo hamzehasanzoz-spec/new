@@ -556,22 +556,37 @@ export default function Exam({ profile, session }) {
                 }}
               >
                 ← السابق
-              </button>
-              <button
-                onClick={next}
-                disabled={currentQ === questions.length - 1}
-                style={{
-                  padding: '12px 24px',
-                  background: currentQ === questions.length - 1 ? '#F1F5F9' : '#7C3AED',
-                  color: currentQ === questions.length - 1 ? '#CBD5E1' : '#fff',
-                  border: 'none',
-                  borderRadius: 8,
-                  cursor: currentQ === questions.length - 1 ? 'not-allowed' : 'pointer',
-                  fontWeight: 'bold',
-                }}
-              >
-                التالي →
-              </button>
+              </button>              {currentQ === questions.length - 1 ? (
+                <button
+                  onClick={handleSubmit}
+                  style={{
+                    padding: '12px 24px',
+                    background: '#10B981',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 8,
+                    cursor: 'pointer',
+                    fontWeight: 'bold',
+                  }}
+                >
+                  ✅ إنهاء وتسليم
+                </button>
+              ) : (
+                <button
+                  onClick={next}
+                  style={{
+                    padding: '12px 24px',
+                    background: '#7C3AED',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 8,
+                    cursor: 'pointer',
+                    fontWeight: 'bold',
+                  }}
+                >
+                  التالي →
+                </button>
+              )}
             </div>
           </div>
 
