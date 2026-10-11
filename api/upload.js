@@ -18,41 +18,40 @@ function decodeJWT(token) {
   try {
     const parts = token.split('.');
     if (parts.length !== 3) return null;
-    const base64Url = parts[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
     const pad = base64.length % 4;
     const padded = pad ? base64 + '='.repeat(4 - pad) : base64;
-    const jsonPayload = Buffer.from(padded, 'base64').toString('utf-8');
-    return JSON.parse(jsonPayload);
+    return JSON.parse(Buffer.from(padded, 'base64').toString('utf-8'));
   } catch {
     return null;
   }
 }
 
+// ⭐ توليد embeddings دفعة واحدة عبر Jina AI
 async function embedBatch(texts, apiKey) {
-  const r = await fetch('https://api.voyageai.com/v1/embeddings', {
+  const r = await fetch('https://api.jina.ai/v1/embeddings', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: 'voyage-multilingual-2',
+      model: 'jina-embeddings-v3',
       input: texts,
-      input_type: 'document',
+      task: 'retrieval.passage',
+      dimensions: 1024,
     }),
   });
   const data = await r.json();
   if (!r.ok) {
     throw new Error(
-      data?.detail || data?.error?.message || `Voyage HTTP ${r.status}`
+      data?.detail || data?.error?.message || `Jina HTTP ${r.status}`
     );
   }
   return data.data.map(d => d.embedding);
 }
 
 export default async function handler(req, res) {
-  // CORS/OPTIONS
   if (req.method === 'OPTIONS') {
     res.status(200).end();
     return;
@@ -62,7 +61,6 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // 1. التوكن من Authorization header (Node.js style)
   const authHeader = req.headers.authorization || '';
   const accessToken = authHeader.replace('Bearer ', '').trim();
 
@@ -70,7 +68,6 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: 'Authorization header مفقود' });
   }
 
-  // 2. فك التوكن
   const payload = decodeJWT(accessToken);
   if (!payload || !payload.sub) {
     return res.status(401).json({ error: 'توكن غير صالح' });
@@ -81,8 +78,6 @@ export default async function handler(req, res) {
   }
 
   const userId = payload.sub;
-
-  // 3. جسم الطلب (يُحلَّل تلقائيًا في Node.js Serverless)
   const body = req.body || {};
   const { filename, text, fileSize, fileType } = body;
 
@@ -90,10 +85,9 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'filename and text مطلوبان' });
   }
 
-  // 4. تحقق من المتغيرات
-  const voyageKey = process.env.VOYAGE_API_KEY;
-  if (!voyageKey) {
-    return res.status(500).json({ error: 'VOYAGE_API_KEY مفقود' });
+  const jinaKey = process.env.JINA_API_KEY;
+  if (!jinaKey) {
+    return res.status(500).json({ error: 'JINA_API_KEY مفقود' });
   }
 
   const supabaseUrl = process.env.VITE_SUPABASE_URL;
@@ -113,7 +107,7 @@ export default async function handler(req, res) {
   };
 
   try {
-    // 5. إنشاء document
+    // 1. إنشاء document
     const docRes = await fetch(`${supabaseUrl}/rest/v1/documents`, {
       method: 'POST',
       headers: { ...apiHeaders, Prefer: 'return=representation' },
@@ -131,22 +125,27 @@ export default async function handler(req, res) {
     }
     const documentId = docArr[0].id;
 
-    // 6. تقطيع النص
+    // 2. تقطيع النص
     const chunks = chunkText(text);
     if (chunks.length === 0) {
       throw new Error('لم يتم استخراج نص كافٍ');
     }
 
-    // 7. توليد embeddings
-    const BATCH_SIZE = 128;
+    // 3. توليد embeddings على دفعات
+    // Jina يدعم حتى 128 نص في الطلب الواحد
+    const BATCH_SIZE = 64;
     const allEmbeddings = [];
     for (let i = 0; i < chunks.length; i += BATCH_SIZE) {
       const batch = chunks.slice(i, i + BATCH_SIZE);
-      const embeddings = await embedBatch(batch, voyageKey);
+      const embeddings = await embedBatch(batch, jinaKey);
       allEmbeddings.push(...embeddings);
+      // تأخير بسيط لتجنّب rate limits
+      if (i + BATCH_SIZE < chunks.length) {
+        await new Promise(r => setTimeout(r, 300));
+      }
     }
 
-    // 8. إدراج chunks
+    // 4. بناء صفوف الإدراج
     const chunkRows = chunks.map((content, i) => ({
       document_id: documentId,
       chunk_index: i,
@@ -154,6 +153,7 @@ export default async function handler(req, res) {
       embedding: `[${allEmbeddings[i].join(',')}]`,
     }));
 
+    // 5. إدراج chunks
     const insRes = await fetch(`${supabaseUrl}/rest/v1/document_chunks`, {
       method: 'POST',
       headers: { ...apiHeaders, Prefer: 'return=minimal' },
@@ -164,7 +164,7 @@ export default async function handler(req, res) {
       throw new Error(`فشل إدراج الأجزاء: ${errTxt.slice(0, 200)}`);
     }
 
-    // 9. تحديث الحالة
+    // 6. تحديث الحالة
     await fetch(`${supabaseUrl}/rest/v1/documents?id=eq.${documentId}`, {
       method: 'PATCH',
       headers: apiHeaders,
@@ -179,6 +179,21 @@ export default async function handler(req, res) {
 
   } catch (err) {
     console.error('Upload error:', err);
+
+    // تحديث الوثيقة بحالة الفشل إذا أمكن
+    if (typeof documentId !== 'undefined') {
+      try {
+        await fetch(`${supabaseUrl}/rest/v1/documents?id=eq.${documentId}`, {
+          method: 'PATCH',
+          headers: apiHeaders,
+          body: JSON.stringify({
+            status: 'failed',
+            error_message: err.message,
+          }),
+        });
+      } catch {}
+    }
+
     return res.status(500).json({ error: err.message });
   }
 }

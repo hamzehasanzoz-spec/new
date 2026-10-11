@@ -11,6 +11,30 @@ function decodeJWT(token) {
   }
 }
 
+// ⭐ توليد embedding للسؤال عبر Jina AI
+async function embedQuery(text, apiKey) {
+  const r = await fetch('https://api.jina.ai/v1/embeddings', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: 'jina-embeddings-v3',
+      input: [text],
+      task: 'retrieval.query',
+      dimensions: 1024,
+    }),
+  });
+  const data = await r.json();
+  if (!r.ok) {
+    throw new Error(
+      data?.detail || data?.error?.message || `Jina HTTP ${r.status}`
+    );
+  }
+  return data.data[0].embedding;
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -33,32 +57,14 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'query مطلوب (3 أحرف على الأقل)' });
   }
 
-  const voyageKey = process.env.VOYAGE_API_KEY;
-  if (!voyageKey) {
-    return res.status(500).json({ error: 'VOYAGE_API_KEY مفقود' });
+  const jinaKey = process.env.JINA_API_KEY;
+  if (!jinaKey) {
+    return res.status(500).json({ error: 'JINA_API_KEY مفقود' });
   }
 
   try {
     // 1. توليد embedding للسؤال
-    const embRes = await fetch('https://api.voyageai.com/v1/embeddings', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${voyageKey}`,
-      },
-      body: JSON.stringify({
-        model: 'voyage-multilingual-2',
-        input: [query],
-        input_type: 'query',
-      }),
-    });
-
-    const embData = await embRes.json();
-    if (!embRes.ok) {
-      throw new Error(embData?.detail || 'فشل توليد embedding للسؤال');
-    }
-
-    const queryEmbedding = embData.data[0].embedding;
+    const queryEmbedding = await embedQuery(query, jinaKey);
 
     // 2. البحث في قاعدة البيانات
     const supabaseUrl = process.env.VITE_SUPABASE_URL;
