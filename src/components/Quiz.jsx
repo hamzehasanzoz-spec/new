@@ -10,7 +10,7 @@ const SUBJECTS = [
 const DIFFICULTIES = ['سهل', 'متوسط', 'صعب'];
 const NUM_OPTIONS = [5, 10, 15, 20];
 
-export default function Quiz({ profile }) {
+export default function Quiz({ profile, setActiveWork }) {
   const [stage, setStage] = useState('setup'); // setup | loading | running | results
   const [error, setError] = useState('');
   
@@ -58,7 +58,8 @@ export default function Quiz({ profile }) {
       setQuestions(data.questions);
       setAnswers(new Array(data.questions.length).fill(-1));
       setSourcesUsed(data.sourcesUsed);
-      setStage('running');
+            setStage('running');
+      if (setActiveWork) setActiveWork({ type: 'اختبار' });
     } catch (err) {
       setError(err.message);
       setStage('setup');
@@ -109,11 +110,13 @@ export default function Quiz({ profile }) {
     console.error('فشل حفظ الأخطاء:', err);
   }
 
-  setStage('results');
-};
+      setStage('results');
+    if (setActiveWork) setActiveWork(null);
+  };
 
   // ─── إعادة ───
-  const handleReset = () => {
+    const handleReset = () => {
+    if (setActiveWork) setActiveWork(null);
     setStage('setup');
     setQuestions([]);
     setAnswers([]);

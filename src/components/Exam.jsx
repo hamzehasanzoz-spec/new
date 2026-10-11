@@ -16,7 +16,7 @@ const EXAM_PRESETS = [
 
 const BATCH_SIZE = 10;
 
-export default function Exam({ profile, session }) {
+export default function Exam({ profile, session, setActiveWork }) {
   const [stage, setStage] = useState('setup');
   const [error, setError] = useState('');
 
@@ -111,7 +111,8 @@ export default function Exam({ profile, session }) {
       setTimeLeft(preset.minutes * 60);
       setTotalTime(preset.minutes * 60);
       setBatches(prev => prev.map((b, i) => i === 0 ? { ...b, status: 'ready' } : b));
-      setStage('running');
+            setStage('running');
+      if (setActiveWork) setActiveWork({ type: 'محاكاة امتحان' });
 
       // ═══ باقي الدفعات في الخلفية ═══
       let allQuestions = [...first];
@@ -231,12 +232,14 @@ export default function Exam({ profile, session }) {
       console.error('فشل حفظ الأخطاء:', err);
     }
 
-    setResult({ score, total, percentage, timeUsed });
+        setResult({ score, total, percentage, timeUsed });
     setStage('results');
+    if (setActiveWork) setActiveWork(null);
   };
 
-  const handleReset = () => {
+    const handleReset = () => {
     clearInterval(timerRef.current);
+    if (setActiveWork) setActiveWork(null);
     setStage('setup');
     setQuestions([]);
     setAnswers([]);
