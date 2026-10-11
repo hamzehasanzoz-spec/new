@@ -8,6 +8,7 @@ import MyFiles from './components/MyFiles';
 import Quiz from './components/Quiz';
 import QuizBank from './components/QuizBank';
 import WeeklyCheckin from './components/WeeklyCheckin';
+import Exam from './components/Exam';
 
 export default function App() {
   const [session, setSession] = useState(null);
@@ -215,6 +216,20 @@ export default function App() {
 >
   📊 التقرير الأسبوعي
 </button>
+<button
+  onClick={() => setActiveTab('exam')}
+  style={{
+    background: activeTab === 'exam' ? '#7C3AED' : 'transparent',
+    color: activeTab === 'exam' ? '#fff' : '#1E293B',
+    border: 'none',
+    padding: '8px 16px',
+    borderRadius: 8,
+    cursor: 'pointer',
+    fontWeight: 'bold',
+  }}
+>
+  ⏱️ محاكاة امتحان
+</button>
           <button
             onClick={() => setActiveTab('profile')}
             style={{
@@ -252,6 +267,7 @@ export default function App() {
         {activeTab === 'files' && <MyFiles session={session} />}
         {activeTab === 'quiz' && <Quiz profile={profile} />}
         {activeTab === 'bank' && <QuizBank session={session} />}
+        {activeTab === 'exam' && <Exam profile={profile} session={session} />}
         {activeTab === 'weekly' && <WeeklyCheckin session={session} profile={profile} />}
         {activeTab === 'profile' && (
           <Profile
