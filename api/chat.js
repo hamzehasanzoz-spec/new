@@ -1,5 +1,11 @@
 export const config = { runtime: 'edge' };
 
+// ⭐ تحليل قائمة المفاتيح
+function parseKeys(envValue) {
+  if (!envValue) return [];
+  return envValue.split(',').map(k => k.trim()).filter(Boolean);
+}
+
 export default async function handler(req) {
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
@@ -31,60 +37,67 @@ export default async function handler(req) {
     });
   }
 
-  const groqKey = process.env.GROQ_API_KEY;
+  const groqKeys = parseKeys(process.env.GROQ_API_KEYS);
   const openrouterKey = process.env.OPENROUTER_KEY;
   const errors = [];
 
   // ═══════════════════════════════════════════
-  // 1️⃣ Groq (مباشرة — Edge IP، لا حجب)
+  // 1️⃣ Groq (كل المفاتيح بالتتابع)
   // ═══════════════════════════════════════════
-  if (groqKey) {
+  if (groqKeys.length > 0) {
     const groqModels = [
       'llama-3.3-70b-versatile',
       'llama-3.1-8b-instant',
       'openai/gpt-oss-120b',
     ];
 
-    for (const model of groqModels) {
-      try {
-        const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${groqKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model,
-            messages,
-            temperature: 0.4,
-            max_completion_tokens: 4000,
-            stream: true,
-          }),
-        });
+    // جرّب كل مفتاح مع كل موديل
+    for (const apiKey of groqKeys) {
+      for (const model of groqModels) {
+        try {
+          const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${apiKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              model,
+              messages,
+              temperature: 0.4,
+              max_completion_tokens: 4000,
+              stream: true,
+            }),
+          });
 
-        if (!r.ok) {
-          const txt = await r.text().catch(() => '');
-          errors.push(`groq/${model}: HTTP ${r.status} ${txt.slice(0, 80)}`);
-          continue;
+          if (!r.ok) {
+            const txt = await r.text().catch(() => '');
+            const keyHint = apiKey.slice(-6); // آخر 6 أحرف للتعريف
+            errors.push(`groq*${keyHint}/${model}: HTTP ${r.status} ${txt.slice(0, 60)}`);
+            continue;
+          }
+
+          // نجح
+          const keyHint = apiKey.slice(-6);
+          return new Response(r.body, {
+            status: 200,
+            headers: {
+              'Content-Type': 'text/event-stream; charset=utf-8',
+              'Cache-Control': 'no-cache, no-transform',
+              'Connection': 'keep-alive',
+              'X-Accel-Buffering': 'no',
+              'X-Provider': 'groq',
+              'X-Model': model,
+              'X-Key-Hint': keyHint,
+            },
+          });
+        } catch (err) {
+          errors.push(`groq/${model}: ${err.message}`);
         }
-
-        return new Response(r.body, {
-          status: 200,
-          headers: {
-            'Content-Type': 'text/event-stream; charset=utf-8',
-            'Cache-Control': 'no-cache, no-transform',
-            'Connection': 'keep-alive',
-            'X-Accel-Buffering': 'no',
-            'X-Provider': 'groq',
-            'X-Model': model,
-          },
-        });
-      } catch (err) {
-        errors.push(`groq/${model}: ${err.message}`);
       }
     }
   } else {
-    errors.push('groq: GROQ_API_KEY مفقود');
+    errors.push('groq: GROQ_API_KEYS مفقود');
   }
 
   // ═══════════════════════════════════════════
@@ -117,7 +130,7 @@ export default async function handler(req) {
 
         if (!r.ok) {
           const txt = await r.text().catch(() => '');
-          errors.push(`or/${model}: HTTP ${r.status} ${txt.slice(0, 80)}`);
+          errors.push(`or/${model}: HTTP ${r.status} ${txt.slice(0, 60)}`);
           continue;
         }
 
