@@ -36,56 +36,56 @@ export default async function handler(req) {
   const errors = [];
 
   // ═══════════════════════════════════════════
-// 1️⃣ Groq (عبر الوسيط — يتجاوز الحجب)
-// ═══════════════════════════════════════════
-if (groqKey) {
-  const groqModels = [
-    'llama-3.3-70b-versatile',
-    'llama-3.1-8b-instant',
-    'openai/gpt-oss-120b',
-  ];
+  // 1️⃣ Groq (مباشرة — Edge IP، لا حجب)
+  // ═══════════════════════════════════════════
+  if (groqKey) {
+    const groqModels = [
+      'llama-3.3-70b-versatile',
+      'llama-3.1-8b-instant',
+      'openai/gpt-oss-120b',
+    ];
 
-  for (const model of groqModels) {
-    try {
-      // ✅ تم تغيير الرابط ليمر عبر الوسيط
-      const r = await fetch(new URL('/api/groq-proxy', req.url).toString(), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model,
-          messages,
-          temperature: 0.4,
-          max_completion_tokens: 4000,
-          stream: true,
-        }),
-      });
+    for (const model of groqModels) {
+      try {
+        const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${groqKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model,
+            messages,
+            temperature: 0.4,
+            max_completion_tokens: 4000,
+            stream: true,
+          }),
+        });
 
-      if (!r.ok) {
-        const txt = await r.text().catch(() => '');
-        errors.push(`groq/${model}: HTTP ${r.status} ${txt.slice(0, 80)}`);
-        continue;
+        if (!r.ok) {
+          const txt = await r.text().catch(() => '');
+          errors.push(`groq/${model}: HTTP ${r.status} ${txt.slice(0, 80)}`);
+          continue;
+        }
+
+        return new Response(r.body, {
+          status: 200,
+          headers: {
+            'Content-Type': 'text/event-stream; charset=utf-8',
+            'Cache-Control': 'no-cache, no-transform',
+            'Connection': 'keep-alive',
+            'X-Accel-Buffering': 'no',
+            'X-Provider': 'groq',
+            'X-Model': model,
+          },
+        });
+      } catch (err) {
+        errors.push(`groq/${model}: ${err.message}`);
       }
-
-      return new Response(r.body, {
-        status: 200,
-        headers: {
-          'Content-Type': 'text/event-stream; charset=utf-8',
-          'Cache-Control': 'no-cache, no-transform',
-          'Connection': 'keep-alive',
-          'X-Accel-Buffering': 'no',
-          'X-Provider': 'groq',
-          'X-Model': model,
-        },
-      });
-    } catch (err) {
-      errors.push(`groq/${model}: ${err.message}`);
     }
+  } else {
+    errors.push('groq: GROQ_API_KEY مفقود');
   }
-} else {
-  errors.push('groq: GROQ_API_KEY مفقود');
-}
 
   // ═══════════════════════════════════════════
   // 2️⃣ OpenRouter (احتياطي)
@@ -94,7 +94,6 @@ if (groqKey) {
     const orModels = [
       'nvidia/nemotron-3-super-120b-a12b:free',
       'google/gemma-4-31b-it:free',
-      'nvidia/nemotron-3-ultra-550b-a55b:free',
     ];
 
     for (const model of orModels) {
@@ -140,10 +139,7 @@ if (groqKey) {
   }
 
   return new Response(
-    JSON.stringify({
-      error: 'تعذر الاتصال بجميع المزودين',
-      details: errors,
-    }),
+    JSON.stringify({ error: 'تعذر الاتصال بجميع المزودين', details: errors }),
     { status: 502, headers: { 'Content-Type': 'application/json' } }
   );
 }
