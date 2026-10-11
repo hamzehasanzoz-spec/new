@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { buildSystemPrompt } from '../lib/buildSystemPrompt';
 import { supabase } from '../lib/supabase';
+import { useIsMobile } from '../hooks/useMediaQuery';
 import {
   createConversation,
   listConversations,
@@ -16,7 +17,13 @@ export default function ChatCoach({ profile, session }) {
   const [loading, setLoading] = useState(false);
   const [conversationId, setConversationId] = useState(null);
   const [conversations, setConversations] = useState([]);
-  const [showSidebar, setShowSidebar] = useState(true);
+  const isMobile = useIsMobile();
+  const [showSidebar, setShowSidebar] = useState(!isMobile);
+
+  // تحديث عند تغيير الجهاز
+  useEffect(() => {
+    setShowSidebar(!isMobile);
+  }, [isMobile]);
   const [ragStatus, setRagStatus] = useState(''); // يعرض حالة البحث
   const bottomRef = useRef(null);
 
@@ -268,12 +275,13 @@ export default function ChatCoach({ profile, session }) {
   return (
     <div style={{
       maxWidth: 1100,
-      margin: '20px auto',
+      margin: isMobile ? '8px auto' : '20px auto',
       display: 'flex',
       gap: 0,
       direction: 'rtl',
+      height: isMobile ? 'calc(100vh - 100px)' : 'auto',
     }}>
-      {showSidebar && (
+            {showSidebar && !isMobile && (
         <ConversationsSidebar
           conversations={conversations}
           activeId={conversationId}
@@ -282,7 +290,29 @@ export default function ChatCoach({ profile, session }) {
           onDelete={handleDeleteConversation}
         />
       )}
-
+      {/* على الجوال: overlay لقائمة المحادثات */}
+      {isMobile && showSidebar && (
+        <>
+          <div style={{
+            position: 'fixed', inset: 0,
+            background: 'rgba(0,0,0,0.4)', zIndex: 200,
+          }} onClick={() => setShowSidebar(false)} />
+          <div style={{
+            position: 'fixed', top: 0, right: 0,
+            width: '78%', maxWidth: 320, height: '100vh',
+            background: '#fff', zIndex: 201,
+            boxShadow: '-4px 0 20px rgba(0,0,0,0.1)',
+          }}>
+            <ConversationsSidebar
+              conversations={conversations}
+              activeId={conversationId}
+              onSelect={(id) => { handleSelectConversation(id); setShowSidebar(false); }}
+              onNew={() => { handleNewChat(); setShowSidebar(false); }}
+              onDelete={handleDeleteConversation}
+            />
+          </div>
+        </>
+      )}
       <div style={{
         flex: 1,
         background: '#fff',
