@@ -36,56 +36,56 @@ export default async function handler(req) {
   const errors = [];
 
   // ═══════════════════════════════════════════
-  // 1️⃣ Groq (الأساسي — سريع وحد عالي)
-  // ═══════════════════════════════════════════
-  if (groqKey) {
-    const groqModels = [
-      'llama-3.3-70b-versatile',   // ⭐ الأفضل للطب العربي
-      'llama-3.1-8b-instant',      // ⚡ احتياطي سريع
-      'openai/gpt-oss-120b',       // 🧠 احتياطي ذكي
-    ];
+// 1️⃣ Groq (عبر الوسيط — يتجاوز الحجب)
+// ═══════════════════════════════════════════
+if (groqKey) {
+  const groqModels = [
+    'llama-3.3-70b-versatile',
+    'llama-3.1-8b-instant',
+    'openai/gpt-oss-120b',
+  ];
 
-    for (const model of groqModels) {
-      try {
-        const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${groqKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model,
-            messages,
-            temperature: 0.4,
-            max_completion_tokens: 4000,
-            stream: true,
-          }),
-        });
+  for (const model of groqModels) {
+    try {
+      // ✅ تم تغيير الرابط ليمر عبر الوسيط
+      const r = await fetch(new URL('/api/groq-proxy', req.url).toString(), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model,
+          messages,
+          temperature: 0.4,
+          max_completion_tokens: 4000,
+          stream: true,
+        }),
+      });
 
-        if (!r.ok) {
-          const txt = await r.text().catch(() => '');
-          errors.push(`groq/${model}: HTTP ${r.status} ${txt.slice(0, 80)}`);
-          continue;
-        }
-
-        return new Response(r.body, {
-          status: 200,
-          headers: {
-            'Content-Type': 'text/event-stream; charset=utf-8',
-            'Cache-Control': 'no-cache, no-transform',
-            'Connection': 'keep-alive',
-            'X-Accel-Buffering': 'no',
-            'X-Provider': 'groq',
-            'X-Model': model,
-          },
-        });
-      } catch (err) {
-        errors.push(`groq/${model}: ${err.message}`);
+      if (!r.ok) {
+        const txt = await r.text().catch(() => '');
+        errors.push(`groq/${model}: HTTP ${r.status} ${txt.slice(0, 80)}`);
+        continue;
       }
+
+      return new Response(r.body, {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/event-stream; charset=utf-8',
+          'Cache-Control': 'no-cache, no-transform',
+          'Connection': 'keep-alive',
+          'X-Accel-Buffering': 'no',
+          'X-Provider': 'groq',
+          'X-Model': model,
+        },
+      });
+    } catch (err) {
+      errors.push(`groq/${model}: ${err.message}`);
     }
-  } else {
-    errors.push('groq: GROQ_API_KEY مفقود');
   }
+} else {
+  errors.push('groq: GROQ_API_KEY مفقود');
+}
 
   // ═══════════════════════════════════════════
   // 2️⃣ OpenRouter (احتياطي)
