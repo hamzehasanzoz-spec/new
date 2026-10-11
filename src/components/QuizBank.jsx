@@ -88,16 +88,16 @@ export default function QuizBank({ session }) {
               style={{
                 padding: 14,
                 background: filterSubject === s ? '#EFF6FF' : '#fff',
-                border: filterSubject === s ? '2px solid #2A5C82' : '1px solid #E2E8F0',
+                border: filterSubject === s ? '2px solid #2A5C82' : '1px solid var(--border)',
                 borderRadius: 12,
                 cursor: 'pointer',
                 textAlign: 'right',
               }}
             >
-              <div style={{ fontSize: '1.6em', fontWeight: 'bold', color: '#2A5C82' }}>
+              <div style={{ fontSize: '1.6em', fontWeight: 'bold', 	color: 'var(--primary)' }}>
                 {stats[s]}
               </div>
-              <div style={{ fontSize: '0.85em', color: '#64748B', marginTop: 4 }}>
+              <div style={{ fontSize: '0.85em', color: 'var(--text-muted)', marginTop: 4 }}>
                 {s}
               </div>
             </button>
@@ -114,9 +114,9 @@ export default function QuizBank({ session }) {
         flexWrap: 'wrap',
         gap: 10,
       }}>
-        <h2 style={{ margin: 0, color: '#2A5C82', fontSize: '1.1em' }}>
+        <h2 style={{ margin: 0, 	color: 'var(--primary)', fontSize: '1.1em' }}>
           الأسئلة ({answers.length})
-          {filterSubject && <span style={{ fontSize: '0.8em', color: '#64748B' }}> — {filterSubject}</span>}
+          {filterSubject && <span style={{ fontSize: '0.8em', color: 'var(--text-muted)' }}> — {filterSubject}</span>}
         </h2>
 
         {answers.length > 0 && (
@@ -139,17 +139,17 @@ export default function QuizBank({ session }) {
 
       {/* القائمة */}
       {loading ? (
-        <div style={{ textAlign: 'center', padding: 50, color: '#64748B' }}>
+        <div style={{ textAlign: 'center', padding: 50, color: 'var(--text-muted)' }}>
           جاري التحميل...
         </div>
       ) : answers.length === 0 ? (
         <div style={{
-          background: '#fff',
-          border: '1px solid #E2E8F0',
+          background: 'var(--bg-elevated)',
+          border: '1px solid var(--border)',
           borderRadius: 14,
           padding: 50,
           textAlign: 'center',
-          color: '#94A3B8',
+          	color: 'var(--text-subtle)',
         }}>
           <div style={{ fontSize: '3em', marginBottom: 12 }}>🎯</div>
           <div>لا توجد أسئلة محفوظة بعد.</div>
@@ -165,8 +165,8 @@ export default function QuizBank({ session }) {
               <div
                 key={item.id}
                 style={{
-                  background: '#fff',
-                  border: '1px solid #E2E8F0',
+                  background: 'var(--bg-elevated)',
+                  border: '1px solid var(--border)',
                   borderRadius: 12,
                   overflow: 'hidden',
                 }}
@@ -186,7 +186,7 @@ export default function QuizBank({ session }) {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{
                       fontSize: '0.75em',
-                      color: '#64748B',
+                      color: 'var(--text-muted)',
                       marginBottom: 6,
                     }}>
                       {item.subject}
@@ -198,7 +198,7 @@ export default function QuizBank({ session }) {
                     </div>
                     <div style={{
                       fontWeight: 'bold',
-                      color: '#1E293B',
+                      color: 'var(--text)',
                       fontSize: '0.94em',
                       lineHeight: 1.5,
                     }}>
@@ -206,7 +206,7 @@ export default function QuizBank({ session }) {
                     </div>
                   </div>
                   <div style={{
-                    color: '#2A5C82',
+                    	color: 'var(--primary)',
                     fontSize: '1.2em',
                     transform: isExpanded ? 'rotate(180deg)' : 'rotate(0)',
                     transition: 'transform 0.2s',
@@ -229,7 +229,7 @@ export default function QuizBank({ session }) {
                         const isUserWrong = oi === item.user_answer_index;
 
                         let bg = '#F8FAFC';
-                        let border = '1px solid #E2E8F0';
+                        let border = '1px solid var(--border)';
                         let color = '#1E293B';
 
                         if (isCorrect) {

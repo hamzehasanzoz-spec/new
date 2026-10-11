@@ -154,7 +154,7 @@ export default function Quiz({ profile, setActiveWork }) {
           </p>
         </div>
 
-        <div style={{ background: '#fff', padding: 24, borderRadius: 14, border: '1px solid #E2E8F0' }}>
+        <div style={{ background: 'var(--bg-elevated)', padding: 24, borderRadius: 14, border: '1px solid var(--border)' }}>
           {/* المادة */}
           <Field label="المادة">
             <select
@@ -190,9 +190,9 @@ export default function Quiz({ profile, setActiveWork }) {
                   style={{
                     padding: '10px 0',
                     borderRadius: 8,
-                    border: numQuestions === n ? '2px solid #2A5C82' : '1px solid #E2E8F0',
+                    border: numQuestions === n ? '2px solid #2A5C82' : '1px solid var(--border)',
                     background: numQuestions === n ? '#EFF6FF' : '#F8FAFC',
-                    color: '#1E293B',
+                    color: 'var(--text)',
                     cursor: 'pointer',
                     fontWeight: numQuestions === n ? 'bold' : 'normal',
                   }}
@@ -214,9 +214,9 @@ export default function Quiz({ profile, setActiveWork }) {
                   style={{
                     padding: '10px 0',
                     borderRadius: 8,
-                    border: difficulty === d ? '2px solid #2A5C82' : '1px solid #E2E8F0',
+                    border: difficulty === d ? '2px solid #2A5C82' : '1px solid var(--border)',
                     background: difficulty === d ? '#EFF6FF' : '#F8FAFC',
-                    color: '#1E293B',
+                    color: 'var(--text)',
                     cursor: 'pointer',
                     fontWeight: difficulty === d ? 'bold' : 'normal',
                   }}
@@ -234,7 +234,7 @@ export default function Quiz({ profile, setActiveWork }) {
               alignItems: 'center',
               gap: 10,
               padding: 12,
-              background: '#F8FAFC',
+              background: 'var(--bg)',
               borderRadius: 8,
               cursor: 'pointer',
             }}>
@@ -298,8 +298,8 @@ export default function Quiz({ profile, setActiveWork }) {
         direction: 'rtl',
       }}>
         <div style={{ fontSize: '3em', marginBottom: 20 }}>🧠</div>
-        <h2 style={{ color: '#2A5C82' }}>جاري توليد الأسئلة...</h2>
-        <p style={{ color: '#64748B' }}>
+        <h2 style={{ 	color: 'var(--primary)' }}>جاري توليد الأسئلة...</h2>
+        <p style={{ color: 'var(--text-muted)' }}>
           يبحث الذكاء الاصطناعي في ملفاتك ويصيغ الأسئلة
         </p>
         <div style={{
@@ -366,16 +366,16 @@ export default function Quiz({ profile, setActiveWork }) {
           <div
             key={qi}
             style={{
-              background: '#fff',
+              background: 'var(--bg-elevated)',
               padding: 20,
               borderRadius: 14,
-              border: '1px solid #E2E8F0',
+              border: '1px solid var(--border)',
               marginBottom: 16,
             }}
           >
             <div style={{
               fontWeight: 'bold',
-              color: '#2A5C82',
+              	color: 'var(--primary)',
               marginBottom: 12,
               fontSize: '1em',
             }}>
@@ -394,7 +394,7 @@ export default function Quiz({ profile, setActiveWork }) {
                       gap: 10,
                       padding: '10px 14px',
                       borderRadius: 8,
-                      border: selected ? '2px solid #2A5C82' : '1px solid #E2E8F0',
+                      border: selected ? '2px solid #2A5C82' : '1px solid var(--border)',
                       background: selected ? '#EFF6FF' : '#F8FAFC',
                       cursor: 'pointer',
                       fontSize: '0.92em',
@@ -423,9 +423,9 @@ export default function Quiz({ profile, setActiveWork }) {
             style={{
               flex: 1,
               padding: 14,
-              background: '#fff',
-              color: '#64748B',
-              border: '1px solid #E2E8F0',
+              background: 'var(--bg-elevated)',
+              color: 'var(--text-muted)',
+              border: '1px solid var(--border)',
               borderRadius: 10,
               fontSize: '1em',
               cursor: 'pointer',
@@ -482,7 +482,7 @@ export default function Quiz({ profile, setActiveWork }) {
         </div>
 
         {/* الأخطاء */}
-        <h3 style={{ color: '#2A5C82', marginBottom: 16 }}>
+        <h3 style={{ 	color: 'var(--primary)', marginBottom: 16 }}>
           📋 الأسئلة الخاطئة ({total - score})
         </h3>
 
@@ -507,7 +507,7 @@ export default function Quiz({ profile, setActiveWork }) {
               <div
                 key={qi}
                 style={{
-                  background: '#fff',
+                  background: 'var(--bg-elevated)',
                   padding: 20,
                   borderRadius: 14,
                   border: '2px solid #FECACA',
@@ -611,7 +611,7 @@ function Field({ label, children }) {
         display: 'block',
         fontWeight: 'bold',
         marginBottom: 8,
-        color: '#1E293B',
+        color: 'var(--text)',
         fontSize: '0.92em',
       }}>
         {label}
@@ -633,6 +633,6 @@ const inputStyle = {
 
 const selectStyle = {
   ...inputStyle,
-  background: '#fff',
+  background: 'var(--bg-elevated)',
   cursor: 'pointer',
 };

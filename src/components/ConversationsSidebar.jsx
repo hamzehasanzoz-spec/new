@@ -10,8 +10,8 @@ export default function ConversationsSidebar({
   return (
     <div style={{
       width: 260,
-      background: '#fff',
-      borderLeft: '1px solid #E2E8F0',
+      background: 'var(--bg-elevated)',
+      borderLeft: '1px solid var(--border)',
       display: 'flex',
       flexDirection: 'column',
       height: '75vh',
@@ -19,7 +19,7 @@ export default function ConversationsSidebar({
       overflow: 'hidden',
     }}>
       {/* رأس */}
-      <div style={{ padding: 14, borderBottom: '1px solid #E2E8F0' }}>
+      <div style={{ padding: 14, borderBottom: '1px solid var(--border)' }}>
         <button
           onClick={onNew}
           style={{
@@ -42,7 +42,7 @@ export default function ConversationsSidebar({
       <div style={{ flex: 1, overflowY: 'auto', padding: 8 }}>
         {conversations.length === 0 ? (
           <p style={{
-            color: '#94A3B8',
+            	color: 'var(--text-subtle)',
             textAlign: 'center',
             padding: 20,
             fontSize: '0.85em',
@@ -73,14 +73,14 @@ export default function ConversationsSidebar({
                 <div style={{
                   fontSize: '0.88em',
                   fontWeight: activeId === conv.id ? 'bold' : 'normal',
-                  color: '#1E293B',
+                  color: 'var(--text)',
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                 }}>
                   {conv.title}
                 </div>
-                <div style={{ fontSize: '0.72em', color: '#94A3B8', marginTop: 2 }}>
+                <div style={{ fontSize: '0.72em', 	color: 'var(--text-subtle)', marginTop: 2 }}>
                   {new Date(conv.updated_at).toLocaleDateString('ar-EG', {
                     day: 'numeric',
                     month: 'short',

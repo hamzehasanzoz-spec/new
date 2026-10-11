@@ -67,7 +67,7 @@ function RadioGroup({ options, value, onChange, columns = 2 }) {
         <label key={opt} style={{
           display:'flex', alignItems:'center', gap:8, padding:'10px 12px',
           background: value === opt ? '#EFF6FF' : '#F8FAFC',
-          border: value === opt ? '2px solid #2A5C82' : '1px solid #E2E8F0',
+          border: value === opt ? '2px solid #2A5C82' : '1px solid var(--border)',
           borderRadius:8, cursor:'pointer', fontSize:'0.9em'
         }}>
           <input type="radio" checked={value === opt} onChange={() => onChange(opt)} />
@@ -88,7 +88,7 @@ function CheckGroup({ options, values = [], onChange, columns = 2 }) {
         <label key={opt} style={{
           display:'flex', alignItems:'center', gap:8, padding:'10px 12px',
           background: values.includes(opt) ? '#EFF6FF' : '#F8FAFC',
-          border: values.includes(opt) ? '2px solid #2A5C82' : '1px solid #E2E8F0',
+          border: values.includes(opt) ? '2px solid #2A5C82' : '1px solid var(--border)',
           borderRadius:8, cursor:'pointer', fontSize:'0.9em'
         }}>
           <input type="checkbox" checked={values.includes(opt)} onChange={() => toggle(opt)} />
@@ -263,7 +263,7 @@ export default function Questionnaire({ session, onComplete, initialData = null 
                         onClick={() => setSubjectLevel(subj, lvl)}
                         style={{
                           padding:'6px 12px', borderRadius:6, fontSize:'0.85em', cursor:'pointer',
-                          border: data.subject_levels[subj] === lvl ? '2px solid #2A5C82' : '1px solid #E2E8F0',
+                          border: data.subject_levels[subj] === lvl ? '2px solid #2A5C82' : '1px solid var(--border)',
                           background: data.subject_levels[subj] === lvl ? '#2A5C82' : '#fff',
                           color: data.subject_levels[subj] === lvl ? '#fff' : '#1E293B',
                         }}
@@ -512,13 +512,13 @@ export default function Questionnaire({ session, onComplete, initialData = null 
       </div>
 
       {/* أزرار التنقل */}
-      <div style={{ display:'flex', justifyContent:'space-between', gap:12, marginTop:30, paddingTop:20, borderTop:'1px solid #E2E8F0' }}>
+      <div style={{ display:'flex', justifyContent:'space-between', gap:12, marginTop:30, paddingTop:20, borderTop:'1px solid var(--border)' }}>
         <button
           type="button"
           onClick={prev}
           disabled={currentSection === 0}
           style={{
-            padding:'12px 24px', borderRadius:8, border:'1px solid #E2E8F0', background:'#fff',
+            padding:'12px 24px', borderRadius:8, border:'1px solid var(--border)', background:'#fff',
             color: currentSection === 0 ? '#CBD5E1' : '#1E293B',
             cursor: currentSection === 0 ? 'not-allowed' : 'pointer', fontWeight:'bold'
           }}

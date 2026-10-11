@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { buildSystemPrompt } from '../lib/buildSystemPrompt';
 import { supabase } from '../lib/supabase';
-import { useIsMobile } from '../hooks/useMediaQuery';
+import { logActivity } from '../lib/streak';
 import {
   createConversation,
   listConversations,
@@ -10,7 +10,7 @@ import {
   deleteConversation,
 } from '../lib/chatStorage';
 import ConversationsSidebar from './ConversationsSidebar';
-import { logActivity } from '../lib/streak';
+import { useIsMobile } from '../hooks/useMediaQuery';
 
 export default function ChatCoach({ profile, session }) {
   const [messages, setMessages] = useState([]);
@@ -18,22 +18,23 @@ export default function ChatCoach({ profile, session }) {
   const [loading, setLoading] = useState(false);
   const [conversationId, setConversationId] = useState(null);
   const [conversations, setConversations] = useState([]);
+  const [ragStatus, setRagStatus] = useState('');
+  const bottomRef = useRef(null);
+  const textareaRef = useRef(null);
+
   const isMobile = useIsMobile();
   const [showSidebar, setShowSidebar] = useState(!isMobile);
 
-  // تحديث عند تغيير الجهاز
+  const userId = session?.user?.id;
+
   useEffect(() => {
     setShowSidebar(!isMobile);
   }, [isMobile]);
-  const [ragStatus, setRagStatus] = useState(''); // يعرض حالة البحث
-  const bottomRef = useRef(null);
-
-  const userId = session?.user?.id;
 
   const welcomeMessage = {
-  role: 'assistant',
-  content: `جاهز. اسألني أي سؤال طبي.`,
-};
+    role: 'assistant',
+    content: `جاهز. اسألني أي سؤال طبي.`,
+  };
 
   useEffect(() => {
     if (!userId) return;
@@ -50,6 +51,14 @@ export default function ChatCoach({ profile, session }) {
     }
   }, []);
 
+  // ✅ Auto-resize textarea
+  useEffect(() => {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    ta.style.height = 'auto';
+    ta.style.height = Math.min(ta.scrollHeight, 200) + 'px';
+  }, [input]);
+
   const refreshConversations = async () => {
     try {
       const list = await listConversations(userId);
@@ -62,6 +71,7 @@ export default function ChatCoach({ profile, session }) {
   const handleNewChat = () => {
     setConversationId(null);
     setMessages([welcomeMessage]);
+    setRagStatus('');
   };
 
   const handleSelectConversation = async (id) => {
@@ -75,6 +85,7 @@ export default function ChatCoach({ profile, session }) {
           ? msgs.map(m => ({ role: m.role, content: m.content }))
           : [welcomeMessage]
       );
+      if (isMobile) setShowSidebar(false);
     } catch (err) {
       console.error('فشل تحميل المحادثة:', err);
     } finally {
@@ -101,12 +112,11 @@ export default function ChatCoach({ profile, session }) {
       const copy = [...prev];
       const lastIdx = copy.length - 1;
       if (copy[lastIdx].role !== 'assistant') return prev;
-      copy[lastIdx] = { role: 'assistant', content };
+      copy[lastIdx] = { ...copy[lastIdx], content };
       return copy;
     });
   };
 
-  // ⭐ دالة جديدة: البحث في ملفات الطالب
   const searchUserDocuments = async (query) => {
     try {
       const { data: { session: freshSession } } = await supabase.auth.getSession();
@@ -118,7 +128,7 @@ export default function ChatCoach({ profile, session }) {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${freshSession.access_token}`,
         },
-                body: JSON.stringify({ query, matchCount: 5, threshold: 0.1 }),
+        body: JSON.stringify({ query, matchCount: 5, threshold: 0.1 }),
       });
 
       if (!res.ok) return [];
@@ -130,12 +140,12 @@ export default function ChatCoach({ profile, session }) {
     }
   };
 
-  const handleSend = async (e) => {
-    e.preventDefault();
+  const sendMessage = async () => {
     if (!input.trim() || loading) return;
 
     const userMessage = input.trim();
     setInput('');
+    if (textareaRef.current) textareaRef.current.style.height = 'auto';
 
     let currentConvId = conversationId;
     if (!currentConvId) {
@@ -160,41 +170,32 @@ export default function ChatCoach({ profile, session }) {
 
     try {
       await saveMessage(currentConvId, 'user', userMessage);
+      await logActivity(userId, 'chat');
     } catch (err) {
       console.error('فشل حفظ رسالة المستخدم:', err);
     }
-          try {
-        await saveMessage(currentConvId, 'user', userMessage);
-        await logActivity(userId, 'chat');
-      } catch (err) {
-        console.error('فشل حفظ رسالة المستخدم:', err);
-      }
 
     let reader = null;
     try {
-      // ⭐ 1. البحث في ملفات الطالب
       setRagStatus('📚 جاري البحث في ملفاتك...');
-            const relevantChunks = await searchUserDocuments(userMessage);
-      console.log('🔍 Search results:', relevantChunks.length, relevantChunks);
+      const relevantChunks = await searchUserDocuments(userMessage);
 
-      // ⭐ 2. بناء System Prompt مع النتائج
       let systemPrompt = buildSystemPrompt(profile);
 
       if (relevantChunks.length > 0) {
-        setRagStatus(`📚 وجدت ${relevantChunks.length} جزء ذو صلة في ملفاتك`);
+        setRagStatus(`📚 وجدت ${relevantChunks.length} جزء ذو صلة`);
         systemPrompt += '\n\n## مقاطع من ملفات الطالب المرفوعة (استخدمها كمصدر أساسي):';
-        systemPrompt += '\nالمقاطع التالية مأخوذة من ملفات رفعها الطالب. **اعتمد عليها أولًا** في إجابتك، واذكر اسم الملف المصدر.';
-        
+        systemPrompt += '\nالمقاطع التالية مأخوذة من ملفات رفعها الطالب. اعتمد عليها أولًا، واذكر اسم الملف المصدر.';
+
         relevantChunks.forEach((chunk, i) => {
           systemPrompt += `\n\n### مقطع ${i + 1} — من ملف "${chunk.filename}" (تشابه: ${(chunk.similarity * 100).toFixed(0)}%):\n${chunk.content}`;
         });
-        
-        systemPrompt += '\n\n**مهم:** إذا كانت المقاطع أعلاه تحتوي على الإجابة، استخدمها كأساس واذكر اسم الملف. إذا لم تكن كافية، أكمل من معرفتك العامة مع التنويه.';
+
+        systemPrompt += '\n\n**مهم:** إذا كانت المقاطع أعلاه تحتوي على الإجابة، استخدمها كأساس واذكر اسم الملف.';
       } else {
         setRagStatus('');
       }
 
-      // 3. إرسال للـ chat
       const recent = withUser.slice(-10);
       const payload = [
         { role: 'system', content: systemPrompt },
@@ -279,6 +280,24 @@ export default function ChatCoach({ profile, session }) {
     }
   };
 
+  // ✅ معالجة المفاتيح
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      if (e.shiftKey) {
+        // Shift+Enter = سطر جديد (السلوك الافتراضي)
+        return;
+      }
+      // Enter بدون Shift = إرسال
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    sendMessage();
+  };
+
   return (
     <div style={{
       maxWidth: 1100,
@@ -286,9 +305,9 @@ export default function ChatCoach({ profile, session }) {
       display: 'flex',
       gap: 0,
       direction: 'rtl',
-      height: isMobile ? 'calc(100vh - 100px)' : 'auto',
+      height: isMobile ? 'calc(100vh - 140px)' : '75vh',
     }}>
-            {showSidebar && !isMobile && (
+      {showSidebar && !isMobile && (
         <ConversationsSidebar
           conversations={conversations}
           activeId={conversationId}
@@ -297,18 +316,18 @@ export default function ChatCoach({ profile, session }) {
           onDelete={handleDeleteConversation}
         />
       )}
-      {/* على الجوال: overlay لقائمة المحادثات */}
+
       {isMobile && showSidebar && (
         <>
           <div style={{
             position: 'fixed', inset: 0,
-            background: 'rgba(0,0,0,0.4)', zIndex: 200,
+            background: 'rgba(0,0,0,0.5)', zIndex: 200,
           }} onClick={() => setShowSidebar(false)} />
           <div style={{
             position: 'fixed', top: 0, right: 0,
             width: '78%', maxWidth: 320, height: '100vh',
-            background: '#fff', zIndex: 201,
-            boxShadow: '-4px 0 20px rgba(0,0,0,0.1)',
+            background: 'var(--bg-elevated)', zIndex: 201,
+            boxShadow: 'var(--shadow-lg)',
           }}>
             <ConversationsSidebar
               conversations={conversations}
@@ -320,19 +339,21 @@ export default function ChatCoach({ profile, session }) {
           </div>
         </>
       )}
+
       <div style={{
         flex: 1,
-        background: '#fff',
-        borderRadius: showSidebar ? '16px 0 0 16px' : 16,
-        boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+        background: 'var(--bg-elevated)',
+        borderRadius: showSidebar && !isMobile ? '16px 0 0 16px' : 16,
+        boxShadow: 'var(--shadow-md)',
         display: 'flex',
         flexDirection: 'column',
-        height: '75vh',
         overflow: 'hidden',
+        border: '1px solid var(--border)',
       }}>
+        {/* Header */}
         <div style={{
-          padding: 16,
-          background: '#2A5C82',
+          padding: 14,
+          background: 'var(--primary)',
           color: '#fff',
           display: 'flex',
           alignItems: 'center',
@@ -340,47 +361,68 @@ export default function ChatCoach({ profile, session }) {
           gap: 10,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <button
-              onClick={() => setShowSidebar(s => !s)}
-              style={{
-                background: 'transparent', border: 'none', color: '#fff',
-                fontSize: '1.3em', cursor: 'pointer', padding: 4,
-              }}
-              title="إظهار/إخفاء القائمة"
-            >
-              ☰
-            </button>
+            {isMobile && (
+              <button
+                onClick={() => setShowSidebar(s => !s)}
+                style={{
+                  background: 'transparent', border: 'none', color: '#fff',
+                  fontSize: '1.3em', cursor: 'pointer', padding: 4,
+                }}
+              >
+                ☰
+              </button>
+            )}
             <span style={{ fontSize: '1.4em' }}>🩺</span>
             <div>
               <div style={{ fontWeight: 'bold' }}>Coach AI</div>
-              <div style={{ fontSize: '0.78em', opacity: 0.85 }}>
+              <div style={{ fontSize: '0.75em', opacity: 0.85 }}>
                 {profile?.full_name ? `مخصص لـ ${profile.full_name}` : 'مساعدك للامتحان الوطني'}
               </div>
             </div>
           </div>
           {ragStatus && (
-            <div style={{ fontSize: '0.82em', opacity: 0.9 }}>
+            <div style={{
+              fontSize: '0.75em',
+              opacity: 0.9,
+              background: 'rgba(255,255,255,0.15)',
+              padding: '4px 10px',
+              borderRadius: 20,
+            }}>
               {ragStatus}
             </div>
           )}
         </div>
 
+        {/* Messages */}
         <div style={{
-          flex: 1, padding: 20, overflowY: 'auto',
-          display: 'flex', flexDirection: 'column', gap: 15, background: '#F8FAFC',
+          flex: 1,
+          padding: isMobile ? 12 : 20,
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 15,
+          background: 'var(--bg)',
         }}>
           {messages.map((msg, i) => {
             const isEmpty = msg.role === 'assistant' && msg.content === '' && loading;
+            const isUser = msg.role === 'user';
             return (
               <div key={i} style={{
-                alignSelf: msg.role === 'user' ? 'flex-start' : 'flex-end',
-                background: msg.role === 'user' ? '#EFF6FF' : '#fff',
-                color: '#1E293B', padding: '12px 18px', borderRadius: 12,
-                maxWidth: '78%', boxShadow: '0 2px 5px rgba(0,0,0,0.02)',
-                border: '1px solid #E2E8F0', textAlign: 'right',
+                alignSelf: isUser ? 'flex-start' : 'flex-end',
+                background: isUser ? '#EFF6FF' : 'var(--bg-elevated)',
+                color: isUser ? '#1E40AF' : 'var(--text)',
+                padding: '12px 18px',
+                borderRadius: 12,
+                maxWidth: '85%',
+                boxShadow: 'var(--shadow-sm)',
+                border: `1px solid ${isUser ? '#BFDBFE' : 'var(--border)'}`,
+                textAlign: 'right',
               }}>
                 <p style={{
-                  margin: 0, whiteSpace: 'pre-wrap', lineHeight: 1.7, fontSize: '0.95em',
+                  margin: 0,
+                  whiteSpace: 'pre-wrap',
+                  lineHeight: 1.7,
+                  fontSize: '0.95em',
                 }}>
                   {isEmpty ? '● ● ●' : msg.content}
                 </p>
@@ -390,28 +432,52 @@ export default function ChatCoach({ profile, session }) {
           <div ref={bottomRef} />
         </div>
 
-        <form onSubmit={handleSend} style={{
-          padding: 15, borderTop: '1px solid #E2E8F0', display: 'flex', gap: 10,
+        {/* Input — الآن textarea */}
+        <form onSubmit={handleSubmit} style={{
+          padding: 12,
+          borderTop: '1px solid var(--border)',
+          background: 'var(--bg-elevated)',
+          display: 'flex',
+          gap: 10,
+          alignItems: 'flex-end',
         }}>
-          <input
-            type="text"
+          <textarea
+            ref={textareaRef}
             value={input}
             onChange={e => setInput(e.target.value)}
-            placeholder="اكتب سؤالك الطبي..."
+            onKeyDown={handleKeyDown}
+            placeholder="اكتب سؤالك الطبي... (Enter للإرسال، Shift+Enter لسطر جديد)"
             disabled={loading}
+            rows={1}
             style={{
-              flex: 1, padding: 12, borderRadius: 8,
-              border: '1px solid #E2E8F0', outline: 'none', fontSize: '0.95em',
+              flex: 1,
+              padding: 12,
+              borderRadius: 10,
+              border: '1px solid var(--border)',
+              outline: 'none',
+              fontSize: '0.95em',
+              fontFamily: 'inherit',
+              background: 'var(--bg-subtle)',
+              color: 'var(--text)',
+              resize: 'none',
+              maxHeight: 200,
+              lineHeight: 1.5,
             }}
           />
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !input.trim()}
             style={{
-              background: loading ? '#94A3B8' : '#2A5C82',
-              color: '#fff', border: 'none', padding: '0 24px',
-              borderRadius: 8, fontWeight: 'bold',
-              cursor: loading ? 'not-allowed' : 'pointer',
+              background: loading || !input.trim() ? 'var(--text-subtle)' : 'var(--primary)',
+              color: '#fff',
+              border: 'none',
+              padding: '12px 20px',
+              borderRadius: 10,
+              fontWeight: 'bold',
+              cursor: loading || !input.trim() ? 'not-allowed' : 'pointer',
+              fontSize: '0.9em',
+              fontFamily: 'inherit',
+              whiteSpace: 'nowrap',
             }}
           >
             {loading ? '...' : 'إرسال'}

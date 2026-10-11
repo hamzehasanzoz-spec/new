@@ -282,7 +282,7 @@ export default function Exam({ profile, session, setActiveWork }) {
           </p>
         </div>
 
-        <div style={{ background: '#fff', padding: 24, borderRadius: 14, border: '1px solid #E2E8F0' }}>
+        <div style={{ background: 'var(--bg-elevated)', padding: 24, borderRadius: 14, border: '1px solid var(--border)' }}>
           <Field label="المادة">
             <select value={subject} onChange={e => setSubject(e.target.value)} style={selectStyle}>
               {SUBJECTS.map(s => <option key={s} value={s}>{s}</option>)}
@@ -299,9 +299,9 @@ export default function Exam({ profile, session, setActiveWork }) {
                   style={{
                     padding: '14px 18px',
                     borderRadius: 10,
-                    border: presetIndex === i ? '2px solid #7C3AED' : '1px solid #E2E8F0',
+                    border: presetIndex === i ? '2px solid #7C3AED' : '1px solid var(--border)',
                     background: presetIndex === i ? '#F5F3FF' : '#F8FAFC',
-                    color: '#1E293B',
+                    color: 'var(--text)',
                     cursor: 'pointer',
                     textAlign: 'right',
                     fontSize: '0.95em',
@@ -320,7 +320,7 @@ export default function Exam({ profile, session, setActiveWork }) {
           <Field label="المصدر">
             <label style={{
               display: 'flex', alignItems: 'center', gap: 10,
-              padding: 12, background: '#F8FAFC', borderRadius: 8, cursor: 'pointer',
+              padding: 12, background: 'var(--bg)', borderRadius: 8, cursor: 'pointer',
             }}>
               <input type="checkbox" checked={useFiles} onChange={e => setUseFiles(e.target.checked)} />
               <span style={{ fontSize: '0.9em' }}>استخدم ملفاتي المرفوعة كمصدر أساسي</span>
@@ -375,7 +375,7 @@ export default function Exam({ profile, session, setActiveWork }) {
       <div style={{ maxWidth: 500, margin: '100px auto', textAlign: 'center', padding: 25, direction: 'rtl' }}>
         <div style={{ fontSize: '3em', marginBottom: 20 }}>🧠</div>
         <h2 style={{ color: '#7C3AED' }}>جاري تحضير الدفعة الأولى...</h2>
-        <p style={{ color: '#64748B' }}>
+        <p style={{ color: 'var(--text-muted)' }}>
           يتم توليد {BATCH_SIZE} أسئلة — ستبدأ خلال ثوانٍ
         </p>
         <div style={{
@@ -396,7 +396,7 @@ export default function Exam({ profile, session, setActiveWork }) {
       <div style={{ maxWidth: 500, margin: '100px auto', textAlign: 'center', padding: 25, direction: 'rtl' }}>
         <div style={{ fontSize: '4em', marginBottom: 20 }}>⏸️</div>
         <h2 style={{ color: '#7C3AED' }}>الامتحان متوقف</h2>
-        <p style={{ color: '#64748B', marginBottom: 20 }}>
+        <p style={{ color: 'var(--text-muted)', marginBottom: 20 }}>
           الوقت المتبقي: <strong>{formatTime(timeLeft)}</strong>
         </p>
         <button
@@ -431,7 +431,7 @@ export default function Exam({ profile, session, setActiveWork }) {
       <div style={{ maxWidth: 1100, margin: '20px auto', padding: 20, direction: 'rtl' }}>
         {/* الشريط العلوي */}
         <div style={{
-          background: '#fff', border: '1px solid #E2E8F0', borderRadius: 14,
+          background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 14,
           padding: isMobile ? 12 : 16, marginBottom: 12,
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           flexWrap: 'wrap', gap: 12,
@@ -447,7 +447,7 @@ export default function Exam({ profile, session, setActiveWork }) {
             <button
               onClick={handlePause}
               style={{
-                background: 'transparent', border: '1px solid #E2E8F0',
+                background: 'transparent', border: '1px solid var(--border)',
                 padding: '8px 14px', borderRadius: 8, cursor: 'pointer', fontSize: '0.85em',
               }}
             >
@@ -455,7 +455,7 @@ export default function Exam({ profile, session, setActiveWork }) {
             </button>
           </div>
 
-          <div style={{ fontSize: '0.9em', color: '#64748B' }}>
+          <div style={{ fontSize: '0.9em', color: 'var(--text-muted)' }}>
             تمت الإجابة: <strong style={{ color: '#7C3AED' }}>{answered}/{questions.length}</strong>
             <span style={{ marginRight: 12, fontSize: '0.9em' }}>
               (الهدف: {targetCount})
@@ -486,7 +486,7 @@ export default function Exam({ profile, session, setActiveWork }) {
 
         {/* شريط الوقت */}
         <div style={{
-          height: 6, background: '#F1F5F9', borderRadius: 99,
+          height: 6, background: 'var(--bg-subtle)', borderRadius: 99,
           marginBottom: 20, overflow: 'hidden',
         }}>
           <div style={{
@@ -502,7 +502,7 @@ export default function Exam({ profile, session, setActiveWork }) {
         }}>
           {/* السؤال */}
           <div style={{
-            background: '#fff', border: '1px solid #E2E8F0',
+            background: 'var(--bg-elevated)', border: '1px solid var(--border)',
             borderRadius: 14, padding: 24,
           }}>
             <div style={{
@@ -517,7 +517,7 @@ export default function Exam({ profile, session, setActiveWork }) {
                 onClick={toggleFlag}
                 style={{
                   background: flagged[currentQ] ? '#FEF3C7' : 'transparent',
-                  border: flagged[currentQ] ? '1px solid #F59E0B' : '1px solid #E2E8F0',
+                  border: flagged[currentQ] ? '1px solid #F59E0B' : '1px solid var(--border)',
                   color: flagged[currentQ] ? '#92400E' : '#64748B',
                   padding: '6px 12px', borderRadius: 8, cursor: 'pointer', fontSize: '0.8em',
                 }}
@@ -526,7 +526,7 @@ export default function Exam({ profile, session, setActiveWork }) {
               </button>
             </div>
 
-            <div style={{ fontSize: '1em', lineHeight: 1.7, marginBottom: 20, color: '#1E293B' }}>
+            <div style={{ fontSize: '1em', lineHeight: 1.7, marginBottom: 20, color: 'var(--text)' }}>
               {q.q}
             </div>
 
@@ -539,7 +539,7 @@ export default function Exam({ profile, session, setActiveWork }) {
                     style={{
                       display: 'flex', alignItems: 'center', gap: 12,
                       padding: '14px 16px', borderRadius: 10,
-                      border: selected ? '2px solid #7C3AED' : '1px solid #E2E8F0',
+                      border: selected ? '2px solid #7C3AED' : '1px solid var(--border)',
                       background: selected ? '#F5F3FF' : '#F8FAFC',
                       cursor: 'pointer', fontSize: '0.93em',
                     }}
@@ -565,7 +565,7 @@ export default function Exam({ profile, session, setActiveWork }) {
                   padding: '12px 24px',
                   background: currentQ === 0 ? '#F1F5F9' : '#fff',
                   color: currentQ === 0 ? '#CBD5E1' : '#1E293B',
-                  border: '1px solid #E2E8F0', borderRadius: 8,
+                  border: '1px solid var(--border)', borderRadius: 8,
                   cursor: currentQ === 0 ? 'not-allowed' : 'pointer', fontWeight: 'bold',
                 }}
               >
@@ -576,7 +576,7 @@ export default function Exam({ profile, session, setActiveWork }) {
                 <button
                   disabled
                   style={{
-                    padding: '12px 24px', background: '#F1F5F9',
+                    padding: '12px 24px', background: 'var(--bg-subtle)',
                     color: '#7C3AED', border: '1px dashed #7C3AED',
                     borderRadius: 8, fontWeight: 'bold',
                     cursor: 'wait', display: 'flex', alignItems: 'center', gap: 8,
@@ -615,7 +615,7 @@ export default function Exam({ profile, session, setActiveWork }) {
 
           {/* خريطة الأسئلة */}
           <div style={{
-            background: '#fff', border: '1px solid #E2E8F0',
+            background: 'var(--bg-elevated)', border: '1px solid var(--border)',
             borderRadius: 14, padding: 16,
             alignSelf: 'flex-start',
             position: isMobile ? 'static' : 'sticky',
@@ -623,7 +623,7 @@ export default function Exam({ profile, session, setActiveWork }) {
           }}>
             <div style={{
               fontSize: '0.85em', fontWeight: 'bold',
-              color: '#2A5C82', marginBottom: 12,
+              	color: 'var(--primary)', marginBottom: 12,
             }}>
               🗺️ خريطة الأسئلة ({questions.length}/{targetCount})
             </div>
@@ -640,7 +640,7 @@ export default function Exam({ profile, session, setActiveWork }) {
 
                 let bg = '#F8FAFC';
                 let color = '#94A3B8';
-                let border = '1px solid #E2E8F0';
+                let border = '1px solid var(--border)';
 
                 if (isAnswered) {
                   bg = '#F5F3FF'; color = '#7C3AED'; border = '1px solid #7C3AED';
@@ -673,7 +673,7 @@ export default function Exam({ profile, session, setActiveWork }) {
                   key={`pending-${i}`}
                   style={{
                     aspectRatio: '1',
-                    background: '#F8FAFC',
+                    background: 'var(--bg)',
                     border: '1px dashed #CBD5E1',
                     borderRadius: 6,
                     display: 'flex',
@@ -689,7 +689,7 @@ export default function Exam({ profile, session, setActiveWork }) {
             </div>
 
             <div style={{
-              fontSize: '0.75em', color: '#64748B',
+              fontSize: '0.75em', color: 'var(--text-muted)',
               marginBottom: 16, lineHeight: 1.8,
             }}>
               <div>🟣 مجاب: {answered}</div>
@@ -791,7 +791,7 @@ function Field({ label, children }) {
     <div style={{ marginBottom: 20 }}>
       <label style={{
         display: 'block', fontWeight: 'bold',
-        marginBottom: 8, color: '#1E293B', fontSize: '0.92em',
+        marginBottom: 8, color: 'var(--text)', fontSize: '0.92em',
       }}>
         {label}
       </label>
@@ -803,7 +803,7 @@ function Field({ label, children }) {
 const selectStyle = {
   width: '100%', padding: 12, borderRadius: 8,
   border: '1px solid #CBD5E1', fontSize: '0.95em',
-  fontFamily: 'inherit', background: '#fff',
+  fontFamily: 'inherit', background: 'var(--bg-elevated)',
   cursor: 'pointer', boxSizing: 'border-box',
   
 };

@@ -12,7 +12,7 @@ import {
 import { logActivity } from '../lib/streak';
 const MOODS = [
   { value: 'ممتاز', emoji: '😄', color: '#10B981' },
-  { value: 'جيد', emoji: '🙂', color: '#2A5C82' },
+  { value: 'جيد', emoji: '🙂', 	color: 'var(--primary)' },
   { value: 'متوسط', emoji: '😐', color: '#F59E0B' },
   { value: 'سيء', emoji: '😔', color: '#EF4444' },
 ];
@@ -123,7 +123,7 @@ export default function WeeklyCheckin({ session, profile }) {
     const current = computeAccuracy(reports[index]);
     const previous = computeAccuracy(reports[index + 1]);
     const diff = current - previous;
-    if (Math.abs(diff) < 5) return { icon: '➖', color: '#94A3B8', text: 'ثابت' };
+    if (Math.abs(diff) < 5) return { icon: '➖', 	color: 'var(--text-subtle)', text: 'ثابت' };
     if (diff > 0) return { icon: '📈', color: '#10B981', text: `+${diff}%` };
     return { icon: '📉', color: '#EF4444', text: `${diff}%` };
   };
@@ -205,22 +205,22 @@ export default function WeeklyCheckin({ session, profile }) {
         )}
 
         {/* السجل */}
-        <h2 style={{ color: '#2A5C82', fontSize: '1.1em', marginBottom: 16 }}>
+        <h2 style={{ 	color: 'var(--primary)', fontSize: '1.1em', marginBottom: 16 }}>
           📅 سجل الأسابيع ({reports.length})
         </h2>
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: 50, color: '#64748B' }}>
+          <div style={{ textAlign: 'center', padding: 50, color: 'var(--text-muted)' }}>
             جاري التحميل...
           </div>
         ) : reports.length === 0 ? (
           <div style={{
-            background: '#fff',
-            border: '1px solid #E2E8F0',
+            background: 'var(--bg-elevated)',
+            border: '1px solid var(--border)',
             borderRadius: 14,
             padding: 50,
             textAlign: 'center',
-            color: '#94A3B8',
+            	color: 'var(--text-subtle)',
           }}>
             <div style={{ fontSize: '3em', marginBottom: 12 }}>📊</div>
             <div>لا توجد تقارير بعد.</div>
@@ -239,8 +239,8 @@ export default function WeeklyCheckin({ session, profile }) {
                 <div
                   key={r.id}
                   style={{
-                    background: '#fff',
-                    border: '1px solid #E2E8F0',
+                    background: 'var(--bg-elevated)',
+                    border: '1px solid var(--border)',
                     borderRadius: 12,
                     padding: 18,
                   }}
@@ -254,10 +254,10 @@ export default function WeeklyCheckin({ session, profile }) {
                     gap: 10,
                   }}>
                     <div>
-                      <div style={{ fontWeight: 'bold', color: '#1E293B', fontSize: '0.95em' }}>
+                      <div style={{ fontWeight: 'bold', color: 'var(--text)', fontSize: '0.95em' }}>
                         أسبوع {formatWeek(r.week_start)}
                       </div>
-                      <div style={{ fontSize: '0.78em', color: '#94A3B8', marginTop: 2 }}>
+                      <div style={{ fontSize: '0.78em', 	color: 'var(--text-subtle)', marginTop: 2 }}>
                         {moodData.emoji} {r.mood}
                       </div>
                     </div>
@@ -320,7 +320,7 @@ export default function WeeklyCheckin({ session, profile }) {
                           key={s}
                           style={{
                             background: '#EFF6FF',
-                            color: '#2A5C82',
+                            	color: 'var(--primary)',
                             padding: '3px 10px',
                             borderRadius: 20,
                             fontSize: '0.75em',
@@ -382,8 +382,8 @@ export default function WeeklyCheckin({ session, profile }) {
       </div>
 
       <div style={{
-        background: '#fff',
-        border: '1px solid #E2E8F0',
+        background: 'var(--bg-elevated)',
+        border: '1px solid var(--border)',
         borderRadius: 14,
         padding: 24,
       }}>
@@ -443,9 +443,9 @@ export default function WeeklyCheckin({ session, profile }) {
                     style={{
                       padding: '8px 12px',
                       borderRadius: 8,
-                      border: selected ? '2px solid #2A5C82' : '1px solid #E2E8F0',
+                      border: selected ? '2px solid #2A5C82' : '1px solid var(--border)',
                       background: selected ? '#EFF6FF' : '#F8FAFC',
-                      color: '#1E293B',
+                      color: 'var(--text)',
                       cursor: 'pointer',
                       fontSize: '0.85em',
                       textAlign: 'right',
@@ -470,14 +470,14 @@ export default function WeeklyCheckin({ session, profile }) {
                 style={{
                   padding: '12px 8px',
                   borderRadius: 10,
-                  border: form.mood === m.value ? `2px solid ${m.color}` : '1px solid #E2E8F0',
+                  border: form.mood === m.value ? `2px solid ${m.color}` : '1px solid var(--border)',
                   background: form.mood === m.value ? `${m.color}15` : '#F8FAFC',
                   cursor: 'pointer',
                   textAlign: 'center',
                 }}
               >
                 <div style={{ fontSize: '1.6em' }}>{m.emoji}</div>
-                <div style={{ fontSize: '0.82em', marginTop: 4, color: '#1E293B' }}>
+                <div style={{ fontSize: '0.82em', marginTop: 4, color: 'var(--text)' }}>
                   {m.value}
                 </div>
               </button>
@@ -514,9 +514,9 @@ export default function WeeklyCheckin({ session, profile }) {
             style={{
               flex: 1,
               padding: 14,
-              background: '#fff',
-              color: '#64748B',
-              border: '1px solid #E2E8F0',
+              background: 'var(--bg-elevated)',
+              color: 'var(--text-muted)',
+              border: '1px solid var(--border)',
               borderRadius: 10,
               fontSize: '1em',
               cursor: 'pointer',
@@ -558,7 +558,7 @@ function Field({ label, children }) {
         display: 'block',
         fontWeight: 'bold',
         marginBottom: 8,
-        color: '#1E293B',
+        color: 'var(--text)',
         fontSize: '0.92em',
       }}>
         {label}
@@ -571,7 +571,7 @@ function Field({ label, children }) {
 function MiniStat({ label, value, color }) {
   return (
     <div style={{
-      background: '#F8FAFC',
+      background: 'var(--bg)',
       padding: 10,
       borderRadius: 8,
       textAlign: 'center',
@@ -586,7 +586,7 @@ function MiniStat({ label, value, color }) {
       </div>
       <div style={{
         fontSize: '0.72em',
-        color: '#64748B',
+        color: 'var(--text-muted)',
         marginTop: 4,
       }}>
         {label}

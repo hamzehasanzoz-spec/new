@@ -40,7 +40,7 @@ export default function Dashboard({ profile, session }) {
     if (!stats) return null;
     const total = stats.wrongAnswersCount;
     if (total === 0 && stats.documentsCount === 0)
-      return { icon: '📚', color: '#2A5C82', text: 'ابدأ برفع ملفاتك الدراسية ثم جرّب اختبارًا.' };
+      return { icon: '📚', 	color: 'var(--primary)', text: 'ابدأ برفع ملفاتك الدراسية ثم جرّب اختبارًا.' };
     if (total === 0 && stats.documentsCount > 0)
       return { icon: '🎯', color: '#10B981', text: 'ملفاتك جاهزة! جرّب اختبارًا لتقييم مستواك.' };
     if (topSubjects.length > 0 && topSubjects[0][1] >= 3)

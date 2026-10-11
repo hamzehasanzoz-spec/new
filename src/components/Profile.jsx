@@ -176,10 +176,10 @@ export default function Profile({ profile, session, onProfileUpdate }) {
 
       {/* ===== بيانات البروفايل ===== */}
       <div style={{
-        background: '#fff',
+        background: 'var(--bg-elevated)',
         padding: 24,
         borderRadius: 14,
-        border: '1px solid #E2E8F0',
+        border: '1px solid var(--border)',
         marginBottom: 20,
       }}>
         <div style={{
@@ -188,7 +188,7 @@ export default function Profile({ profile, session, onProfileUpdate }) {
           alignItems: 'center',
           marginBottom: 20,
         }}>
-          <h2 style={{ color: '#2A5C82', margin: 0, fontSize: '1.2em' }}>
+          <h2 style={{ 	color: 'var(--primary)', margin: 0, fontSize: '1.2em' }}>
             📋 معلوماتك الشخصية
           </h2>
           {!editing ? (
@@ -335,13 +335,13 @@ export default function Profile({ profile, session, onProfileUpdate }) {
 
       {/* ===== إعدادات الحساب ===== */}
       <div style={{
-        background: '#fff',
+        background: 'var(--bg-elevated)',
         padding: 24,
         borderRadius: 14,
-        border: '1px solid #E2E8F0',
+        border: '1px solid var(--border)',
         marginBottom: 20,
       }}>
-        <h2 style={{ color: '#2A5C82', marginTop: 0, fontSize: '1.2em' }}>
+        <h2 style={{ 	color: 'var(--primary)', marginTop: 0, fontSize: '1.2em' }}>
           🔐 إعدادات الحساب
         </h2>
 
@@ -390,12 +390,12 @@ export default function Profile({ profile, session, onProfileUpdate }) {
 
       {/* ===== إجراءات متقدمة ===== */}
       <div style={{
-        background: '#fff',
+        background: 'var(--bg-elevated)',
         padding: 24,
         borderRadius: 14,
-        border: '1px solid #E2E8F0',
+        border: '1px solid var(--border)',
       }}>
-        <h2 style={{ color: '#2A5C82', marginTop: 0, fontSize: '1.2em' }}>
+        <h2 style={{ 	color: 'var(--primary)', marginTop: 0, fontSize: '1.2em' }}>
           ⚙️ إجراءات إضافية
         </h2>
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
@@ -425,7 +425,7 @@ export default function Profile({ profile, session, onProfileUpdate }) {
 function StatBox({ icon, label, value, color }) {
   return (
     <div style={{
-      background: '#fff',
+      background: 'var(--bg-elevated)',
       padding: 16,
       borderRadius: 12,
       border: `2px solid ${color}20`,
@@ -433,7 +433,7 @@ function StatBox({ icon, label, value, color }) {
     }}>
       <div style={{ fontSize: '1.8em', marginBottom: 6 }}>{icon}</div>
       <div style={{ fontSize: '1.6em', fontWeight: 'bold', color }}>{value}</div>
-      <div style={{ fontSize: '0.82em', color: '#64748B', marginTop: 4 }}>{label}</div>
+      <div style={{ fontSize: '0.82em', color: 'var(--text-muted)', marginTop: 4 }}>{label}</div>
     </div>
   );
 }
@@ -444,12 +444,12 @@ function Row({ label, value }) {
       display: 'flex',
       justifyContent: 'space-between',
       padding: '10px 14px',
-      background: '#F8FAFC',
+      background: 'var(--bg)',
       borderRadius: 8,
       gap: 12,
     }}>
-      <span style={{ color: '#64748B', fontSize: '0.9em' }}>{label}</span>
-      <span style={{ color: '#1E293B', fontWeight: 'bold', fontSize: '0.92em', textAlign: 'left' }}>
+      <span style={{ color: 'var(--text-muted)', fontSize: '0.9em' }}>{label}</span>
+      <span style={{ color: 'var(--text)', fontWeight: 'bold', fontSize: '0.92em', textAlign: 'left' }}>
         {value || <span style={{ color: '#CBD5E1', fontWeight: 'normal' }}>—</span>}
       </span>
     </div>
@@ -459,7 +459,7 @@ function Row({ label, value }) {
 function Field({ label, children }) {
   return (
     <div>
-      <label style={{ display: 'block', fontWeight: 'bold', marginBottom: 6, color: '#1E293B', fontSize: '0.9em' }}>
+      <label style={{ display: 'block', fontWeight: 'bold', marginBottom: 6, color: 'var(--text)', fontSize: '0.9em' }}>
         {label}
       </label>
       {children}
@@ -475,9 +475,9 @@ function RadioBtn({ label, selected, onClick, multi }) {
       style={{
         padding: '8px 12px',
         borderRadius: 8,
-        border: selected ? '2px solid #2A5C82' : '1px solid #E2E8F0',
+        border: selected ? '2px solid #2A5C82' : '1px solid var(--border)',
         background: selected ? '#EFF6FF' : '#F8FAFC',
-        color: '#1E293B',
+        color: 'var(--text)',
         cursor: 'pointer',
         fontSize: '0.85em',
         textAlign: 'center',

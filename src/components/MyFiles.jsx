@@ -156,12 +156,12 @@ export default function MyFiles({ session }) {
 
       {/* Upload Zone */}
       <div style={{
-        background: '#fff', padding: 30, borderRadius: 14,
+        background: 'var(--bg-elevated)', padding: 30, borderRadius: 14,
         border: '2px dashed #CBD5E1', textAlign: 'center', marginBottom: 25,
       }}>
         <div style={{ fontSize: '3em', marginBottom: 10 }}>📄</div>
-        <h3 style={{ color: '#2A5C82', marginTop: 0 }}>ارفع ملفًا جديدًا</h3>
-        <p style={{ color: '#64748B', fontSize: '0.9em' }}>
+        <h3 style={{ 	color: 'var(--primary)', marginTop: 0 }}>ارفع ملفًا جديدًا</h3>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.9em' }}>
           PDF أو TXT — الحد الأقصى 15 ميجابايت
         </p>
 
@@ -195,7 +195,7 @@ export default function MyFiles({ session }) {
             background: '#EFF6FF',
             borderRadius: 8,
             fontSize: '0.85em',
-            color: '#2A5C82',
+            	color: 'var(--primary)',
           }}>
             <div>📎 <strong>{fileInfo.name}</strong></div>
             <div style={{ opacity: 0.8, marginTop: 4 }}>
@@ -205,7 +205,7 @@ export default function MyFiles({ session }) {
         )}
 
         {uploadProgress && (
-          <p style={{ marginTop: 16, color: '#2A5C82', fontWeight: 'bold', fontSize: '0.9em' }}>
+          <p style={{ marginTop: 16, 	color: 'var(--primary)', fontWeight: 'bold', fontSize: '0.9em' }}>
             {uploadProgress}
           </p>
         )}
@@ -224,14 +224,14 @@ export default function MyFiles({ session }) {
       </div>
 
       {/* Files List */}
-      <h2 style={{ color: '#2A5C82', fontSize: '1.2em' }}>
+      <h2 style={{ 	color: 'var(--primary)', fontSize: '1.2em' }}>
         📋 الملفات المرفوعة ({documents.length})
       </h2>
 
       {documents.length === 0 ? (
         <div style={{
-          background: '#fff', padding: 40, borderRadius: 14,
-          border: '1px solid #E2E8F0', textAlign: 'center', color: '#94A3B8',
+          background: 'var(--bg-elevated)', padding: 40, borderRadius: 14,
+          border: '1px solid var(--border)', textAlign: 'center', 	color: 'var(--text-subtle)',
         }}>
           لا توجد ملفات بعد.
         </div>
@@ -239,19 +239,19 @@ export default function MyFiles({ session }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {documents.map(doc => (
             <div key={doc.id} style={{
-              background: '#fff', padding: 16, borderRadius: 12,
-              border: '1px solid #E2E8F0',
+              background: 'var(--bg-elevated)', padding: 16, borderRadius: 12,
+              border: '1px solid var(--border)',
               display: 'flex', alignItems: 'center',
               justifyContent: 'space-between', gap: 12, flexWrap: 'wrap',
             }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{
-                  fontWeight: 'bold', color: '#1E293B',
+                  fontWeight: 'bold', color: 'var(--text)',
                   whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                 }}>
                   📄 {doc.filename}
                 </div>
-                <div style={{ fontSize: '0.8em', color: '#64748B', marginTop: 4 }}>
+                <div style={{ fontSize: '0.8em', color: 'var(--text-muted)', marginTop: 4 }}>
                   {doc.file_size ? `${formatSize(doc.file_size)} • ` : ''}
                   {doc.num_chunks > 0 && `${doc.num_chunks} جزء • `}
                   {new Date(doc.created_at).toLocaleDateString('ar-EG', {
