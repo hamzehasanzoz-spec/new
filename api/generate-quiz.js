@@ -137,35 +137,70 @@ export default async function handler(req, res) {
 - أعد JSON فقط بدون أي نص خارجه.${excludePart}`;
 
   // ── 3. استدعاء النماذج ──
-  const models = [
-    'nvidia/nemotron-3-ultra-550b-a55b:free',
-    'nvidia/nemotron-3-super-120b-a12b:free',
-    'google/gemma-4-31b-it:free',
-  ];
+    const groqKey = process.env.GROQ_API_KEY;
+
+  // ⭐ استخدم Groq أولًا إن كان متوفرًا
+  const models = groqKey
+    ? [
+        { provider: 'groq', id: 'llama-3.3-70b-versatile' },
+        { provider: 'groq', id: 'openai/gpt-oss-120b' },
+        { provider: 'openrouter', id: 'nvidia/nemotron-3-super-120b-a12b:free' },
+        { provider: 'openrouter', id: 'google/gemma-4-31b-it:free' },
+      ]
+    : [
+        { provider: 'openrouter', id: 'nvidia/nemotron-3-super-120b-a12b:free' },
+        { provider: 'openrouter', id: 'google/gemma-4-31b-it:free' },
+        { provider: 'openrouter', id: 'nvidia/nemotron-3-ultra-550b-a55b:free' },
+      ];
 
   let lastError = '';
 
-  for (const model of models) {
-    try {
-      const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${openrouterKey}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': process.env.SITE_URL || 'https://new-theta-five-73.vercel.app',
-          'X-Title': 'Coach AI',
-        },
-        body: JSON.stringify({
-          model,
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt },
-          ],
-          temperature: 0.5,
-          max_tokens: 16000,
-        }),
-      });
+    for (const entry of models) {
+    const { provider, id: model } = entry;
 
+    let url, headers, requestBody;
+
+    if (provider === 'groq') {
+      url = 'https://api.groq.com/openai/v1/chat/completions';
+      headers = {
+        Authorization: `Bearer ${groqKey}`,
+        'Content-Type': 'application/json',
+      };
+      requestBody = {
+        model,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+        temperature: 0.5,
+        max_completion_tokens: 16000,
+      };
+    } else {
+      url = 'https://openrouter.ai/api/v1/chat/completions';
+      headers = {
+        Authorization: `Bearer ${openrouterKey}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': process.env.SITE_URL || 'https://new-theta-five-73.vercel.app',
+        'X-Title': 'Coach AI',
+      };
+      requestBody = {
+        model,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+        temperature: 0.5,
+        max_tokens: 16000,
+      };
+    }
+
+    try {
+      const r = await fetch(url, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(requestBody),
+      });
+      // ... باقي الكود كما هو
       if (!r.ok) {
         const txt = await r.text().catch(() => '');
         lastError = `HTTP ${r.status} ${txt.slice(0, 100)}`;

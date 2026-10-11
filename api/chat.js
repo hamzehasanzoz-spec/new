@@ -31,81 +31,117 @@ export default async function handler(req) {
     });
   }
 
-  const key = process.env.OPENROUTER_KEY;
-  if (!key) {
-    return new Response(JSON.stringify({ error: 'OPENROUTER_KEY مفقود' }), {
-      status: 500, headers: { 'Content-Type': 'application/json' },
-    });
+  const groqKey = process.env.GROQ_API_KEY;
+  const openrouterKey = process.env.OPENROUTER_KEY;
+  const errors = [];
+
+  // ═══════════════════════════════════════════
+  // 1️⃣ Groq (الأساسي — سريع وحد عالي)
+  // ═══════════════════════════════════════════
+  if (groqKey) {
+    const groqModels = [
+      'llama-3.3-70b-versatile',   // ⭐ الأفضل للطب العربي
+      'llama-3.1-8b-instant',      // ⚡ احتياطي سريع
+      'openai/gpt-oss-120b',       // 🧠 احتياطي ذكي
+    ];
+
+    for (const model of groqModels) {
+      try {
+        const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${groqKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model,
+            messages,
+            temperature: 0.4,
+            max_completion_tokens: 4000,
+            stream: true,
+          }),
+        });
+
+        if (!r.ok) {
+          const txt = await r.text().catch(() => '');
+          errors.push(`groq/${model}: HTTP ${r.status} ${txt.slice(0, 80)}`);
+          continue;
+        }
+
+        return new Response(r.body, {
+          status: 200,
+          headers: {
+            'Content-Type': 'text/event-stream; charset=utf-8',
+            'Cache-Control': 'no-cache, no-transform',
+            'Connection': 'keep-alive',
+            'X-Accel-Buffering': 'no',
+            'X-Provider': 'groq',
+            'X-Model': model,
+          },
+        });
+      } catch (err) {
+        errors.push(`groq/${model}: ${err.message}`);
+      }
+    }
+  } else {
+    errors.push('groq: GROQ_API_KEY مفقود');
   }
 
-  // ✅ النماذج مرتبة: الذكاء أولًا، ثم السرعة، ثم الاحتياطي
-  const models = [
-    'nvidia/nemotron-3-super-120b-a12b:free',   // ⭐ متوازن
-    'google/gemma-4-31b-it:free',               // ⭐ Google
-    'nvidia/nemotron-3-ultra-550b-a55b:free',   // قوي لكن أبطأ
-    'google/gemma-4-26b-a4b-it:free',           // ⚡ سريع
-    'apodex/apodex-1.1-mini:free',              // احتياطي
-    'dots-studio/dots-3-note-preview:free',     // احتياطي أخير
-  ];
+  // ═══════════════════════════════════════════
+  // 2️⃣ OpenRouter (احتياطي)
+  // ═══════════════════════════════════════════
+  if (openrouterKey) {
+    const orModels = [
+      'nvidia/nemotron-3-super-120b-a12b:free',
+      'google/gemma-4-31b-it:free',
+      'nvidia/nemotron-3-ultra-550b-a55b:free',
+    ];
 
-  const errors = [];
-  let allRateLimited = true;
+    for (const model of orModels) {
+      try {
+        const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${openrouterKey}`,
+            'Content-Type': 'application/json',
+            'HTTP-Referer': process.env.SITE_URL || 'https://new-theta-five-73.vercel.app',
+            'X-Title': 'Coach AI',
+          },
+          body: JSON.stringify({
+            model,
+            messages,
+            temperature: 0.4,
+            max_tokens: 4000,
+            stream: true,
+          }),
+        });
 
-  for (const model of models) {
-    try {
-      const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${key}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': process.env.SITE_URL || 'https://new-theta-five-73.vercel.app',
-          'X-Title': 'Coach AI',
-        },
-        body: JSON.stringify({
-          model,
-          messages,
-          temperature: 0.4,
-          max_tokens: 4000,
-          stream: true,
-        }),
-      });
+        if (!r.ok) {
+          const txt = await r.text().catch(() => '');
+          errors.push(`or/${model}: HTTP ${r.status} ${txt.slice(0, 80)}`);
+          continue;
+        }
 
-      // إذا كان rate limit، لا نحاول النماذج التالية بنفس المفتاح
-      if (r.status === 429) {
-        errors.push(`${model}: HTTP 429 Rate Limit`);
-        continue;
+        return new Response(r.body, {
+          status: 200,
+          headers: {
+            'Content-Type': 'text/event-stream; charset=utf-8',
+            'Cache-Control': 'no-cache, no-transform',
+            'Connection': 'keep-alive',
+            'X-Accel-Buffering': 'no',
+            'X-Provider': 'openrouter',
+            'X-Model': model,
+          },
+        });
+      } catch (err) {
+        errors.push(`or/${model}: ${err.message}`);
       }
-
-      allRateLimited = false;
-
-      if (!r.ok) {
-        const txt = await r.text().catch(() => '');
-        errors.push(`${model}: HTTP ${r.status} ${txt.slice(0, 80)}`);
-        continue;
-      }
-
-      return new Response(r.body, {
-        status: 200,
-        headers: {
-          'Content-Type': 'text/event-stream; charset=utf-8',
-          'Cache-Control': 'no-cache, no-transform',
-          'Connection': 'keep-alive',
-          'X-Accel-Buffering': 'no',
-        },
-      });
-    } catch (err) {
-      errors.push(`${model}: ${err.message}`);
     }
   }
 
-  // إذا كل الأخطاء rate limit
-  const isRateLimit = errors.every(e => e.includes('429'));
-
   return new Response(
     JSON.stringify({
-      error: isRateLimit
-        ? '⏱️ تم استنفاد حصة OpenRouter اليومية. جرّب بعد 24 ساعة أو أضف رصيدًا.'
-        : 'تعذر الاتصال بجميع النماذج',
+      error: 'تعذر الاتصال بجميع المزودين',
       details: errors,
     }),
     { status: 502, headers: { 'Content-Type': 'application/json' } }
