@@ -14,9 +14,6 @@ import { useIsMobile } from './hooks/useMediaQuery';
 import ThemeToggle from './components/ThemeToggle';
 import ExamCountdown from './components/ExamCountdown';
 
-// ═══════════════════════════════════════
-// تعريف التبويبات
-// ═══════════════════════════════════════
 const MAIN_TABS = [
   { id: 'dashboard', label: 'الرئيسية', icon: '🏠' },
   { id: 'chat', label: 'الدردشة', icon: '💬' },
@@ -120,7 +117,6 @@ export default function App() {
     }
 
     setActiveTab(newTab);
-    // scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -141,7 +137,7 @@ export default function App() {
 
   if (loading) {
     return (
-      <div style={{ textAlign: 'center', padding: '100px', color: '#2A5C82' }}>
+      <div style={{ textAlign: 'center', padding: '100px', color: 'var(--primary)', background: 'var(--bg)', minHeight: '100vh' }}>
         جاري التحميل...
       </div>
     );
@@ -166,13 +162,13 @@ export default function App() {
             <Logo size={isMobile ? 52 : 64} showText={false} />
           </div>
           <h2 style={{
-            color: '#1E293B', textAlign: 'center',
+            color: 'var(--text)', textAlign: 'center',
             margin: '0 0 8px', fontSize: isMobile ? '1.4em' : '1.6em', fontWeight: 800,
           }}>
             كوتش AI
           </h2>
           <p style={{
-            color: '#64748B', textAlign: 'center',
+            color: 'var(--text-muted)', textAlign: 'center',
             fontSize: '0.88em', marginBottom: 24,
           }}>
             بوابتك للامتحان الوطني للطب في سوريا
@@ -192,10 +188,10 @@ export default function App() {
               {isSignUp ? 'إنشاء حساب جديد' : 'تسجيل الدخول'}
             </button>
           </form>
-          <p style={{ textAlign: 'center', marginTop: 16, fontSize: '0.85em', color: '#64748B' }}>
+          <p style={{ textAlign: 'center', marginTop: 16, fontSize: '0.85em', color: 'var(--text-muted)' }}>
             {isSignUp ? 'لديك حساب؟' : 'ليس لديك حساب؟'}{' '}
             <span onClick={() => setIsSignUp(!isSignUp)}
-              style={{ color: '#2A5C82', cursor: 'pointer', fontWeight: 'bold' }}>
+              style={{ color: 'var(--primary)', cursor: 'pointer', fontWeight: 'bold' }}>
               {isSignUp ? 'تسجيل الدخول' : 'أنشئ حساباً'}
             </span>
           </p>
@@ -209,15 +205,15 @@ export default function App() {
   }
 
   // ═══════════════════════════════════════════
-  // 📱 تصميم الجوال — Bottom Tab Bar
+  // 📱 تصميم الجوال
   // ═══════════════════════════════════════════
   if (isMobile) {
     return (
       <div style={{
         minHeight: '100vh',
-        background: '#F8FAFC',
+        background: 'var(--bg)',
         direction: 'rtl',
-        paddingBottom: 68, // مساحة للـ bottom bar
+        paddingBottom: 68,
       }}>
         {/* ═══ شريط علوي رفيع ═══ */}
         <nav style={mobileTopBar}>
@@ -229,7 +225,7 @@ export default function App() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <ExamCountdown compact />
+            <ExamCountdown />
             <ThemeToggle />
           </div>
 
@@ -247,7 +243,6 @@ export default function App() {
           )}
         </nav>
 
-        {/* ═══ المحتوى ═══ */}
         <main style={{ padding: '12px' }}>
           {renderContent()}
         </main>
@@ -262,7 +257,7 @@ export default function App() {
                 onClick={() => switchTab(t.id)}
                 style={{
                   ...bottomTabBtn,
-                  color: active ? '#2A5C82' : '#94A3B8',
+                  color: active ? 'var(--primary)' : 'var(--text-subtle)',
                 }}
               >
                 <div style={{
@@ -286,7 +281,7 @@ export default function App() {
                     top: 0,
                     width: 24,
                     height: 3,
-                    background: '#2A5C82',
+                    background: 'var(--primary)',
                     borderRadius: 2,
                   }} />
                 )}
@@ -294,12 +289,11 @@ export default function App() {
             );
           })}
 
-          {/* زر "المزيد" */}
           <button
             onClick={() => setMoreOpen(true)}
             style={{
               ...bottomTabBtn,
-              color: MORE_TABS.some(t => t.id === activeTab) ? '#2A5C82' : '#94A3B8',
+              color: MORE_TABS.some(t => t.id === activeTab) ? 'var(--primary)' : 'var(--text-subtle)',
             }}
           >
             <div style={{
@@ -335,7 +329,7 @@ export default function App() {
               <div style={{
                 width: 40,
                 height: 4,
-                background: '#CBD5E1',
+                background: 'var(--border)',
                 borderRadius: 2,
                 margin: '12px auto 16px',
               }} />
@@ -353,8 +347,8 @@ export default function App() {
                       key={t.id}
                       onClick={() => switchTab(t.id)}
                       style={{
-                        background: active ? `${t.color}15` : '#F8FAFC',
-                        border: active ? `2px solid ${t.color}` : '1px solid #E2E8F0',
+                        background: active ? `${t.color}20` : 'var(--bg-subtle)',
+                        border: active ? `2px solid ${t.color}` : '1px solid var(--border)',
                         borderRadius: 14,
                         padding: '18px 12px',
                         cursor: 'pointer',
@@ -370,7 +364,7 @@ export default function App() {
                       <div style={{
                         fontSize: '0.82em',
                         fontWeight: 700,
-                        color: active ? t.color : '#1E293B',
+                        color: active ? t.color : 'var(--text)',
                       }}>
                         {t.label}
                       </div>
@@ -381,7 +375,7 @@ export default function App() {
 
               <div style={{
                 padding: '20px 16px',
-                borderTop: '1px solid #F1F5F9',
+                borderTop: '1px solid var(--border)',
                 marginTop: 20,
               }}>
                 <button
@@ -421,7 +415,7 @@ export default function App() {
   // 💻 تصميم الديسكتوب
   // ═══════════════════════════════════════════
   return (
-        <div style={{ minHeight: '100vh', background: 'var(--bg)', direction: 'rtl' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg)', direction: 'rtl' }}>
       <DesktopNav
         activeTab={activeTab}
         switchTab={switchTab}
@@ -480,7 +474,7 @@ function DesktopNav({ activeTab, switchTab, onSignOut }) {
           ))}
         </div>
       </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <ThemeToggle />
         <button onClick={onSignOut} style={signOutStyle}>خروج</button>
       </div>
@@ -491,8 +485,8 @@ function DesktopNav({ activeTab, switchTab, onSignOut }) {
 function TabButton({ tab, active, onClick }) {
   return (
     <button onClick={onClick} style={{
-      background: active ? '#2A5C82' : 'transparent',
-      color: active ? '#fff' : '#475569',
+      background: active ? 'var(--primary)' : 'transparent',
+      color: active ? '#fff' : 'var(--text-muted)',
       border: 'none', padding: '8px 12px', borderRadius: 8,
       cursor: 'pointer', fontWeight: active ? 700 : 500,
       fontSize: '0.84em', display: 'flex', alignItems: 'center', gap: 5,
@@ -519,7 +513,7 @@ const mobileTopBar = {
   position: 'sticky',
   top: 0,
   zIndex: 100,
-  boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+  boxShadow: 'var(--shadow-sm)',
 };
 
 const bottomBarStyle = {
@@ -554,12 +548,12 @@ const moreDrawerStyle = {
   bottom: 0,
   left: 0,
   right: 0,
-  background: '#fff',
+  background: 'var(--bg-elevated)',
   borderTopLeftRadius: 24,
   borderTopRightRadius: 24,
   zIndex: 301,
   paddingBottom: 'calc(16px + env(safe-area-inset-bottom))',
-  boxShadow: '0 -4px 24px rgba(0,0,0,0.15)',
+  boxShadow: 'var(--shadow-lg)',
   animation: 'slideUp 0.25s ease-out',
 };
 
@@ -568,11 +562,11 @@ const desktopNavStyle = {
   borderBottom: '1px solid var(--border)',
   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
   gap: 12, position: 'sticky', top: 0, zIndex: 100,
-  boxShadow: '0 1px 3px rgba(0,0,0,0.04)', flexWrap: 'wrap',
+  boxShadow: 'var(--shadow-sm)', flexWrap: 'wrap',
 };
 
 const groupStyle = { display: 'flex', gap: 2, alignItems: 'center' };
-const dividerStyle = { width: 1, height: 22, background: '#E2E8F0' };
+const dividerStyle = { width: 1, height: 22, background: 'var(--border)' };
 
 const signOutStyle = {
   background: '#FEF2F2', color: '#EF4444',
@@ -584,12 +578,13 @@ const signOutStyle = {
 
 const inputStyle = {
   width: '100%', padding: 12, borderRadius: 10,
-  border: '1px solid #E2E8F0', fontSize: '0.95em',
+  border: '1px solid var(--border)', fontSize: '0.95em',
   fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none',
+  background: 'var(--bg-subtle)', color: 'var(--text)',
 };
 
 const primaryBtn = {
-  background: '#2A5C82', color: '#fff', padding: 14,
+  background: 'var(--primary)', color: '#fff', padding: 14,
   border: 'none', borderRadius: 10, fontWeight: 'bold',
   cursor: 'pointer', fontSize: '0.95em', fontFamily: 'inherit',
 };
