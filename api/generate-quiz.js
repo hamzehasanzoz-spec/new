@@ -34,6 +34,7 @@ export default async function handler(req, res) {
     numQuestions = 5,
     difficulty = 'متوسط',
     useFiles = true,
+    excludeQuestions = [],
   } = req.body || {};
 
   const openrouterKey = process.env.OPENROUTER_KEY;
@@ -120,20 +121,26 @@ export default async function handler(req, res) {
 - شرح كل سؤال في سطر واحد فقط.
 - الأسئلة بصيغة سريرية عملية إن أمكن.${context ? `\n\n## مقاطع من ملفات الطالب (استخدمها كمصدر أساسي للأسئلة)\n\n${context}` : ''}`;
 
-    const userPrompt = `أنشئ ${numQuestions} سؤال MCQ${subject ? ` في مادة **${subject}**` : ''}${topic ? ` عن موضوع "${topic}"` : ''}.
+  // ⭐ بناء جزء "لا تكرر"
+  const excludePart = excludeQuestions.length > 0
+    ? `\n\n⚠️ **لا تكرر هذه الأسئلة** (سبق طرحها):\n${excludeQuestions.slice(-15).map((q, i) => `${i + 1}. ${typeof q === 'string' ? q : q.q}`).join('\n')}`
+    : '';
+
+  // ⭐ userPrompt النهائي
+  const userPrompt = `أنشئ ${numQuestions} سؤال MCQ${subject ? ` في مادة **${subject}**` : ''}${topic ? ` عن موضوع "${topic}"` : ''}.
 مستوى الصعوبة: ${difficulty}.
 
 ⚠️ **مهم جدًا:**
-- التزم بـ **${numQuestions} سؤال بالضبط** — لا أقل ولا أكثر.
-- عدّ الأسئلة في JSON قبل الإرجاع.
-- إذا وصلت إلى ${numQuestions} سؤال، **توقف**.
-- أعد JSON فقط بدون أي نص خارجه.`;
+- التزم بـ **${numQuestions} سؤال بالضبط**.
+- عدّ قبل الإرجاع.
+- إذا وصلت إلى ${numQuestions}، توقف.
+- أعد JSON فقط بدون أي نص خارجه.${excludePart}`;
 
   // ── 3. استدعاء النماذج ──
-    const models = [
-    'nvidia/nemotron-3-ultra-550b-a55b:free',   // الأقوى (بطيء لكن دقيق)
-    'nvidia/nemotron-3-super-120b-a12b:free',   // متوازن
-    'google/gemma-4-31b-it:free',               // احتياطي
+  const models = [
+    'nvidia/nemotron-3-ultra-550b-a55b:free',
+    'nvidia/nemotron-3-super-120b-a12b:free',
+    'google/gemma-4-31b-it:free',
   ];
 
   let lastError = '';
@@ -155,7 +162,7 @@ export default async function handler(req, res) {
             { role: 'user', content: userPrompt },
           ],
           temperature: 0.5,
-          max_tokens: 10000,
+          max_tokens: 16000,
         }),
       });
 
