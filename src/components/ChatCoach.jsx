@@ -19,6 +19,7 @@ export default function ChatCoach({ profile, session }) {
   const [conversationId, setConversationId] = useState(null);
   const [conversations, setConversations] = useState([]);
   const [ragStatus, setRagStatus] = useState('');
+  const [lastProvider, setLastProvider] = useState('');
   const bottomRef = useRef(null);
   const textareaRef = useRef(null);
 
@@ -51,7 +52,6 @@ export default function ChatCoach({ profile, session }) {
     }
   }, []);
 
-  // ✅ Auto-resize textarea
   useEffect(() => {
     const ta = textareaRef.current;
     if (!ta) return;
@@ -167,6 +167,7 @@ export default function ChatCoach({ profile, session }) {
     setMessages([...withUser, { role: 'assistant', content: '' }]);
     setLoading(true);
     setRagStatus('');
+    setLastProvider('');
 
     try {
       await saveMessage(currentConvId, 'user', userMessage);
@@ -213,6 +214,13 @@ export default function ChatCoach({ profile, session }) {
       });
 
       clearTimeout(timeoutId);
+
+      // ⭐ اقرأ Provider من الـ headers
+      const providerHeader = res.headers.get('X-Provider') || '';
+      const modelHeader = res.headers.get('X-Model') || '';
+      if (providerHeader) {
+        setLastProvider(`${providerHeader}${modelHeader ? ` • ${modelHeader.split('/').pop()}` : ''}`);
+      }
 
       if (!res.ok) {
         let errMsg = `HTTP ${res.status}`;
@@ -280,14 +288,9 @@ export default function ChatCoach({ profile, session }) {
     }
   };
 
-  // ✅ معالجة المفاتيح
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
-      if (e.shiftKey) {
-        // Shift+Enter = سطر جديد (السلوك الافتراضي)
-        return;
-      }
-      // Enter بدون Shift = إرسال
+      if (e.shiftKey) return;
       e.preventDefault();
       sendMessage();
     }
@@ -380,17 +383,30 @@ export default function ChatCoach({ profile, session }) {
               </div>
             </div>
           </div>
-          {ragStatus && (
-            <div style={{
-              fontSize: '0.75em',
-              opacity: 0.9,
-              background: 'rgba(255,255,255,0.15)',
-              padding: '4px 10px',
-              borderRadius: 20,
-            }}>
-              {ragStatus}
-            </div>
-          )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {lastProvider && (
+              <div style={{
+                fontSize: '0.7em',
+                background: 'rgba(255,255,255,0.2)',
+                padding: '3px 10px',
+                borderRadius: 20,
+                fontWeight: 600,
+              }}>
+                ⚡ {lastProvider}
+              </div>
+            )}
+            {ragStatus && (
+              <div style={{
+                fontSize: '0.72em',
+                opacity: 0.9,
+                background: 'rgba(255,255,255,0.15)',
+                padding: '4px 10px',
+                borderRadius: 20,
+              }}>
+                {ragStatus}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Messages */}
@@ -432,7 +448,7 @@ export default function ChatCoach({ profile, session }) {
           <div ref={bottomRef} />
         </div>
 
-        {/* Input — الآن textarea */}
+        {/* Input */}
         <form onSubmit={handleSubmit} style={{
           padding: 12,
           borderTop: '1px solid var(--border)',
