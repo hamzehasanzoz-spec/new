@@ -7,6 +7,7 @@ import Profile from './components/Profile';
 import MyFiles from './components/MyFiles';
 import Quiz from './components/Quiz';
 import QuizBank from './components/QuizBank';
+import WeeklyCheckin from './components/WeeklyCheckin';
 
 export default function App() {
   const [session, setSession] = useState(null);
@@ -200,6 +201,20 @@ export default function App() {
 >
   📚 بنك الأخطاء
 </button>
+<button
+  onClick={() => setActiveTab('weekly')}
+  style={{
+    background: activeTab === 'weekly' ? '#2A5C82' : 'transparent',
+    color: activeTab === 'weekly' ? '#fff' : '#1E293B',
+    border: 'none',
+    padding: '8px 16px',
+    borderRadius: 8,
+    cursor: 'pointer',
+    fontWeight: 'bold',
+  }}
+>
+  📊 التقرير الأسبوعي
+</button>
           <button
             onClick={() => setActiveTab('profile')}
             style={{
@@ -237,6 +252,7 @@ export default function App() {
         {activeTab === 'files' && <MyFiles session={session} />}
         {activeTab === 'quiz' && <Quiz profile={profile} />}
         {activeTab === 'bank' && <QuizBank session={session} />}
+        {activeTab === 'weekly' && <WeeklyCheckin session={session} profile={profile} />}
         {activeTab === 'profile' && (
           <Profile
             profile={profile}
