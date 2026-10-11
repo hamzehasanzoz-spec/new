@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { getDashboardStats } from '../lib/dashboardStats';
+import ExamCountdown from './ExamCountdown';
 import StreakCard from './StreakCard';
+
 
 export default function Dashboard({ profile, session }) {
   const [stats, setStats] = useState(null);
@@ -113,6 +115,8 @@ export default function Dashboard({ profile, session }) {
       </div>
             {/* 🔥 Streak Card */}
       <div style={{ marginBottom: 24 }}>
+              {/* ⏱️ عدّاد الامتحان */}
+      <ExamCountdown />
         <StreakCard userId={session?.user?.id} />
       </div>
 

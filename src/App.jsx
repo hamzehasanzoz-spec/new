@@ -11,6 +11,8 @@ import WeeklyCheckin from './components/WeeklyCheckin';
 import Exam from './components/Exam';
 import Logo from './components/Logo';
 import { useIsMobile } from './hooks/useMediaQuery';
+import ThemeToggle from './components/ThemeToggle';
+import ExamCountdown from './components/ExamCountdown';
 
 // ═══════════════════════════════════════
 // تعريف التبويبات
@@ -150,15 +152,15 @@ export default function App() {
     return (
       <div style={{
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #EFF6FF 0%, #F8FAFC 100%)',
+        background: 'var(--bg)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         padding: 16, direction: 'rtl',
       }}>
         <div style={{
           width: '100%', maxWidth: 420,
           padding: isMobile ? 24 : 40,
-          background: '#fff', borderRadius: 20,
-          boxShadow: '0 20px 60px rgba(42,92,130,0.1)',
+          background: 'var(--bg-elevated)', borderRadius: 20,
+          boxShadow: 'var(--shadow-lg)',
         }}>
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
             <Logo size={isMobile ? 52 : 64} showText={false} />
@@ -221,13 +223,14 @@ export default function App() {
         <nav style={mobileTopBar}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <Logo size={28} showText={false} />
-            <div style={{
-              fontSize: '1em',
-              fontWeight: 800,
-              color: '#2A5C82',
-            }}>
+            <div style={{ fontSize: '1em', fontWeight: 800, color: 'var(--primary)' }}>
               {PAGE_TITLES[activeTab] || 'كوتش AI'}
             </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <ExamCountdown compact />
+            <ThemeToggle />
           </div>
 
           {activeWork && (
@@ -418,7 +421,7 @@ export default function App() {
   // 💻 تصميم الديسكتوب
   // ═══════════════════════════════════════════
   return (
-    <div style={{ minHeight: '100vh', background: '#F8FAFC', direction: 'rtl' }}>
+        <div style={{ minHeight: '100vh', background: 'var(--bg)', direction: 'rtl' }}>
       <DesktopNav
         activeTab={activeTab}
         switchTab={switchTab}
@@ -477,7 +480,10 @@ function DesktopNav({ activeTab, switchTab, onSignOut }) {
           ))}
         </div>
       </div>
-      <button onClick={onSignOut} style={signOutStyle}>خروج</button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <ThemeToggle />
+        <button onClick={onSignOut} style={signOutStyle}>خروج</button>
+      </div>
     </nav>
   );
 }
@@ -504,9 +510,9 @@ function TabButton({ tab, active, onClick }) {
 // Styles
 // ═════════════════════════════════════════════
 const mobileTopBar = {
-  background: '#fff',
+  background: 'var(--bg-elevated)',
   padding: '12px 16px',
-  borderBottom: '1px solid #E2E8F0',
+  borderBottom: '1px solid var(--border)',
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
@@ -521,8 +527,8 @@ const bottomBarStyle = {
   bottom: 0,
   left: 0,
   right: 0,
-  background: '#fff',
-  borderTop: '1px solid #E2E8F0',
+  background: 'var(--bg-elevated)',
+  borderTop: '1px solid var(--border)',
   display: 'grid',
   gridTemplateColumns: 'repeat(5, 1fr)',
   paddingBottom: 'env(safe-area-inset-bottom)',
@@ -558,8 +564,8 @@ const moreDrawerStyle = {
 };
 
 const desktopNavStyle = {
-  background: '#fff', padding: '12px 20px',
-  borderBottom: '1px solid #E2E8F0',
+  background: 'var(--bg-elevated)', padding: '12px 20px',
+  borderBottom: '1px solid var(--border)',
   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
   gap: 12, position: 'sticky', top: 0, zIndex: 100,
   boxShadow: '0 1px 3px rgba(0,0,0,0.04)', flexWrap: 'wrap',

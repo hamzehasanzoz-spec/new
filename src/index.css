@@ -1,42 +1,101 @@
 * { box-sizing: border-box; }
 
+/* ═══════════════════════════════════════ */
+/* 🎨 CSS Variables - Light & Dark        */
+/* ═══════════════════════════════════════ */
+:root {
+  --bg: #F8FAFC;
+  --bg-elevated: #FFFFFF;
+  --bg-subtle: #F1F5F9;
+  --border: #E2E8F0;
+  --text: #1E293B;
+  --text-muted: #64748B;
+  --text-subtle: #94A3B8;
+  --primary: #2A5C82;
+  --primary-hover: #3B7BA8;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.06);
+  --shadow-lg: 0 20px 60px rgba(42,92,130,0.1);
+}
+
+[data-theme="dark"] {
+  --bg: #0F172A;
+  --bg-elevated: #1E293B;
+  --bg-subtle: #334155;
+  --border: #334155;
+  --text: #F1F5F9;
+  --text-muted: #94A3B8;
+  --text-subtle: #64748B;
+  --primary: #3B82F6;
+  --primary-hover: #60A5FA;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+  --shadow-lg: 0 20px 60px rgba(0,0,0,0.5);
+}
+
 html, body, #root {
   margin: 0;
   padding: 0;
   font-family: 'Tajawal', 'Segoe UI', Tahoma, system-ui, sans-serif;
-  background: #F8FAFC;
-  color: #1E293B;
+  background: var(--bg);
+  color: var(--text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.2s, color 0.2s;
 }
 
 input, select, textarea, button {
   font-family: 'Tajawal', 'Segoe UI', Tahoma, system-ui, sans-serif;
 }
 
-/* شريط تمرير أنيق */
+/* ✅ دعم Dark Mode للحقول والبطاقات */
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+  background: var(--bg-subtle) !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+}
+
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+  color: var(--text-subtle);
+}
+
+button, a, [role="button"] {
+  touch-action: manipulation;
+  user-select: none;
+}
+
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
-::-webkit-scrollbar-track {
-  background: #F1F5F9;
-}
+::-webkit-scrollbar-track { background: var(--bg-subtle); }
 ::-webkit-scrollbar-thumb {
-  background: #CBD5E1;
+  background: var(--border);
   border-radius: 4px;
 }
-::-webkit-scrollbar-thumb:hover {
-  background: #94A3B8;
+::-webkit-scrollbar-thumb:hover { background: var(--text-subtle); }
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 @keyframes slideUp {
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
 }
 
-/* منع التمرير الأفقي على الجوال */
 @media (max-width: 767px) {
   html, body {
+    font-size: 15px;
     overflow-x: hidden;
   }
 }
