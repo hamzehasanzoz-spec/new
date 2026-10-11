@@ -232,7 +232,7 @@ export default function App() {
       </nav>
 
       <main style={{ padding: 20 }}>
-        {activeTab === 'dashboard' && <Dashboard profile={profile} />}
+        {activeTab === 'dashboard' && <Dashboard profile={profile} session={session} />}
         {activeTab === 'chat' && <ChatCoach profile={profile} session={session} />}
         {activeTab === 'files' && <MyFiles session={session} />}
         {activeTab === 'quiz' && <Quiz profile={profile} />}
