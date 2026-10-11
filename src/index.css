@@ -1,8 +1,31 @@
 * { box-sizing: border-box; }
-body {
+
+html, body, #root {
   margin: 0;
-  font-family: 'Segoe UI', Tahoma, system-ui, sans-serif;
+  padding: 0;
+  font-family: 'Tajawal', 'Segoe UI', Tahoma, system-ui, sans-serif;
   background: #F8FAFC;
   color: #1E293B;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
-input, select, button { font-family: inherit; }
+
+input, select, textarea, button {
+  font-family: 'Tajawal', 'Segoe UI', Tahoma, system-ui, sans-serif;
+}
+
+/* شريط تمرير أنيق */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #F1F5F9;
+}
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}

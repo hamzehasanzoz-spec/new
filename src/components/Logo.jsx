@@ -1,0 +1,69 @@
+import React from 'react';
+
+export default function Logo({ size = 40, showText = true, textColor = '#2A5C82' }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 64 64"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        {/* دائرة خلفية */}
+        <circle cx="32" cy="32" r="30" fill="#EFF6FF" stroke="#2A5C82" strokeWidth="2"/>
+
+        {/* دماغ (نصف علوي) */}
+        <path
+          d="M22 22 C 22 16, 30 14, 32 18 C 34 14, 42 16, 42 22 C 44 22, 46 24, 46 27 C 46 30, 42 32, 40 32"
+          stroke="#2A5C82"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          fill="none"
+        />
+        <path
+          d="M20 27 C 18 27, 18 32, 22 32"
+          stroke="#2A5C82"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          fill="none"
+        />
+
+        {/* خطوط الدماغ الداخلية */}
+        <path d="M27 24 L 27 28" stroke="#2A5C82" strokeWidth="1.5" strokeLinecap="round"/>
+        <path d="M32 22 L 32 28" stroke="#2A5C82" strokeWidth="1.5" strokeLinecap="round"/>
+        <path d="M37 24 L 37 28" stroke="#2A5C82" strokeWidth="1.5" strokeLinecap="round"/>
+
+        {/* سماعة (نصف سفلي) */}
+        <path
+          d="M20 38 C 20 32, 44 32, 44 38"
+          stroke="#10B981"
+          strokeWidth="3"
+          strokeLinecap="round"
+          fill="none"
+        />
+        <circle cx="20" cy="40" r="3" fill="#10B981"/>
+        <circle cx="44" cy="40" r="3" fill="#10B981"/>
+        <path
+          d="M44 43 C 44 47, 36 48, 32 48"
+          stroke="#10B981"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          fill="none"
+        />
+        <circle cx="32" cy="48" r="2" fill="#10B981"/>
+      </svg>
+
+      {showText && (
+        <div style={{
+          fontSize: size * 0.5,
+          fontWeight: 800,
+          color: textColor,
+          lineHeight: 1,
+        }}>
+          كوتش AI
+        </div>
+      )}
+    </div>
+  );
+}

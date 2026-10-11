@@ -9,6 +9,7 @@ import Quiz from './components/Quiz';
 import QuizBank from './components/QuizBank';
 import WeeklyCheckin from './components/WeeklyCheckin';
 import Exam from './components/Exam';
+import Logo from './components/Logo';
 
 export default function App() {
   const [session, setSession] = useState(null);
@@ -80,7 +81,9 @@ export default function App() {
   if (!session) {
     return (
       <div style={{ maxWidth: 400, margin: '80px auto', padding: 30, background: '#fff', borderRadius: 16, boxShadow: '0 4px 20px rgba(0,0,0,0.05)', direction: 'rtl' }}>
-        <h2 style={{ color: '#2A5C82', textAlign: 'center' }}>منصة كوتش AI 🩺</h2>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+  <Logo size={56} />
+</div>
         <p style={{ color: '#64748B', textAlign: 'center', fontSize: '0.9em' }}>بوابتك للامتحان الوطني للطب في سوريا</p>
         <form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: 15 }}>
           <input
@@ -130,7 +133,7 @@ export default function App() {
         flexWrap: 'wrap',
         gap: 10,
       }}>
-        <h2 style={{ color: '#2A5C82', margin: 0 }}>كوتش AI 🩺</h2>
+        <Logo size={36} />
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           <button
             onClick={() => setActiveTab('dashboard')}
