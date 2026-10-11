@@ -38,15 +38,18 @@ export default async function handler(req) {
     });
   }
 
-  // ✅ ترتيب مُحسّن: الذكاء أولاً، ثم السرعة
+  // ✅ النماذج مرتبة: الذكاء أولًا، ثم السرعة، ثم الاحتياطي
   const models = [
-    'nvidia/nemotron-3-super-120b-a12b:free',   // ⭐ ذكي + متوسط السرعة
-    'google/gemma-4-31b-it:free',               // ⭐ Google، جودة عالية
-    'google/gemma-4-26b-a4b-it:free',           // ⚡ سريع جدًا
-    'nvidia/nemotron-3-ultra-550b-a55b:free',   // احتياطي قوي
+    'nvidia/nemotron-3-super-120b-a12b:free',   // ⭐ متوازن
+    'google/gemma-4-31b-it:free',               // ⭐ Google
+    'nvidia/nemotron-3-ultra-550b-a55b:free',   // قوي لكن أبطأ
+    'google/gemma-4-26b-a4b-it:free',           // ⚡ سريع
+    'apodex/apodex-1.1-mini:free',              // احتياطي
+    'dots-studio/dots-3-note-preview:free',     // احتياطي أخير
   ];
 
   const errors = [];
+  let allRateLimited = true;
 
   for (const model of models) {
     try {
@@ -61,16 +64,23 @@ export default async function handler(req) {
         body: JSON.stringify({
           model,
           messages,
-          temperature: 0.3,       // أدق للطب
-          top_p: 0.85,
-          max_tokens: 4000,       // ✅ أكثر من كافٍ لـ 5 أسئلة مفصلة
+          temperature: 0.4,
+          max_tokens: 4000,
           stream: true,
         }),
       });
 
+      // إذا كان rate limit، لا نحاول النماذج التالية بنفس المفتاح
+      if (r.status === 429) {
+        errors.push(`${model}: HTTP 429 Rate Limit`);
+        continue;
+      }
+
+      allRateLimited = false;
+
       if (!r.ok) {
         const txt = await r.text().catch(() => '');
-        errors.push(`${model}: HTTP ${r.status} ${txt.slice(0, 100)}`);
+        errors.push(`${model}: HTTP ${r.status} ${txt.slice(0, 80)}`);
         continue;
       }
 
@@ -88,8 +98,16 @@ export default async function handler(req) {
     }
   }
 
+  // إذا كل الأخطاء rate limit
+  const isRateLimit = errors.every(e => e.includes('429'));
+
   return new Response(
-    JSON.stringify({ error: 'تعذر الاتصال بجميع النماذج', details: errors }),
+    JSON.stringify({
+      error: isRateLimit
+        ? '⏱️ تم استنفاد حصة OpenRouter اليومية. جرّب بعد 24 ساعة أو أضف رصيدًا.'
+        : 'تعذر الاتصال بجميع النماذج',
+      details: errors,
+    }),
     { status: 502, headers: { 'Content-Type': 'application/json' } }
   );
 }
