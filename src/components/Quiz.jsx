@@ -9,6 +9,7 @@ const SUBJECTS = [
 import { logActivity } from '../lib/streak';
 const DIFFICULTIES = ['سهل', 'متوسط', 'صعب'];
 const NUM_OPTIONS = [5, 10, 15, 20];
+import { exportQuizPDF } from '../lib/pdfExport';
 
 export default function Quiz({ profile, setActiveWork }) {
   const [stage, setStage] = useState('setup'); // setup | loading | running | results
@@ -562,6 +563,38 @@ export default function Quiz({ profile, setActiveWork }) {
 
         {/* الإجراءات */}
         <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
+          <button
+            onClick={async () => {
+              try {
+                await exportQuizPDF({
+                  subject,
+                  topic,
+                  questions,
+                  answers,
+                  score,
+                  total,
+                  percentage,
+                  profile,
+                });
+              } catch (err) {
+                alert('فشل التصدير: ' + err.message);
+              }
+            }}
+            style={{
+              flex: 1,
+              padding: 14,
+              background: '#10B981',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 10,
+              fontSize: '1em',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+            }}
+          >
+            📄 تصدير PDF
+          </button>
           <button
             onClick={handleReset}
             style={{

@@ -11,6 +11,8 @@ import {
 } from '../lib/chatStorage';
 import ConversationsSidebar from './ConversationsSidebar';
 import { useIsMobile } from '../hooks/useMediaQuery';
+import { exportConversationPDF } from '../lib/pdfExport';
+
 
 export default function ChatCoach({ profile, session }) {
   const [messages, setMessages] = useState([]);
@@ -384,6 +386,31 @@ export default function ChatCoach({ profile, session }) {
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {messages.length > 1 && (
+              <button
+                onClick={async () => {
+                  try {
+                    await exportConversationPDF(messages, profile);
+                  } catch (err) {
+                    alert('فشل التصدير: ' + err.message);
+                  }
+                }}
+                style={{
+                  background: 'rgba(255,255,255,0.2)',
+                  border: 'none',
+                  color: '#fff',
+                  padding: '6px 12px',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                  fontSize: '0.75em',
+                  fontWeight: 'bold',
+                  fontFamily: 'inherit',
+                }}
+                title="تصدير المحادثة PDF"
+              >
+                📄 PDF
+              </button>
+            )}
             {lastProvider && (
               <div style={{
                 fontSize: '0.7em',

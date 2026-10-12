@@ -6,6 +6,7 @@ import {
   clearAllWrongAnswers,
 } from '../lib/wrongAnswers';
 import { supabase } from '../lib/supabase';
+import { exportWrongAnswersPDF } from '../lib/pdfExport';
 
 export default function QuizBank({ session }) {
   const [loading, setLoading] = useState(true);
@@ -105,7 +106,7 @@ export default function QuizBank({ session }) {
         </div>
       )}
 
-      {/* أدوات */}
+            {/* أدوات */}
       <div style={{
         display: 'flex',
         justifyContent: 'space-between',
@@ -114,26 +115,51 @@ export default function QuizBank({ session }) {
         flexWrap: 'wrap',
         gap: 10,
       }}>
-        <h2 style={{ margin: 0, 	color: 'var(--primary)', fontSize: '1.1em' }}>
+        <h2 style={{ margin: 0, color: '#2A5C82', fontSize: '1.1em' }}>
           الأسئلة ({answers.length})
-          {filterSubject && <span style={{ fontSize: '0.8em', color: 'var(--text-muted)' }}> — {filterSubject}</span>}
+          {filterSubject && <span style={{ fontSize: '0.8em', color: '#64748B' }}> — {filterSubject}</span>}
         </h2>
 
         {answers.length > 0 && (
-          <button
-            onClick={handleClearAll}
-            style={{
-              background: 'transparent',
-              border: '1px solid #EF4444',
-              color: '#EF4444',
-              padding: '6px 14px',
-              borderRadius: 8,
-              cursor: 'pointer',
-              fontSize: '0.85em',
-            }}
-          >
-            🗑 حذف الكل
-          </button>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button
+              onClick={async () => {
+                try {
+                  await exportWrongAnswersPDF(answers, null, filterSubject);
+                } catch (err) {
+                  alert('فشل التصدير: ' + err.message);
+                }
+              }}
+              style={{
+                background: '#2A5C82',
+                border: 'none',
+                color: '#fff',
+                padding: '6px 14px',
+                borderRadius: 8,
+                cursor: 'pointer',
+                fontSize: '0.85em',
+                fontWeight: 'bold',
+                fontFamily: 'inherit',
+              }}
+            >
+              📄 تصدير PDF
+            </button>
+            <button
+              onClick={handleClearAll}
+              style={{
+                background: 'transparent',
+                border: '1px solid #EF4444',
+                color: '#EF4444',
+                padding: '6px 14px',
+                borderRadius: 8,
+                cursor: 'pointer',
+                fontSize: '0.85em',
+                fontFamily: 'inherit',
+              }}
+            >
+              🗑 حذف الكل
+            </button>
+          </div>
         )}
       </div>
 

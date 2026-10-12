@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useIsMobile } from '../hooks/useMediaQuery';
 import { saveManyWrongAnswers } from '../lib/wrongAnswers';
+import { exportExamPDF } from '../lib/pdfExport';
 const SUBJECTS = [
   'الداخلية العصبية', 'الداخلية القلبية', 'الداخلية الهضمية', 'الداخلية الصدرية',
   'الجراحة العامة', 'الأطفال', 'النسائية والتوليد', 'الفارماكولوجي',
@@ -770,15 +771,44 @@ export default function Exam({ profile, session, setActiveWork }) {
           💾 تم حفظ {total - score} سؤال خاطئ تلقائيًا في بنك الأخطاء
         </div>
 
-        <button
-          onClick={handleReset}
-          style={{
-            width: '100%', padding: 14, background: '#7C3AED', color: '#fff',
-            border: 'none', borderRadius: 10, fontSize: '1em', fontWeight: 'bold', cursor: 'pointer',
-          }}
-        >
-          🔄 امتحان جديد
-        </button>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button
+            onClick={async () => {
+              try {
+                await exportExamPDF({
+                  subject,
+                  questions,
+                  answers,
+                  score,
+                  total,
+                  percentage,
+                  timeUsed,
+                  totalTime,
+                  profile,
+                });
+              } catch (err) {
+                alert('فشل التصدير: ' + err.message);
+              }
+            }}
+            style={{
+              flex: 1, padding: 14, background: '#10B981', color: '#fff',
+              border: 'none', borderRadius: 10, fontSize: '1em', fontWeight: 'bold',
+              cursor: 'pointer', fontFamily: 'inherit',
+            }}
+          >
+            📄 تصدير PDF
+          </button>
+          <button
+            onClick={handleReset}
+            style={{
+              flex: 1, padding: 14, background: '#7C3AED', color: '#fff',
+              border: 'none', borderRadius: 10, fontSize: '1em', fontWeight: 'bold',
+              cursor: 'pointer', fontFamily: 'inherit',
+            }}
+          >
+            🔄 امتحان جديد
+          </button>
+        </div>
       </div>
     );
   }
