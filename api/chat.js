@@ -44,15 +44,17 @@ export default async function handler(req) {
   // ═══════════════════════════════════════════
   // 1️⃣ Groq (كل المفاتيح بالتتابع)
   // ═══════════════════════════════════════════
-  if (groqKeys.length > 0) {
+    if (groqKeys.length > 0) {
     const groqModels = [
       'llama-3.3-70b-versatile',
       'llama-3.1-8b-instant',
       'openai/gpt-oss-120b',
     ];
 
-    // جرّب كل مفتاح مع كل موديل
-    for (const apiKey of groqKeys) {
+    // ⭐ خلط عشوائي للمفاتيح → توزيع 50/50
+    const shuffledKeys = [...groqKeys].sort(() => Math.random() - 0.5);
+
+    for (const apiKey of shuffledKeys) {
       for (const model of groqModels) {
         try {
           const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
