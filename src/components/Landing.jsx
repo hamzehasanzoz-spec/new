@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Logo from './Logo';
+import ThemeToggle from './ThemeToggle';
 
 export default function Landing({ onEnter }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -65,6 +66,7 @@ export default function Landing({ onEnter }) {
             </div>
 
             <div className="flex items-center gap-2">
+              <ThemeToggle />
               <button
                 onClick={() => onEnter(false)}
                 className="hidden sm:block text-sm font-semibold text-content-muted hover:text-content px-4 py-2 rounded-md transition-colors"
