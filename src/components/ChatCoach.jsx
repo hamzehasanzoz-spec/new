@@ -366,17 +366,23 @@ export default function ChatCoach({ profile, session }) {
           gap: 10,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            {isMobile && (
-              <button
-                onClick={() => setShowSidebar(s => !s)}
-                style={{
-                  background: 'transparent', border: 'none', color: '#fff',
-                  fontSize: '1.3em', cursor: 'pointer', padding: 4,
-                }}
-              >
-                ☰
-              </button>
-            )}
+            <button
+              onClick={() => setShowSidebar(s => !s)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#fff',
+                fontSize: '1.3em',
+                cursor: 'pointer',
+                padding: 4,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              title={showSidebar ? 'إخفاء قائمة المحادثات' : 'إظهار قائمة المحادثات'}
+            >
+              {showSidebar ? '✕' : '☰'}
+            </button>
             <span style={{ fontSize: '1.4em' }}>🩺</span>
             <div>
               <div style={{ fontWeight: 'bold' }}>Coach AI</div>
