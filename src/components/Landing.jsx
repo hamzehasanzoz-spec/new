@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import Logo from './Logo';
 import ThemeToggle from './ThemeToggle';
+import { Reveal, StaggerContainer, StaggerItem } from './ui';
+import { motion } from 'framer-motion';
 
 export default function Landing({ onEnter }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -114,42 +116,71 @@ export default function Landing({ onEnter }) {
 
       {/* ═══ Hero ═══ */}
       <section className="max-w-6xl mx-auto px-4 md:px-6 pt-16 md:pt-24 pb-20 text-center">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary/10 border border-primary/20 rounded-full text-xs font-semibold text-primary mb-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.21, 0.47, 0.32, 0.98] }}
+          className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary/10 border border-primary/20 rounded-full text-xs font-semibold text-primary mb-6"
+        >
           <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
           منصة تعليمية ذكية لطلاب الجامعات السورية
-        </div>
+        </motion.div>
 
-        <h1 className="text-4xl md:text-6xl font-bold text-content mb-6 leading-tight tracking-tight">
+        <motion.h1
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.1, ease: [0.21, 0.47, 0.32, 0.98] }}
+          className="text-4xl md:text-6xl font-bold text-content mb-6 leading-tight tracking-tight"
+        >
           ادرس بذكاء،
           <br />
           <span className="text-primary">وتفوّق بمساعدة AI</span>
-        </h1>
+        </motion.h1>
 
-        <p className="text-base md:text-lg text-content-muted max-w-2xl mx-auto mb-10 leading-relaxed">
+        <motion.p
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2, ease: [0.21, 0.47, 0.32, 0.98] }}
+          className="text-base md:text-lg text-content-muted max-w-2xl mx-auto mb-10 leading-relaxed"
+        >
           كوتش AI يساعدك على رفع ملفاتك، توليد اختبارات ذكية، محاكاة الامتحانات،
           وتتبع تقدمك — كل ذلك في منصة واحدة أنيقة.
           <br className="hidden md:block" />
           <span className="text-content-subtle text-sm">
             صُمّمت لطلاب الطب البشري، طب الأسنان، والصيدلة في سوريا.
           </span>
-        </p>
+        </motion.p>
 
-        <div className="flex items-center justify-center gap-3 flex-wrap mb-12">
-          <button
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3, ease: [0.21, 0.47, 0.32, 0.98] }}
+          className="flex items-center justify-center gap-3 flex-wrap mb-12"
+        >
+          <motion.button
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
             onClick={() => onEnter(true)}
-            className="bg-primary hover:bg-primary-light text-white font-semibold px-7 py-3.5 rounded-md transition-all shadow-sm hover:shadow-md"
+            className="bg-primary hover:bg-primary-light text-white font-semibold px-7 py-3.5 rounded-md transition-colors shadow-sm hover:shadow-md"
           >
             ابدأ مجانًا الآن
-          </button>
-          <button
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
             onClick={() => onEnter(false)}
             className="bg-surface-card hover:bg-surface-soft border border-border text-content font-semibold px-7 py-3.5 rounded-md transition-colors"
           >
             تسجيل الدخول
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
 
-        <div className="flex items-center justify-center gap-8 md:gap-12 flex-wrap text-sm">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.5 }}
+          className="flex items-center justify-center gap-8 md:gap-12 flex-wrap text-sm"
+        >
           <div className="text-center">
             <div className="text-2xl font-bold text-content tabular-nums">3</div>
             <div className="text-xs text-content-subtle mt-1">كليات مدعومة</div>
@@ -164,7 +195,7 @@ export default function Landing({ onEnter }) {
             <div className="text-2xl font-bold text-content">مجاني</div>
             <div className="text-xs text-content-subtle mt-1">بدون بطاقة</div>
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* ═══ Features ═══ */}
@@ -179,20 +210,23 @@ export default function Landing({ onEnter }) {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <StaggerContainer className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {features.map((f, i) => (
-            <div
-              key={i}
-              className="bg-surface-card border border-border rounded-lg p-6 hover:border-primary/40 transition-colors group"
-            >
-              <div className="w-12 h-12 rounded-md bg-primary/10 flex items-center justify-center text-2xl mb-4 group-hover:bg-primary/15 transition-colors">
-                {f.icon}
-              </div>
-              <h3 className="text-base font-bold text-content mb-2">{f.title}</h3>
-              <p className="text-sm text-content-muted leading-relaxed">{f.desc}</p>
-            </div>
+            <StaggerItem key={i}>
+              <motion.div
+                whileHover={{ y: -4, borderColor: 'rgba(59,130,246,0.4)' }}
+                transition={{ duration: 0.2 }}
+                className="bg-surface-card border border-border rounded-lg p-6 group h-full"
+              >
+                <div className="w-12 h-12 rounded-md bg-primary/10 flex items-center justify-center text-2xl mb-4 group-hover:bg-primary/15 transition-colors">
+                  {f.icon}
+                </div>
+                <h3 className="text-base font-bold text-content mb-2">{f.title}</h3>
+                <p className="text-sm text-content-muted leading-relaxed">{f.desc}</p>
+              </motion.div>
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerContainer>
       </section>
 
       {/* ═══ How it works ═══ */}
@@ -207,26 +241,31 @@ export default function Landing({ onEnter }) {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6">
+        <StaggerContainer className="grid md:grid-cols-3 gap-6">
           {steps.map((s, i) => (
-            <div key={i}>
+            <StaggerItem key={i}>
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-10 h-10 rounded-md bg-primary text-white flex items-center justify-center font-bold text-sm shadow-sm flex-shrink-0">
+                <motion.div
+                  whileHover={{ scale: 1.1, rotate: 5 }}
+                  transition={{ duration: 0.2 }}
+                  className="w-10 h-10 rounded-md bg-primary text-white flex items-center justify-center font-bold text-sm shadow-sm flex-shrink-0"
+                >
                   {s.num}
-                </div>
+                </motion.div>
                 <div className="text-xs font-bold text-content-subtle uppercase tracking-wider">
                   الخطوة {s.num}
                 </div>
               </div>
               <h3 className="text-base font-bold text-content mb-2">{s.title}</h3>
               <p className="text-sm text-content-muted leading-relaxed">{s.desc}</p>
-            </div>
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerContainer>
       </section>
 
       {/* ═══ Vision & Mission ═══ */}
       <section id="vision" className="max-w-6xl mx-auto px-4 md:px-6 py-20 border-t border-border">
+        <Reveal>
         <div className="grid md:grid-cols-2 gap-8 items-start">
           {/* Vision */}
           <div>
@@ -269,6 +308,7 @@ export default function Landing({ onEnter }) {
             </div>
           </div>
         </div>
+        </Reveal>
       </section>
 
       {/* ═══ Team ═══ */}
@@ -283,9 +323,9 @@ export default function Landing({ onEnter }) {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-5 max-w-3xl mx-auto">
+        <StaggerContainer className="grid md:grid-cols-3 gap-5 max-w-3xl mx-auto">
           {/* Founder */}
-          <div className="bg-surface-card border border-border rounded-lg p-6 text-center">
+          <StaggerItem className="bg-surface-card border border-border rounded-lg p-6 text-center">
             <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-3xl mx-auto mb-4">
               🩺
             </div>
@@ -298,19 +338,19 @@ export default function Landing({ onEnter }) {
             <p className="text-xs text-content-muted leading-relaxed">
               طلاب طب سوريون، نعرف التحديات التي تواجهها لأننا نعيشها يومياً.
             </p>
-          </div>
+          </StaggerItem>
 
           {/* Contributors */}
           <div className="bg-surface-card border border-border rounded-lg p-6 text-center">
             <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center text-3xl mx-auto mb-4">
               🤝
             </div>
-            <div className="text-base font-bold text-content mb-1">
+            <p className="text-base font-bold text-content mb-1">
               المساهمون
-            </div>
-            <div className="text-xs text-primary font-semibold mb-3">
+            </p>
+            <p className="text-xs text-primary font-semibold mb-3">
               طلاب من كل كلية
-            </div>
+            </p>
             <p className="text-xs text-content-muted leading-relaxed">
               أصدقاء من الطب، الأسنان، والصيدلة يساهمون بالمحتوى والملاحظات.
             </p>
@@ -331,7 +371,7 @@ export default function Landing({ onEnter }) {
               كل ملاحظة، اقتراح، وملف تشاركه يجعل المنصة أفضل للجميع.
             </p>
           </div>
-        </div>
+        </StaggerContainer>
 
         <div className="text-center mt-10">
           <p className="text-xs text-content-subtle">
@@ -352,34 +392,45 @@ export default function Landing({ onEnter }) {
           </p>
         </div>
 
-        <div className="space-y-3">
+        <StaggerContainer className="space-y-3">
           {faqs.map((f, i) => {
             const isOpen = openFaq === i;
             return (
-              <div
-                key={i}
-                className="bg-surface-card border border-border rounded-lg overflow-hidden transition-colors"
-              >
-                <button
-                  onClick={() => setOpenFaq(isOpen ? null : i)}
-                  className="w-full p-5 flex items-center justify-between gap-4 text-right hover:bg-surface-soft transition-colors"
-                >
-                  <span className="text-sm font-semibold text-content flex-1">
-                    {f.q}
-                  </span>
-                  <span className={`text-primary text-lg transition-transform flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`}>
-                    ▼
-                  </span>
-                </button>
-                {isOpen && (
-                  <div className="px-5 pb-5 text-sm text-content-muted leading-relaxed border-t border-border pt-4">
-                    {f.a}
-                  </div>
-                )}
-              </div>
+              <StaggerItem key={i}>
+                <div className="bg-surface-card border border-border rounded-lg overflow-hidden">
+                  <button
+                    onClick={() => setOpenFaq(isOpen ? null : i)}
+                    className="w-full p-5 flex items-center justify-between gap-4 text-right hover:bg-surface-soft transition-colors"
+                  >
+                    <span className="text-sm font-semibold text-content flex-1">
+                      {f.q}
+                    </span>
+                    <motion.span
+                      animate={{ rotate: isOpen ? 180 : 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="text-primary text-lg flex-shrink-0"
+                    >
+                      ▼
+                    </motion.span>
+                  </button>
+                  <motion.div
+                    initial={false}
+                    animate={{
+                      height: isOpen ? 'auto' : 0,
+                      opacity: isOpen ? 1 : 0,
+                    }}
+                    transition={{ duration: 0.25, ease: [0.21, 0.47, 0.32, 0.98] }}
+                    style={{ overflow: 'hidden' }}
+                  >
+                    <div className="px-5 pb-5 text-sm text-content-muted leading-relaxed border-t border-border pt-4">
+                      {f.a}
+                    </div>
+                  </motion.div>
+                </div>
+              </StaggerItem>
             );
           })}
-        </div>
+        </StaggerContainer>
       </section>
 
       {/* ═══ Contact ═══ */}
