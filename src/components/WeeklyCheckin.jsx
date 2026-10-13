@@ -9,16 +9,16 @@ import {
   computeAccuracy,
   formatWeek,
 } from '../lib/weeklyCheckin';
-import { logActivity } from '../lib/streak';
+
 const MOODS = [
-  { value: 'ممتاز', emoji: '😄', color: '#10B981' },
-  { value: 'جيد', emoji: '🙂', 	color: 'var(--primary)' },
-  { value: 'متوسط', emoji: '😐', color: '#F59E0B' },
-  { value: 'سيء', emoji: '😔', color: '#EF4444' },
+  { value: 'ممتاز', emoji: '😄', color: 'text-success' },
+  { value: 'جيد', emoji: '🙂', color: 'text-primary' },
+  { value: 'متوسط', emoji: '😐', color: 'text-warn' },
+  { value: 'سيء', emoji: '😔', color: 'text-danger' },
 ];
 
 export default function WeeklyCheckin({ session, profile }) {
-  const [stage, setStage] = useState('list'); // list | form
+  const [stage, setStage] = useState('list');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [reports, setReports] = useState([]);
@@ -35,9 +35,7 @@ export default function WeeklyCheckin({ session, profile }) {
 
   const userId = session?.user?.id;
 
-  useEffect(() => {
-    loadData();
-  }, [userId]);
+  useEffect(() => { loadData(); }, [userId]);
 
   const loadData = async () => {
     setLoading(true);
@@ -55,7 +53,7 @@ export default function WeeklyCheckin({ session, profile }) {
     }
   };
 
-  const upd = (key, val) => setForm(prev => ({ ...prev, [key]: val }));
+  const upd = (k, v) => setForm(prev => ({ ...prev, [k]: v }));
 
   const toggleSubject = (s) => {
     setForm(prev => ({
@@ -68,10 +66,8 @@ export default function WeeklyCheckin({ session, profile }) {
 
   const handleSubmit = async () => {
     if (!form.hours_studied && !form.questions_attempted) {
-      alert('الرجاء إدخال ساعات الدراسة أو عدد الأسئلة');
-      return;
+      return alert('الرجاء إدخال ساعات الدراسة أو عدد الأسئلة');
     }
-
     setSaving(true);
     try {
       await saveWeeklyReport(userId, {
@@ -83,21 +79,10 @@ export default function WeeklyCheckin({ session, profile }) {
         challenges: form.challenges.trim() || null,
         achievements: form.achievements.trim() || null,
       });
-         // 🔥 سجّل النشاط
-      const { logActivity } = await import('../lib/streak');
-      await logActivity(userId, 'weekly');
-      
-      alert('✅ تم حفظ التقرير');
-      alert('✅ تم حفظ التقرير');
       setStage('list');
       setForm({
-        hours_studied: '',
-        questions_attempted: '',
-        questions_correct: '',
-        subjects_studied: [],
-        mood: 'جيد',
-        challenges: '',
-        achievements: '',
+        hours_studied: '', questions_attempted: '', questions_correct: '',
+        subjects_studied: [], mood: 'جيد', challenges: '', achievements: '',
       });
       loadData();
     } catch (err) {
@@ -117,215 +102,110 @@ export default function WeeklyCheckin({ session, profile }) {
     }
   };
 
-  // حساب الاتجاه
   const getTrend = (index) => {
     if (index >= reports.length - 1) return null;
-    const current = computeAccuracy(reports[index]);
-    const previous = computeAccuracy(reports[index + 1]);
-    const diff = current - previous;
-    if (Math.abs(diff) < 5) return { icon: '➖', 	color: 'var(--text-subtle)', text: 'ثابت' };
-    if (diff > 0) return { icon: '📈', color: '#10B981', text: `+${diff}%` };
-    return { icon: '📉', color: '#EF4444', text: `${diff}%` };
+    const diff = computeAccuracy(reports[index]) - computeAccuracy(reports[index + 1]);
+    if (Math.abs(diff) < 5) return { icon: '➖', color: 'text-content-muted', text: 'ثابت' };
+    if (diff > 0) return { icon: '📈', color: 'text-success', text: `+${diff}%` };
+    return { icon: '📉', color: 'text-danger', text: `${diff}%` };
   };
 
-  // ══════════════════════════════════════
-  // Stage: List
-  // ══════════════════════════════════════
   if (stage === 'list') {
     return (
-      <div style={{ maxWidth: 900, margin: '30px auto', padding: 25, direction: 'rtl' }}>
-        {/* Header */}
-        <div style={{
-          background: 'linear-gradient(135deg, #2A5C82 0%, #3B7BA8 100%)',
-          color: '#fff',
-          padding: 30,
-          borderRadius: 16,
-          marginBottom: 24,
-        }}>
-          <h1 style={{ margin: '0 0 8px', fontSize: '1.5em' }}>📊 التقرير الأسبوعي</h1>
-          <p style={{ margin: 0, opacity: 0.9, fontSize: '0.95em' }}>
+      <div className="max-w-3xl mx-auto space-y-5" dir="rtl">
+        <div className="bg-surface-card border border-border rounded-lg p-6">
+          <h1 className="text-2xl font-bold text-content mb-2">
+            📊 التقرير الأسبوعي
+          </h1>
+          <p className="text-sm text-content-muted">
             سجّل تقدمك أسبوعيًا لترى صورة واضحة عن أدائك.
           </p>
         </div>
 
-        {/* Banner الحالة */}
         {!currentWeekDone ? (
-          <div style={{
-            background: '#FEF3C7',
-            border: '2px solid #F59E0B',
-            borderRadius: 14,
-            padding: 20,
-            marginBottom: 24,
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            flexWrap: 'wrap',
-            gap: 12,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ fontSize: '2em' }}>⏰</div>
+          <div className="bg-warn/10 border-2 border-warn/40 rounded-lg p-5 flex items-center justify-between flex-wrap gap-3">
+            <div className="flex items-center gap-3">
+              <div className="text-3xl">⏰</div>
               <div>
-                <div style={{ fontWeight: 'bold', color: '#92400E' }}>
-                  لم تُسجّل تقرير هذا الأسبوع بعد
-                </div>
-                <div style={{ fontSize: '0.85em', color: '#92400E', opacity: 0.8 }}>
-                  خصص دقيقتين لتقييم تقدمك
-                </div>
+                <div className="text-sm font-bold text-warn">لم تُسجّل تقرير هذا الأسبوع</div>
+                <div className="text-xs text-warn/80 mt-0.5">خصص دقيقتين لتقييم تقدمك</div>
               </div>
             </div>
             <button
               onClick={() => setStage('form')}
-              style={{
-                background: '#F59E0B',
-                color: '#fff',
-                border: 'none',
-                padding: '12px 24px',
-                borderRadius: 10,
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                fontSize: '0.95em',
-              }}
+              className="bg-warn hover:opacity-90 text-white font-semibold px-5 py-2.5 rounded-md text-sm transition-opacity"
             >
               📝 إضافة تقرير الآن
             </button>
           </div>
         ) : (
-          <div style={{
-            background: '#F0FDF4',
-            border: '2px solid #10B981',
-            borderRadius: 14,
-            padding: 16,
-            marginBottom: 24,
-            textAlign: 'center',
-            color: '#065F46',
-            fontWeight: 'bold',
-          }}>
+          <div className="bg-success/10 border-2 border-success/40 rounded-lg p-4 text-center text-sm font-bold text-success">
             ✅ أحسنت! سجّلت تقرير هذا الأسبوع
           </div>
         )}
 
-        {/* السجل */}
-        <h2 style={{ 	color: 'var(--primary)', fontSize: '1.1em', marginBottom: 16 }}>
+        <h2 className="text-sm font-bold text-content">
           📅 سجل الأسابيع ({reports.length})
         </h2>
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: 50, color: 'var(--text-muted)' }}>
-            جاري التحميل...
+          <div className="text-center py-16">
+            <div className="w-10 h-10 mx-auto border-2 border-border border-t-primary rounded-full animate-spin" />
           </div>
         ) : reports.length === 0 ? (
-          <div style={{
-            background: 'var(--bg-elevated)',
-            border: '1px solid var(--border)',
-            borderRadius: 14,
-            padding: 50,
-            textAlign: 'center',
-            	color: 'var(--text-subtle)',
-          }}>
-            <div style={{ fontSize: '3em', marginBottom: 12 }}>📊</div>
-            <div>لا توجد تقارير بعد.</div>
-            <div style={{ fontSize: '0.85em', marginTop: 8 }}>
-              ابدأ بتسجيل أسبوعك الأول.
-            </div>
+          <div className="bg-surface-card border border-border rounded-lg p-12 text-center">
+            <div className="text-5xl mb-3 opacity-40">📊</div>
+            <div className="text-sm text-content-muted">لا توجد تقارير بعد.</div>
+            <div className="text-xs text-content-subtle mt-1">ابدأ بتسجيل أسبوعك الأول.</div>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div className="space-y-3">
             {reports.map((r, idx) => {
               const accuracy = computeAccuracy(r);
               const trend = getTrend(idx);
               const moodData = MOODS.find(m => m.value === r.mood) || MOODS[1];
 
               return (
-                <div
-                  key={r.id}
-                  style={{
-                    background: 'var(--bg-elevated)',
-                    border: '1px solid var(--border)',
-                    borderRadius: 12,
-                    padding: 18,
-                  }}
-                >
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: 14,
-                    flexWrap: 'wrap',
-                    gap: 10,
-                  }}>
+                <div key={r.id} className="bg-surface-card border border-border rounded-lg p-5">
+                  <div className="flex justify-between items-center flex-wrap gap-3 mb-4">
                     <div>
-                      <div style={{ fontWeight: 'bold', color: 'var(--text)', fontSize: '0.95em' }}>
+                      <div className="text-sm font-bold text-content">
                         أسبوع {formatWeek(r.week_start)}
                       </div>
-                      <div style={{ fontSize: '0.78em', 	color: 'var(--text-subtle)', marginTop: 2 }}>
+                      <div className={`text-xs mt-0.5 ${moodData.color}`}>
                         {moodData.emoji} {r.mood}
                       </div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div className="flex items-center gap-3">
                       {trend && (
-                        <div style={{
-                          fontSize: '0.82em',
-                          color: trend.color,
-                          fontWeight: 'bold',
-                        }}>
+                        <div className={`text-xs font-bold ${trend.color}`}>
                           {trend.icon} {trend.text}
                         </div>
                       )}
                       <button
                         onClick={() => handleDelete(r.id)}
-                        style={{
-                          background: 'transparent',
-                          border: '1px solid #EF4444',
-                          color: '#EF4444',
-                          padding: '4px 10px',
-                          borderRadius: 6,
-                          cursor: 'pointer',
-                          fontSize: '0.75em',
-                        }}
+                        className="w-8 h-8 rounded-md border border-danger/40 text-danger hover:bg-danger/10 transition-colors text-xs"
                       >
                         🗑
                       </button>
                     </div>
                   </div>
 
-                  <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))',
-                    gap: 10,
-                    marginBottom: 12,
-                  }}>
-                    <MiniStat label="ساعات" value={r.hours_studied} color="#2A5C82" />
-                    <MiniStat label="أسئلة" value={r.questions_attempted} color="#8B5CF6" />
-                    <MiniStat
-                      label="صحيحة"
-                      value={r.questions_correct}
-                      color="#10B981"
-                    />
+                  <div className="grid grid-cols-4 gap-2 mb-3">
+                    <MiniStat label="ساعات" value={r.hours_studied} color="text-primary" />
+                    <MiniStat label="أسئلة" value={r.questions_attempted} color="text-warn" />
+                    <MiniStat label="صحيحة" value={r.questions_correct} color="text-success" />
                     <MiniStat
                       label="الدقة"
                       value={`${accuracy}%`}
-                      color={accuracy >= 70 ? '#10B981' : accuracy >= 50 ? '#F59E0B' : '#EF4444'}
+                      color={accuracy >= 70 ? 'text-success' : accuracy >= 50 ? 'text-warn' : 'text-danger'}
                     />
                   </div>
 
                   {r.subjects_studied?.length > 0 && (
-                    <div style={{
-                      display: 'flex',
-                      flexWrap: 'wrap',
-                      gap: 6,
-                      marginBottom: 10,
-                    }}>
+                    <div className="flex flex-wrap gap-1.5 mb-3">
                       {r.subjects_studied.map(s => (
-                        <span
-                          key={s}
-                          style={{
-                            background: '#EFF6FF',
-                            	color: 'var(--primary)',
-                            padding: '3px 10px',
-                            borderRadius: 20,
-                            fontSize: '0.75em',
-                          }}
-                        >
+                        <span key={s} className="bg-primary/10 text-primary text-xs px-3 py-1 rounded-md">
                           {s}
                         </span>
                       ))}
@@ -333,25 +213,12 @@ export default function WeeklyCheckin({ session, profile }) {
                   )}
 
                   {r.achievements && (
-                    <div style={{
-                      fontSize: '0.82em',
-                      color: '#065F46',
-                      background: '#F0FDF4',
-                      padding: '8px 12px',
-                      borderRadius: 8,
-                      marginBottom: 6,
-                    }}>
+                    <div className="text-xs bg-success/10 border border-success/20 text-success rounded-md p-2.5 mb-2">
                       🏆 {r.achievements}
                     </div>
                   )}
                   {r.challenges && (
-                    <div style={{
-                      fontSize: '0.82em',
-                      color: '#92400E',
-                      background: '#FFFBEB',
-                      padding: '8px 12px',
-                      borderRadius: 8,
-                    }}>
+                    <div className="text-xs bg-warn/10 border border-warn/20 text-warn rounded-md p-2.5">
                       ⚠️ {r.challenges}
                     </div>
                   )}
@@ -364,31 +231,18 @@ export default function WeeklyCheckin({ session, profile }) {
     );
   }
 
-  // ══════════════════════════════════════
-  // Stage: Form
-  // ══════════════════════════════════════
   const subjectOptions = profile?.target_subjects || [];
 
   return (
-    <div style={{ maxWidth: 700, margin: '30px auto', padding: 25, direction: 'rtl' }}>
-      <div style={{
-        background: 'linear-gradient(135deg, #2A5C82 0%, #3B7BA8 100%)',
-        color: '#fff',
-        padding: 24,
-        borderRadius: 16,
-        marginBottom: 24,
-      }}>
-        <h1 style={{ margin: 0, fontSize: '1.4em' }}>📝 تقرير أسبوع {formatWeek(getCurrentWeekStart())}</h1>
+    <div className="max-w-2xl mx-auto space-y-5" dir="rtl">
+      <div className="bg-surface-card border border-border rounded-lg p-6">
+        <h1 className="text-xl font-bold text-content">
+          📝 تقرير أسبوع {formatWeek(getCurrentWeekStart())}
+        </h1>
       </div>
 
-      <div style={{
-        background: 'var(--bg-elevated)',
-        border: '1px solid var(--border)',
-        borderRadius: 14,
-        padding: 24,
-      }}>
+      <div className="bg-surface-card border border-border rounded-lg p-6 space-y-5">
 
-        {/* ساعات الدراسة */}
         <Field label="كم ساعة درست هذا الأسبوع؟">
           <input
             type="number"
@@ -397,61 +251,52 @@ export default function WeeklyCheckin({ session, profile }) {
             placeholder="مثال: 25"
             value={form.hours_studied}
             onChange={e => upd('hours_studied', e.target.value)}
-            style={inputStyle}
+            className="w-full bg-surface-soft border border-border rounded-md px-3 py-2.5 text-sm text-content placeholder:text-content-subtle focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
           />
         </Field>
 
-        {/* الأسئلة */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <Field label="عدد الأسئلة التي حلّيتها">
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="عدد الأسئلة">
             <input
               type="number"
               min="0"
-              placeholder="مثال: 100"
+              placeholder="100"
               value={form.questions_attempted}
               onChange={e => upd('questions_attempted', e.target.value)}
-              style={inputStyle}
+              className="w-full bg-surface-soft border border-border rounded-md px-3 py-2.5 text-sm text-content placeholder:text-content-subtle focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
             />
           </Field>
           <Field label="منها صحيحة">
             <input
               type="number"
               min="0"
-              placeholder="مثال: 70"
+              placeholder="70"
               value={form.questions_correct}
               onChange={e => upd('questions_correct', e.target.value)}
-              style={inputStyle}
+              className="w-full bg-surface-soft border border-border rounded-md px-3 py-2.5 text-sm text-content placeholder:text-content-subtle focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
             />
           </Field>
         </div>
 
-        {/* المواد */}
         {subjectOptions.length > 0 && (
           <Field label="المواد التي درستها">
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
-              gap: 8,
-            }}>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
               {subjectOptions.map(s => {
-                const selected = form.subjects_studied.includes(s);
+                const active = form.subjects_studied.includes(s);
                 return (
                   <button
                     key={s}
                     type="button"
                     onClick={() => toggleSubject(s)}
-                    style={{
-                      padding: '8px 12px',
-                      borderRadius: 8,
-                      border: selected ? '2px solid #2A5C82' : '1px solid var(--border)',
-                      background: selected ? '#EFF6FF' : '#F8FAFC',
-                      color: 'var(--text)',
-                      cursor: 'pointer',
-                      fontSize: '0.85em',
-                      textAlign: 'right',
-                    }}
+                    className={`
+                      p-2.5 rounded-md border text-xs font-semibold transition-all text-right
+                      ${active
+                        ? 'bg-primary/10 border-primary text-primary'
+                        : 'bg-surface-soft border-border text-content-muted hover:border-content-subtle'
+                      }
+                    `}
                   >
-                    {selected && '✓ '}{s}
+                    {active && '✓ '}{s}
                   </button>
                 );
               })}
@@ -459,85 +304,64 @@ export default function WeeklyCheckin({ session, profile }) {
           </Field>
         )}
 
-        {/* الحالة النفسية */}
         <Field label="كيف كانت حالتك النفسية؟">
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
-            {MOODS.map(m => (
-              <button
-                key={m.value}
-                type="button"
-                onClick={() => upd('mood', m.value)}
-                style={{
-                  padding: '12px 8px',
-                  borderRadius: 10,
-                  border: form.mood === m.value ? `2px solid ${m.color}` : '1px solid var(--border)',
-                  background: form.mood === m.value ? `${m.color}15` : '#F8FAFC',
-                  cursor: 'pointer',
-                  textAlign: 'center',
-                }}
-              >
-                <div style={{ fontSize: '1.6em' }}>{m.emoji}</div>
-                <div style={{ fontSize: '0.82em', marginTop: 4, color: 'var(--text)' }}>
-                  {m.value}
-                </div>
-              </button>
-            ))}
+          <div className="grid grid-cols-4 gap-2">
+            {MOODS.map(m => {
+              const active = form.mood === m.value;
+              return (
+                <button
+                  key={m.value}
+                  type="button"
+                  onClick={() => upd('mood', m.value)}
+                  className={`
+                    p-3 rounded-md border text-center transition-all
+                    ${active
+                      ? 'bg-primary/10 border-primary'
+                      : 'bg-surface-soft border-border hover:border-content-subtle'
+                    }
+                  `}
+                >
+                  <div className="text-2xl mb-1">{m.emoji}</div>
+                  <div className={`text-xs ${active ? 'text-primary font-semibold' : 'text-content-muted'}`}>
+                    {m.value}
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </Field>
 
-        {/* الإنجازات */}
         <Field label="ما أهم إنجاز هذا الأسبوع؟ (اختياري)">
           <textarea
             rows={2}
             placeholder="مثال: أنهيت فصل Cardiology كاملًا"
             value={form.achievements}
             onChange={e => upd('achievements', e.target.value)}
-            style={{ ...inputStyle, resize: 'vertical', fontFamily: 'inherit' }}
+            className="w-full bg-surface-soft border border-border rounded-md px-3 py-2.5 text-sm text-content placeholder:text-content-subtle focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-vertical"
           />
         </Field>
 
-        {/* التحديات */}
         <Field label="ما أكبر تحدي واجهته؟ (اختياري)">
           <textarea
             rows={2}
             placeholder="مثال: التشتت أثناء مراجعة الفارماكولوجي"
             value={form.challenges}
             onChange={e => upd('challenges', e.target.value)}
-            style={{ ...inputStyle, resize: 'vertical', fontFamily: 'inherit' }}
+            className="w-full bg-surface-soft border border-border rounded-md px-3 py-2.5 text-sm text-content placeholder:text-content-subtle focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-vertical"
           />
         </Field>
 
-        {/* أزرار */}
-        <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+        <div className="flex gap-2 pt-2">
           <button
             onClick={() => setStage('list')}
-            style={{
-              flex: 1,
-              padding: 14,
-              background: 'var(--bg-elevated)',
-              color: 'var(--text-muted)',
-              border: '1px solid var(--border)',
-              borderRadius: 10,
-              fontSize: '1em',
-              cursor: 'pointer',
-            }}
+            className="flex-1 bg-surface-soft border border-border text-content-muted hover:text-content py-3 rounded-md font-semibold text-sm transition-colors"
           >
             إلغاء
           </button>
           <button
             onClick={handleSubmit}
             disabled={saving}
-            style={{
-              flex: 2,
-              padding: 14,
-              background: saving ? '#94A3B8' : '#10B981',
-              color: '#fff',
-              border: 'none',
-              borderRadius: 10,
-              fontSize: '1em',
-              fontWeight: 'bold',
-              cursor: saving ? 'not-allowed' : 'pointer',
-            }}
+            className="flex-[2] bg-success hover:opacity-90 text-white py-3 rounded-md font-semibold text-sm transition-opacity disabled:opacity-50"
           >
             {saving ? '...' : '💾 حفظ التقرير'}
           </button>
@@ -547,22 +371,10 @@ export default function WeeklyCheckin({ session, profile }) {
   );
 }
 
-// ═══════════════════════════════════════
-// مكونات مساعدة
-// ═══════════════════════════════════════
-
 function Field({ label, children }) {
   return (
-    <div style={{ marginBottom: 20 }}>
-      <label style={{
-        display: 'block',
-        fontWeight: 'bold',
-        marginBottom: 8,
-        color: 'var(--text)',
-        fontSize: '0.92em',
-      }}>
-        {label}
-      </label>
+    <div className="space-y-2">
+      <label className="block text-xs font-semibold text-content-muted">{label}</label>
       {children}
     </div>
   );
@@ -570,37 +382,9 @@ function Field({ label, children }) {
 
 function MiniStat({ label, value, color }) {
   return (
-    <div style={{
-      background: 'var(--bg)',
-      padding: 10,
-      borderRadius: 8,
-      textAlign: 'center',
-    }}>
-      <div style={{
-        fontSize: '1.2em',
-        fontWeight: 'bold',
-        color,
-        lineHeight: 1,
-      }}>
-        {value}
-      </div>
-      <div style={{
-        fontSize: '0.72em',
-        color: 'var(--text-muted)',
-        marginTop: 4,
-      }}>
-        {label}
-      </div>
+    <div className="bg-surface-soft rounded-md p-2.5 text-center">
+      <div className={`text-lg font-bold tabular-nums ${color}`}>{value}</div>
+      <div className="text-xs text-content-subtle mt-0.5">{label}</div>
     </div>
   );
 }
-
-const inputStyle = {
-  width: '100%',
-  padding: 12,
-  borderRadius: 8,
-  border: '1px solid #CBD5E1',
-  fontSize: '0.95em',
-  fontFamily: 'inherit',
-  boxSizing: 'border-box',
-};
