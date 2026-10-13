@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
+import Avatar from './Avatar';
+import { uploadAvatar, deleteAvatar } from '../lib/avatar';
 
 export default function Profile({ profile, session, onProfileUpdate }) {
   const [editing, setEditing] = useState(false);
@@ -136,18 +138,21 @@ export default function Profile({ profile, session, onProfileUpdate }) {
         marginBottom: 25,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
-          <div style={{
-            width: 80,
-            height: 80,
-            borderRadius: '50%',
-            background: 'rgba(255,255,255,0.15)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '2.5em',
-          }}>
-            👨‍⚕️
-          </div>
+          <Avatar
+            profile={profile}
+            size={80}
+            editable={true}
+            onUpload={async (file) => {
+              await uploadAvatar(session.user.id, file);
+              if (onProfileUpdate) onProfileUpdate();
+              else if (onUpdate) onUpdate();
+            }}
+            onDelete={async () => {
+              await deleteAvatar(session.user.id);
+              if (onProfileUpdate) onProfileUpdate();
+              else if (onUpdate) onUpdate();
+            }}
+          />
           <div style={{ flex: 1 }}>
             <h1 style={{ margin: '0 0 8px', fontSize: '1.6em' }}>
               {profile?.full_name || 'زُميلنا العزيز'}
