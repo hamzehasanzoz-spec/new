@@ -144,3 +144,10 @@ button, a, [role="button"] {
   color: #FCD34D !important;
   border-color: #F59E0B !important;
 }
+:root {
+  --sidebar-width: 240px;
+}
+
+[data-sidebar-collapsed="true"] {
+  --sidebar-width: 72px;
+}

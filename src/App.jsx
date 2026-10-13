@@ -128,16 +128,18 @@ export default function App() {
       {activeTab === 'dashboard' && <Dashboard profile={profile} session={session} />}
       {activeTab === 'chat' && <ChatCoach profile={profile} session={session} />}
       {activeTab === 'my-chats' && (
-  <MyConversations
-    session={session}
-    onOpenConversation={(id) => {
-      setActiveTab('chat');
-      // سيُفتح ChatCoach ويحتاج تحديث المحادثة
-      // للتبسيط: افتح في تبويب جديد
-      window.dispatchEvent(new CustomEvent('open-conversation', { detail: { id } }));
-    }}
-  />
-)}
+        <MyConversations
+          session={session}
+          onOpenConversation={(id) => {
+            setActiveTab('chat');
+            setTimeout(() => {
+              window.dispatchEvent(
+                new CustomEvent('open-conversation', { detail: { id } })
+              );
+            }, 100);
+          }}
+        />
+      )}
       {activeTab === 'files' && <MyFiles session={session} />}
       {activeTab === 'quiz' && <Quiz profile={profile} setActiveWork={setActiveWork} />}
       {activeTab === 'bank' && <QuizBank session={session} />}
@@ -218,9 +220,7 @@ export default function App() {
     return <Questionnaire session={session} onComplete={() => fetchProfile(session.user.id)} />;
   }
 
-  // ═══════════════════════════════════════════
-  // 📱 تصميم الجوال
-  // ═══════════════════════════════════════════
+  // ═══ Mobile Layout ═══
   if (isMobile) {
     return (
       <div style={{
@@ -229,7 +229,6 @@ export default function App() {
         direction: 'rtl',
         paddingBottom: 68,
       }}>
-        {/* ═══ شريط علوي رفيع ═══ */}
         <nav style={mobileTopBar}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <Logo size={28} showText={false} />
@@ -242,26 +241,23 @@ export default function App() {
             <ExamCountdown />
             <ThemeToggle />
           </div>
-
-          {activeWork && (
-            <div style={{
-              fontSize: '0.72em',
-              color: '#92400E',
-              background: '#FEF3C7',
-              padding: '4px 10px',
-              borderRadius: 20,
-              fontWeight: 600,
-            }}>
-              ⏸️ قيد التنفيذ
-            </div>
-          )}
         </nav>
+
+        {activeWork && (
+          <div style={{
+            background: '#FEF3C7',
+            borderBottom: '1px solid #F59E0B',
+            padding: '8px 16px', fontSize: '0.82em',
+            color: '#92400E', textAlign: 'center', fontWeight: 600,
+          }}>
+            ⏸️ {activeWork.type} قيد التنفيذ — لا تغادر الصفحة
+          </div>
+        )}
 
         <main style={{ padding: '12px' }}>
           {renderContent()}
         </main>
 
-        {/* ═══ Bottom Tab Bar ═══ */}
         <div style={bottomBarStyle}>
           {MAIN_TABS.map(t => {
             const active = activeTab === t.id;
@@ -310,12 +306,7 @@ export default function App() {
               color: MORE_TABS.some(t => t.id === activeTab) ? 'var(--primary)' : 'var(--text-subtle)',
             }}
           >
-            <div style={{
-              fontSize: '1.4em',
-              lineHeight: 1,
-            }}>
-              ⋯
-            </div>
+            <div style={{ fontSize: '1.4em', lineHeight: 1 }}>⋯</div>
             <div style={{
               fontSize: '0.68em',
               fontWeight: MORE_TABS.some(t => t.id === activeTab) ? 700 : 500,
@@ -326,7 +317,6 @@ export default function App() {
           </button>
         </div>
 
-        {/* ═══ Drawer "المزيد" ═══ */}
         {moreOpen && (
           <>
             <div
@@ -341,8 +331,7 @@ export default function App() {
             />
             <div style={moreDrawerStyle}>
               <div style={{
-                width: 40,
-                height: 4,
+                width: 40, height: 4,
                 background: 'var(--border)',
                 borderRadius: 2,
                 margin: '12px auto 16px',
@@ -425,92 +414,232 @@ export default function App() {
     );
   }
 
-  // ═══════════════════════════════════════════
-  // 💻 تصميم الديسكتوب
-  // ═══════════════════════════════════════════
+  // ═══ Desktop Layout ═══
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg)', direction: 'rtl' }}>
+    <div style={{
+      minHeight: '100vh',
+      background: 'var(--bg)',
+      direction: 'rtl',
+    }}>
       <DesktopNav
         activeTab={activeTab}
         switchTab={switchTab}
         onSignOut={() => supabase.auth.signOut()}
       />
 
-      {activeWork && (
-        <div style={{
-          background: '#FEF3C7',
-          borderBottom: '1px solid #F59E0B',
-          padding: '8px 16px', fontSize: '0.82em',
-          color: '#92400E', textAlign: 'center', fontWeight: 600,
-        }}>
-          ⏸️ {activeWork.type} قيد التنفيذ — لا تغادر الصفحة
-        </div>
-      )}
-
-      <main style={{
-        maxWidth: 1200, margin: '0 auto',
-        padding: '20px 16px',
+      <div style={{
+        paddingRight: 'var(--sidebar-width)',
+        transition: 'padding-right 0.2s ease',
+        minHeight: '100vh',
       }}>
-        {renderContent()}
-      </main>
+        {activeWork && (
+          <div style={{
+            background: '#FEF3C7',
+            borderBottom: '1px solid #F59E0B',
+            padding: '8px 16px', fontSize: '0.82em',
+            color: '#92400E', textAlign: 'center', fontWeight: 600,
+          }}>
+            ⏸️ {activeWork.type} قيد التنفيذ — لا تغادر الصفحة
+          </div>
+        )}
+
+        <main style={{
+          maxWidth: 1200,
+          margin: '0 auto',
+          padding: '20px 24px',
+        }}>
+          {renderContent()}
+        </main>
+      </div>
     </div>
   );
 }
 
 // ═════════════════════════════════════════════
-// Desktop Nav
+// Desktop Sidebar
 // ═════════════════════════════════════════════
 function DesktopNav({ activeTab, switchTab, onSignOut }) {
-  const allTabs = [...MAIN_TABS, ...MORE_TABS];
-  const mainTabs = allTabs.slice(0, 3);
-  const studyTabs = allTabs.slice(3, 6);
-  const personalTabs = allTabs.slice(6, 8);
+  const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-sidebar-collapsed', String(collapsed));
+  }, [collapsed]);
+
+  const groups = [
+    {
+      title: 'الرئيسية',
+      tabs: [
+        { id: 'dashboard', label: 'الرئيسية', icon: '🏠' },
+        { id: 'chat', label: 'الدردشة', icon: '💬' },
+        { id: 'my-chats', label: 'محادثاتي', icon: '📂' },
+      ],
+    },
+    {
+      title: 'الدراسة',
+      tabs: [
+        { id: 'quiz', label: 'اختبارات', icon: '🎯' },
+        { id: 'exam', label: 'محاكاة امتحان', icon: '⏱️' },
+        { id: 'bank', label: 'بنك الأخطاء', icon: '📖' },
+        { id: 'files', label: 'ملفاتي', icon: '📚' },
+      ],
+    },
+    {
+      title: 'شخصي',
+      tabs: [
+        { id: 'weekly', label: 'التقرير الأسبوعي', icon: '📊' },
+        { id: 'profile', label: 'حسابي', icon: '👤' },
+      ],
+    },
+  ];
 
   return (
-    <nav style={desktopNavStyle}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16, flex: 1, flexWrap: 'wrap' }}>
-        <Logo size={34} />
-        <div style={groupStyle}>
-          {mainTabs.map(t => (
-            <TabButton key={t.id} tab={t} active={activeTab === t.id} onClick={() => switchTab(t.id)} />
-          ))}
-        </div>
-        <div style={dividerStyle} />
-        <div style={groupStyle}>
-          {studyTabs.map(t => (
-            <TabButton key={t.id} tab={t} active={activeTab === t.id} onClick={() => switchTab(t.id)} />
-          ))}
-        </div>
-        <div style={dividerStyle} />
-        <div style={groupStyle}>
-          {personalTabs.map(t => (
-            <TabButton key={t.id} tab={t} active={activeTab === t.id} onClick={() => switchTab(t.id)} />
-          ))}
-        </div>
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <ThemeToggle />
-        <button onClick={onSignOut} style={signOutStyle}>خروج</button>
-      </div>
-    </nav>
-  );
-}
-
-function TabButton({ tab, active, onClick }) {
-  return (
-    <button onClick={onClick} style={{
-      background: active ? 'var(--primary)' : 'transparent',
-      color: active ? '#fff' : 'var(--text-muted)',
-      border: 'none', padding: '8px 12px', borderRadius: 8,
-      cursor: 'pointer', fontWeight: active ? 700 : 500,
-      fontSize: '0.84em', display: 'flex', alignItems: 'center', gap: 5,
-      transition: 'all 0.15s ease',
-      boxShadow: active ? '0 2px 8px rgba(42,92,130,0.25)' : 'none',
-      fontFamily: 'inherit',
+    <aside style={{
+      width: 'var(--sidebar-width)',
+      background: 'var(--bg-elevated)',
+      borderLeft: '1px solid var(--border)',
+      height: '100vh',
+      position: 'fixed',
+      top: 0,
+      right: 0,
+      display: 'flex',
+      flexDirection: 'column',
+      transition: 'width 0.2s ease',
+      zIndex: 100,
+      overflow: 'hidden',
     }}>
-      <span style={{ fontSize: '1.05em' }}>{tab.icon}</span>
-      <span>{tab.label}</span>
-    </button>
+      {/* Logo + Collapse */}
+      <div style={{
+        padding: collapsed ? '16px 8px' : '16px',
+        borderBottom: '1px solid var(--border)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: collapsed ? 'center' : 'space-between',
+        gap: 8,
+        minHeight: 64,
+      }}>
+        {!collapsed && <Logo size={30} />}
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          style={{
+            background: 'var(--bg-subtle)',
+            border: 'none',
+            color: 'var(--text-muted)',
+            width: 32,
+            height: 32,
+            borderRadius: 8,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '1em',
+            flexShrink: 0,
+          }}
+          title={collapsed ? 'توسيع القائمة' : 'تصغير القائمة'}
+        >
+          {collapsed ? '⟩' : '⟨'}
+        </button>
+      </div>
+
+      {/* Tabs */}
+      <nav style={{
+        flex: 1,
+        overflowY: 'auto',
+        padding: '12px 8px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 16,
+      }}>
+        {groups.map((group, gi) => (
+          <div key={gi}>
+            {!collapsed && (
+              <div style={{
+                fontSize: '0.68em',
+                fontWeight: 700,
+                color: 'var(--text-subtle)',
+                textTransform: 'uppercase',
+                padding: '0 12px',
+                marginBottom: 6,
+                letterSpacing: 1,
+              }}>
+                {group.title}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              {group.tabs.map(t => {
+                const active = activeTab === t.id;
+                return (
+                  <button
+                    key={t.id}
+                    onClick={() => switchTab(t.id)}
+                    title={collapsed ? t.label : undefined}
+                    style={{
+                      background: active ? 'var(--primary)' : 'transparent',
+                      color: active ? '#fff' : 'var(--text-muted)',
+                      border: 'none',
+                      padding: collapsed ? '10px 8px' : '10px 12px',
+                      borderRadius: 8,
+                      cursor: 'pointer',
+                      fontWeight: active ? 700 : 500,
+                      fontSize: '0.88em',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      transition: 'all 0.15s',
+                      fontFamily: 'inherit',
+                      justifyContent: collapsed ? 'center' : 'flex-start',
+                      textAlign: 'right',
+                    }}
+                  >
+                    <span style={{ fontSize: '1.2em', flexShrink: 0 }}>{t.icon}</span>
+                    {!collapsed && <span>{t.label}</span>}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </nav>
+
+      {/* Footer */}
+      <div style={{
+        padding: collapsed ? '12px 8px' : '12px',
+        borderTop: '1px solid var(--border)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 8,
+      }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: collapsed ? 'center' : 'flex-start',
+        }}>
+          <ThemeToggle />
+        </div>
+
+        <button
+          onClick={onSignOut}
+          title={collapsed ? 'خروج' : undefined}
+          style={{
+            background: '#FEF2F2',
+            border: '1px solid #FECACA',
+            color: '#EF4444',
+            padding: collapsed ? '10px 8px' : '10px 12px',
+            borderRadius: 8,
+            cursor: 'pointer',
+            fontWeight: 600,
+            fontSize: '0.85em',
+            fontFamily: 'inherit',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+          }}
+        >
+          <span>🚪</span>
+          {!collapsed && <span>خروج</span>}
+        </button>
+      </div>
+    </aside>
   );
 }
 
@@ -569,25 +698,6 @@ const moreDrawerStyle = {
   paddingBottom: 'calc(16px + env(safe-area-inset-bottom))',
   boxShadow: 'var(--shadow-lg)',
   animation: 'slideUp 0.25s ease-out',
-};
-
-const desktopNavStyle = {
-  background: 'var(--bg-elevated)', padding: '12px 20px',
-  borderBottom: '1px solid var(--border)',
-  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-  gap: 12, position: 'sticky', top: 0, zIndex: 100,
-  boxShadow: 'var(--shadow-sm)', flexWrap: 'wrap',
-};
-
-const groupStyle = { display: 'flex', gap: 2, alignItems: 'center' };
-const dividerStyle = { width: 1, height: 22, background: 'var(--border)' };
-
-const signOutStyle = {
-  background: '#FEF2F2', color: '#EF4444',
-  border: '1px solid #FECACA',
-  padding: '8px 16px', borderRadius: 8,
-  cursor: 'pointer', fontWeight: 600, fontSize: '0.85em',
-  fontFamily: 'inherit',
 };
 
 const inputStyle = {
