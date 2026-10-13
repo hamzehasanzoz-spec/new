@@ -8,104 +8,70 @@ export default function ConversationsSidebar({
   onDelete,
 }) {
   return (
-    <div style={{
-      width: 260,
-      background: 'var(--bg-elevated)',
-      borderLeft: '1px solid var(--border)',
-      display: 'flex',
-      flexDirection: 'column',
-      height: '75vh',
-      borderRadius: '0 16px 16px 0',
-      overflow: 'hidden',
-    }}>
-      {/* رأس */}
-      <div style={{ padding: 14, borderBottom: '1px solid var(--border)' }}>
+    <div className="w-64 bg-surface-card border-l border-border flex flex-col h-full">
+      {/* Header */}
+      <div className="p-3 border-b border-border">
         <button
           onClick={onNew}
-          style={{
-            width: '100%',
-            background: '#2A5C82',
-            color: '#fff',
-            border: 'none',
-            padding: '10px 14px',
-            borderRadius: 8,
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            fontSize: '0.9em',
-          }}
+          className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-light text-white font-semibold text-sm px-4 py-2.5 rounded-md transition-colors"
         >
-          + محادثة جديدة
+          <span>+</span>
+          <span>محادثة جديدة</span>
         </button>
       </div>
 
-      {/* قائمة المحادثات */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: 8 }}>
+      {/* List */}
+      <div className="flex-1 overflow-y-auto p-2">
         {conversations.length === 0 ? (
-          <p style={{
-            	color: 'var(--text-subtle)',
-            textAlign: 'center',
-            padding: 20,
-            fontSize: '0.85em',
-          }}>
+          <p className="text-center text-content-subtle text-xs py-8">
             لا توجد محادثات بعد
           </p>
         ) : (
-          conversations.map(conv => (
-            <div
-              key={conv.id}
-              onClick={() => onSelect(conv.id)}
-              style={{
-                padding: '10px 12px',
-                marginBottom: 4,
-                borderRadius: 8,
-                cursor: 'pointer',
-                background: activeId === conv.id ? '#EFF6FF' : 'transparent',
-                borderRight: activeId === conv.id ? '3px solid #2A5C82' : '3px solid transparent',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: 6,
-              }}
-              onMouseEnter={e => { if (activeId !== conv.id) e.currentTarget.style.background = '#F8FAFC'; }}
-              onMouseLeave={e => { if (activeId !== conv.id) e.currentTarget.style.background = 'transparent'; }}
-            >
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{
-                  fontSize: '0.88em',
-                  fontWeight: activeId === conv.id ? 'bold' : 'normal',
-                  color: 'var(--text)',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                }}>
-                  {conv.title}
+          <div className="space-y-1">
+            {conversations.map(conv => {
+              const active = activeId === conv.id;
+              return (
+                <div
+                  key={conv.id}
+                  onClick={() => onSelect(conv.id)}
+                  className={`
+                    group flex items-center justify-between gap-2
+                    p-2.5 rounded-md cursor-pointer transition-colors
+                    ${active 
+                      ? 'bg-primary/10 border-r-2 border-primary' 
+                      : 'hover:bg-surface-soft border-r-2 border-transparent'
+                    }
+                  `}
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className={`
+                      text-sm truncate
+                      ${active ? 'text-content font-semibold' : 'text-content font-normal'}
+                    `}>
+                      {conv.title}
+                    </div>
+                    <div className="text-xs text-content-subtle mt-0.5">
+                      {new Date(conv.updated_at).toLocaleDateString('ar-EG', {
+                        day: 'numeric',
+                        month: 'short',
+                      })}
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (confirm('حذف هذه المحادثة؟')) onDelete(conv.id);
+                    }}
+                    className="opacity-0 group-hover:opacity-100 text-danger hover:bg-danger/10 w-7 h-7 rounded-md flex items-center justify-center text-xs transition-all"
+                    title="حذف"
+                  >
+                    🗑
+                  </button>
                 </div>
-                <div style={{ fontSize: '0.72em', 	color: 'var(--text-subtle)', marginTop: 2 }}>
-                  {new Date(conv.updated_at).toLocaleDateString('ar-EG', {
-                    day: 'numeric',
-                    month: 'short',
-                  })}
-                </div>
-              </div>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (confirm('حذف هذه المحادثة؟')) onDelete(conv.id);
-                }}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: '#EF4444',
-                  cursor: 'pointer',
-                  fontSize: '1em',
-                  padding: 4,
-                }}
-                title="حذف"
-              >
-                🗑
-              </button>
-            </div>
-          ))
+              );
+            })}
+          </div>
         )}
       </div>
     </div>

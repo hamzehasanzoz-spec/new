@@ -13,7 +13,6 @@ import ConversationsSidebar from './ConversationsSidebar';
 import { useIsMobile } from '../hooks/useMediaQuery';
 import { exportConversationPDF } from '../lib/pdfExport';
 
-
 export default function ChatCoach({ profile, session }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -60,6 +59,16 @@ export default function ChatCoach({ profile, session }) {
     ta.style.height = 'auto';
     ta.style.height = Math.min(ta.scrollHeight, 200) + 'px';
   }, [input]);
+
+  // استقبل حدث فتح محادثة
+  useEffect(() => {
+    const handler = (e) => {
+      const id = e.detail?.id;
+      if (id) handleSelectConversation(id);
+    };
+    window.addEventListener('open-conversation', handler);
+    return () => window.removeEventListener('open-conversation', handler);
+  }, []);
 
   const refreshConversations = async () => {
     try {
@@ -217,7 +226,6 @@ export default function ChatCoach({ profile, session }) {
 
       clearTimeout(timeoutId);
 
-      // ⭐ اقرأ Provider من الـ headers
       const providerHeader = res.headers.get('X-Provider') || '';
       const modelHeader = res.headers.get('X-Model') || '';
       if (providerHeader) {
@@ -304,14 +312,11 @@ export default function ChatCoach({ profile, session }) {
   };
 
   return (
-    <div style={{
-      maxWidth: 1100,
-      margin: isMobile ? '8px auto' : '20px auto',
-      display: 'flex',
-      gap: 0,
-      direction: 'rtl',
-      height: isMobile ? 'calc(100vh - 140px)' : '75vh',
-    }}>
+    <div
+      className="flex h-[calc(100vh-140px)] md:h-[75vh] max-w-6xl mx-auto"
+      dir="rtl"
+    >
+      {/* Sidebar */}
       {showSidebar && !isMobile && (
         <ConversationsSidebar
           conversations={conversations}
@@ -322,18 +327,14 @@ export default function ChatCoach({ profile, session }) {
         />
       )}
 
+      {/* Mobile Sidebar */}
       {isMobile && showSidebar && (
         <>
-          <div style={{
-            position: 'fixed', inset: 0,
-            background: 'rgba(0,0,0,0.5)', zIndex: 200,
-          }} onClick={() => setShowSidebar(false)} />
-          <div style={{
-            position: 'fixed', top: 0, right: 0,
-            width: '78%', maxWidth: 320, height: '100vh',
-            background: 'var(--bg-elevated)', zIndex: 201,
-            boxShadow: 'var(--shadow-lg)',
-          }}>
+          <div
+            className="fixed inset-0 bg-black/50 z-40"
+            onClick={() => setShowSidebar(false)}
+          />
+          <div className="fixed top-0 right-0 w-[78%] max-w-xs h-screen bg-surface-card z-50">
             <ConversationsSidebar
               conversations={conversations}
               activeId={conversationId}
@@ -345,53 +346,35 @@ export default function ChatCoach({ profile, session }) {
         </>
       )}
 
-      <div style={{
-        flex: 1,
-        background: 'var(--bg-elevated)',
-        borderRadius: showSidebar && !isMobile ? '16px 0 0 16px' : 16,
-        boxShadow: 'var(--shadow-md)',
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-        border: '1px solid var(--border)',
-      }}>
+      {/* Main Chat */}
+      <div className={`
+        flex-1 flex flex-col bg-surface-card border border-border overflow-hidden
+        ${showSidebar && !isMobile ? 'rounded-r-none rounded-l-lg' : 'rounded-lg'}
+      `}>
         {/* Header */}
-        <div style={{
-          padding: 14,
-          background: 'var(--primary)',
-          color: '#fff',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 10,
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div className="bg-surface-soft border-b border-border p-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
             <button
               onClick={() => setShowSidebar(s => !s)}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: '#fff',
-                fontSize: '1.3em',
-                cursor: 'pointer',
-                padding: 4,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-              title={showSidebar ? 'إخفاء قائمة المحادثات' : 'إظهار قائمة المحادثات'}
+              className="w-8 h-8 rounded-md bg-surface-card hover:bg-surface border border-border text-content-muted flex items-center justify-center text-sm font-bold transition-colors"
+              title={showSidebar ? 'إخفاء القائمة' : 'إظهار القائمة'}
             >
               {showSidebar ? '✕' : '☰'}
             </button>
-            <span style={{ fontSize: '1.4em' }}>🩺</span>
-            <div>
-              <div style={{ fontWeight: 'bold' }}>Coach AI</div>
-              <div style={{ fontSize: '0.75em', opacity: 0.85 }}>
+
+            <div className="w-9 h-9 rounded-md bg-primary/15 flex items-center justify-center text-lg">
+              🩺
+            </div>
+
+            <div className="hidden sm:block">
+              <div className="font-semibold text-content text-sm">Coach AI</div>
+              <div className="text-xs text-content-muted">
                 {profile?.full_name ? `مخصص لـ ${profile.full_name}` : 'مساعدك للامتحان الوطني'}
               </div>
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+
+          <div className="flex items-center gap-2">
             {messages.length > 1 && (
               <button
                 onClick={async () => {
@@ -401,41 +384,22 @@ export default function ChatCoach({ profile, session }) {
                     alert('فشل التصدير: ' + err.message);
                   }
                 }}
-                style={{
-                  background: 'rgba(255,255,255,0.2)',
-                  border: 'none',
-                  color: '#fff',
-                  padding: '6px 12px',
-                  borderRadius: 8,
-                  cursor: 'pointer',
-                  fontSize: '0.75em',
-                  fontWeight: 'bold',
-                  fontFamily: 'inherit',
-                }}
-                title="تصدير المحادثة PDF"
+                className="text-xs px-3 py-1.5 rounded-md bg-surface-card border border-border text-content-muted hover:text-content transition-colors"
+                title="تصدير PDF"
               >
                 📄 PDF
               </button>
             )}
+
             {lastProvider && (
-              <div style={{
-                fontSize: '0.7em',
-                background: 'rgba(255,255,255,0.2)',
-                padding: '3px 10px',
-                borderRadius: 20,
-                fontWeight: 600,
-              }}>
-                ⚡ {lastProvider}
+              <div className="hidden sm:flex items-center gap-1 text-xs bg-primary/10 text-primary px-2.5 py-1 rounded-full">
+                <span>⚡</span>
+                <span className="font-medium">{lastProvider}</span>
               </div>
             )}
+
             {ragStatus && (
-              <div style={{
-                fontSize: '0.72em',
-                opacity: 0.9,
-                background: 'rgba(255,255,255,0.15)',
-                padding: '4px 10px',
-                borderRadius: 20,
-              }}>
+              <div className="hidden md:block text-xs text-content-muted">
                 {ragStatus}
               </div>
             )}
@@ -443,38 +407,26 @@ export default function ChatCoach({ profile, session }) {
         </div>
 
         {/* Messages */}
-        <div style={{
-          flex: 1,
-          padding: isMobile ? 12 : 20,
-          overflowY: 'auto',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 15,
-          background: 'var(--bg)',
-        }}>
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-surface">
           {messages.map((msg, i) => {
             const isEmpty = msg.role === 'assistant' && msg.content === '' && loading;
             const isUser = msg.role === 'user';
             return (
-              <div key={i} style={{
-                alignSelf: isUser ? 'flex-start' : 'flex-end',
-                background: isUser ? '#EFF6FF' : 'var(--bg-elevated)',
-                color: isUser ? '#1E40AF' : 'var(--text)',
-                padding: '12px 18px',
-                borderRadius: 12,
-                maxWidth: '85%',
-                boxShadow: 'var(--shadow-sm)',
-                border: `1px solid ${isUser ? '#BFDBFE' : 'var(--border)'}`,
-                textAlign: 'right',
-              }}>
-                <p style={{
-                  margin: 0,
-                  whiteSpace: 'pre-wrap',
-                  lineHeight: 1.7,
-                  fontSize: '0.95em',
-                }}>
-                  {isEmpty ? '● ● ●' : msg.content}
-                </p>
+              <div
+                key={i}
+                className={`flex ${isUser ? 'justify-start' : 'justify-end'}`}
+              >
+                <div className={`
+                  max-w-[85%] md:max-w-[75%] rounded-lg px-4 py-3 text-sm leading-relaxed
+                  ${isUser
+                    ? 'bg-primary text-white'
+                    : 'bg-surface-card border border-border text-content'
+                  }
+                `}>
+                  <p className="whitespace-pre-wrap m-0">
+                    {isEmpty ? '● ● ●' : msg.content}
+                  </p>
+                </div>
               </div>
             );
           })}
@@ -482,14 +434,10 @@ export default function ChatCoach({ profile, session }) {
         </div>
 
         {/* Input */}
-        <form onSubmit={handleSubmit} style={{
-          padding: 12,
-          borderTop: '1px solid var(--border)',
-          background: 'var(--bg-elevated)',
-          display: 'flex',
-          gap: 10,
-          alignItems: 'flex-end',
-        }}>
+        <form
+          onSubmit={handleSubmit}
+          className="p-3 border-t border-border bg-surface-card flex gap-2 items-end"
+        >
           <textarea
             ref={textareaRef}
             value={input}
@@ -498,38 +446,34 @@ export default function ChatCoach({ profile, session }) {
             placeholder="اكتب سؤالك الطبي... (Enter للإرسال، Shift+Enter لسطر جديد)"
             disabled={loading}
             rows={1}
-            style={{
-              flex: 1,
-              padding: 12,
-              borderRadius: 10,
-              border: '1px solid var(--border)',
-              outline: 'none',
-              fontSize: '0.95em',
-              fontFamily: 'inherit',
-              background: 'var(--bg-subtle)',
-              color: 'var(--text)',
-              resize: 'none',
-              maxHeight: 200,
-              lineHeight: 1.5,
-            }}
+            className="
+              flex-1 bg-surface-soft border border-border rounded-md
+              px-3 py-2.5 text-sm text-content resize-none
+              placeholder:text-content-subtle
+              focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20
+              max-h-[200px] leading-relaxed transition-all
+            "
           />
           <button
             type="submit"
             disabled={loading || !input.trim()}
-            style={{
-              background: loading || !input.trim() ? 'var(--text-subtle)' : 'var(--primary)',
-              color: '#fff',
-              border: 'none',
-              padding: '12px 20px',
-              borderRadius: 10,
-              fontWeight: 'bold',
-              cursor: loading || !input.trim() ? 'not-allowed' : 'pointer',
-              fontSize: '0.9em',
-              fontFamily: 'inherit',
-              whiteSpace: 'nowrap',
-            }}
+            className="
+              bg-primary hover:bg-primary-light text-white
+              px-5 py-2.5 rounded-md font-semibold text-sm
+              disabled:opacity-40 disabled:cursor-not-allowed
+              transition-all flex items-center gap-2
+            "
           >
-            {loading ? '...' : 'إرسال'}
+            {loading ? (
+              <>
+                <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <span className="hidden sm:inline">...</span>
+              </>
+            ) : (
+              <>
+                <span>إرسال</span>
+              </>
+            )}
           </button>
         </form>
       </div>
