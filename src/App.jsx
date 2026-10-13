@@ -14,6 +14,7 @@ import { useIsMobile } from './hooks/useMediaQuery';
 import ThemeToggle from './components/ThemeToggle';
 import ExamCountdown from './components/ExamCountdown';
 import MyConversations from './components/MyConversations';
+import Landing from './components/Landing';
 import { Button, Input, Card } from './components/ui';
 
 const MAIN_TABS = [
@@ -53,6 +54,7 @@ export default function App() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [activeWork, setActiveWork] = useState(null);
   const [moreOpen, setMoreOpen] = useState(false);
+    const [showLanding, setShowLanding] = useState(true);
 
   const isMobile = useIsMobile();
 
@@ -65,8 +67,13 @@ export default function App() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
       setSession(session);
-      if (session) fetchProfile(session.user.id);
-      else { setProfile(null); setLoading(false); }
+      if (session) {
+        fetchProfile(session.user.id);
+      } else {
+        setProfile(null);
+        setLoading(false);
+        setShowLanding(true);
+      }
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -154,20 +161,22 @@ export default function App() {
 
     if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-surface text-content gap-6">
-        <div className="text-2xl font-bold text-primary">
-          🎨 اختبار Design Tokens
-        </div>
-        <div className="flex gap-3">
-          <div className="w-12 h-12 rounded-md bg-primary" />
-          <div className="w-12 h-12 rounded-md bg-success" />
-          <div className="w-12 h-12 rounded-md bg-warn" />
-          <div className="w-12 h-12 rounded-md bg-danger" />
-        </div>
-        <div className="text-content-muted">
-          الخلفية داكنة • النص واضح
-        </div>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-surface gap-4">
+        <div className="w-12 h-12 border-2 border-border border-t-primary rounded-full animate-spin" />
+        <p className="text-sm text-content-muted">جاري التحميل...</p>
       </div>
+    );
+  }
+
+  // ═══ Landing Page ═══
+  if (!session && showLanding) {
+    return (
+      <Landing
+        onEnter={(isSignup) => {
+          setIsSignUp(isSignup);
+          setShowLanding(false);
+        }}
+      />
     );
   }
 
@@ -187,7 +196,7 @@ export default function App() {
               كوتش AI
             </h1>
             <p className="text-sm text-content-muted">
-              بوابتك للامتحان الوطني للطب في سوريا
+             مساعدك الشخصي في الدراسة والتحضير للامتحان 
             </p>
           </div>
 
@@ -224,7 +233,16 @@ export default function App() {
               {isSignUp ? '✨ إنشاء حساب جديد' : '🚀 تسجيل الدخول'}
             </Button>
           </form>
-
+          {/* Back to Landing */}
+          <div className="text-center mt-4">
+            <button
+              type="button"
+              onClick={() => setShowLanding(true)}
+              className="text-xs text-content-subtle hover:text-content transition-colors"
+            >
+              ← رجوع للصفحة الرئيسية
+            </button>
+          </div>
           {/* Footer */}
           <div className="text-center mt-6 pt-6 border-t border-border">
             <p className="text-sm text-content-muted">
