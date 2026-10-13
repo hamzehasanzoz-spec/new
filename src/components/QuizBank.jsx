@@ -62,68 +62,60 @@ export default function QuizBank({ session }) {
   const subjects = Object.keys(stats);
 
   return (
-    <div style={{ maxWidth: 900, margin: '30px auto', padding: 25, direction: 'rtl' }}>
+    <div className="max-w-4xl mx-auto space-y-5" dir="rtl">
+
       {/* Header */}
-      <div style={{
-        background: 'linear-gradient(135deg, #2A5C82 0%, #3B7BA8 100%)',
-        color: '#fff', padding: 30, borderRadius: 16, marginBottom: 25,
-      }}>
-        <h1 style={{ margin: '0 0 8px', fontSize: '1.5em' }}>📚 بنك الأخطاء</h1>
-        <p style={{ margin: 0, opacity: 0.9, fontSize: '0.95em' }}>
+      <div className="bg-surface-card border border-border rounded-lg p-6">
+        <h1 className="text-2xl font-bold text-content mb-2">
+          📚 بنك الأخطاء
+        </h1>
+        <p className="text-sm text-content-muted">
           كل سؤال خاطئ في اختباراتك يُحفظ هنا لمراجعته لاحقًا.
         </p>
       </div>
 
-      {/* الإحصائيات */}
+      {/* Stats */}
       {subjects.length > 0 && (
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-          gap: 12,
-          marginBottom: 24,
-        }}>
-          {subjects.map(s => (
-            <button
-  key={s}
-  onClick={() => setFilterSubject(filterSubject === s ? '' : s)}
-  style={{
-    padding: 14,
-    background: filterSubject === s ? 'var(--bg-elevated)' : 'var(--bg-subtle)',
-    border: filterSubject === s ? '2px solid var(--primary)' : '1px solid var(--border)',
-    borderRadius: 12,
-    cursor: 'pointer',
-    textAlign: 'right',
-    color: 'var(--text)',
-    fontFamily: 'inherit',
-  }}
-            >
-              <div style={{ fontSize: '1.6em', fontWeight: 'bold', 	color: 'var(--primary)' }}>
-                {stats[s]}
-              </div>
-              <div style={{ fontSize: '0.85em', color: 'var(--text-muted)', marginTop: 4 }}>
-                {s}
-              </div>
-            </button>
-          ))}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {subjects.map(s => {
+            const active = filterSubject === s;
+            return (
+              <button
+                key={s}
+                onClick={() => setFilterSubject(active ? '' : s)}
+                className={`
+                  p-4 rounded-lg border text-right transition-all
+                  ${active
+                    ? 'bg-primary/10 border-primary'
+                    : 'bg-surface-card border-border hover:border-content-subtle'
+                  }
+                `}
+              >
+                <div className={`text-2xl font-bold tabular-nums mb-1 ${active ? 'text-primary' : 'text-content'}`}>
+                  {stats[s]}
+                </div>
+                <div className={`text-xs truncate ${active ? 'text-primary' : 'text-content-muted'}`}>
+                  {s}
+                </div>
+              </button>
+            );
+          })}
         </div>
       )}
 
-            {/* أدوات */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 16,
-        flexWrap: 'wrap',
-        gap: 10,
-      }}>
-        <h2 style={{ margin: 0, color: '#2A5C82', fontSize: '1.1em' }}>
+      {/* Toolbar */}
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <h2 className="text-sm font-bold text-content">
           الأسئلة ({answers.length})
-          {filterSubject && <span style={{ fontSize: '0.8em', color: '#64748B' }}> — {filterSubject}</span>}
+          {filterSubject && (
+            <span className="text-xs font-normal text-content-muted mr-2">
+              — {filterSubject}
+            </span>
+          )}
         </h2>
 
         {answers.length > 0 && (
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <div className="flex gap-2">
             <button
               onClick={async () => {
                 try {
@@ -132,32 +124,13 @@ export default function QuizBank({ session }) {
                   alert('فشل التصدير: ' + err.message);
                 }
               }}
-              style={{
-                background: '#2A5C82',
-                border: 'none',
-                color: '#fff',
-                padding: '6px 14px',
-                borderRadius: 8,
-                cursor: 'pointer',
-                fontSize: '0.85em',
-                fontWeight: 'bold',
-                fontFamily: 'inherit',
-              }}
+              className="text-xs bg-primary hover:bg-primary-light text-white font-semibold px-4 py-2 rounded-md transition-colors"
             >
               📄 تصدير PDF
             </button>
             <button
               onClick={handleClearAll}
-              style={{
-                background: 'transparent',
-                border: '1px solid #EF4444',
-                color: '#EF4444',
-                padding: '6px 14px',
-                borderRadius: 8,
-                cursor: 'pointer',
-                fontSize: '0.85em',
-                fontFamily: 'inherit',
-              }}
+              className="text-xs bg-transparent border border-danger/40 text-danger hover:bg-danger/10 font-semibold px-4 py-2 rounded-md transition-colors"
             >
               🗑 حذف الكل
             </button>
@@ -165,159 +138,98 @@ export default function QuizBank({ session }) {
         )}
       </div>
 
-      {/* القائمة */}
+      {/* Content */}
       {loading ? (
-        <div style={{ textAlign: 'center', padding: 50, color: 'var(--text-muted)' }}>
-          جاري التحميل...
+        <div className="text-center py-16">
+          <div className="w-10 h-10 mx-auto border-2 border-border border-t-primary rounded-full animate-spin" />
+          <p className="text-sm text-content-muted mt-4">جاري التحميل...</p>
         </div>
       ) : answers.length === 0 ? (
-        <div style={{
-          background: 'var(--bg-elevated)',
-          border: '1px solid var(--border)',
-          borderRadius: 14,
-          padding: 50,
-          textAlign: 'center',
-          	color: 'var(--text-subtle)',
-        }}>
-          <div style={{ fontSize: '3em', marginBottom: 12 }}>🎯</div>
-          <div>لا توجد أسئلة محفوظة بعد.</div>
-          <div style={{ fontSize: '0.85em', marginTop: 8 }}>
+        <div className="bg-surface-card border border-border rounded-lg p-12 text-center">
+          <div className="text-5xl mb-4 opacity-40">🎯</div>
+          <div className="text-sm text-content-muted mb-1">
+            لا توجد أسئلة محفوظة بعد.
+          </div>
+          <div className="text-xs text-content-subtle">
             ابدأ اختبارًا وستُحفظ أسئلتك الخاطئة تلقائيًا.
           </div>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div className="space-y-2">
           {answers.map((item, idx) => {
             const isExpanded = expandedId === item.id;
             return (
               <div
                 key={item.id}
-                style={{
-                  background: 'var(--bg-elevated)',
-                  border: '1px solid var(--border)',
-                  borderRadius: 12,
-                  overflow: 'hidden',
-                }}
+                className="bg-surface-card border border-border rounded-lg overflow-hidden"
               >
-                {/* رأس السؤال */}
+                {/* Header */}
                 <div
                   onClick={() => setExpandedId(isExpanded ? null : item.id)}
-                  style={{
-                    padding: 16,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'flex-start',
-                    gap: 12,
-                  }}
+                  className="p-4 cursor-pointer hover:bg-surface-soft transition-colors flex items-start justify-between gap-3"
                 >
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{
-                      fontSize: '0.75em',
-                      color: 'var(--text-muted)',
-                      marginBottom: 6,
-                    }}>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs text-content-subtle mb-1.5 flex flex-wrap items-center gap-x-2">
                       {item.subject}
-                      {item.topic && ` • ${item.topic}`}
-                      {' • '}
-                      {new Date(item.created_at).toLocaleDateString('ar-EG', {
-                        day: 'numeric', month: 'short',
-                      })}
+                      {item.topic && <span>• {item.topic}</span>}
+                      <span>
+                        • {new Date(item.created_at).toLocaleDateString('ar-EG', {
+                          day: 'numeric', month: 'short',
+                        })}
+                      </span>
                     </div>
-                    <div style={{
-                      fontWeight: 'bold',
-                      color: 'var(--text)',
-                      fontSize: '0.94em',
-                      lineHeight: 1.5,
-                    }}>
+                    <div className="text-sm font-semibold text-content leading-relaxed">
                       {idx + 1}. {item.question}
                     </div>
                   </div>
-                  <div style={{
-                    	color: 'var(--primary)',
-                    fontSize: '1.2em',
-                    transform: isExpanded ? 'rotate(180deg)' : 'rotate(0)',
-                    transition: 'transform 0.2s',
-                  }}>
+                  <div className={`text-primary text-lg transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
                     ▼
                   </div>
                 </div>
 
-                {/* التفاصيل */}
+                {/* Body */}
                 {isExpanded && (
-                  <div style={{
-                    padding: '0 16px 16px',
-                    borderTop: '1px solid #F1F5F9',
-                    paddingTop: 12,
-                  }}>
-                    {/* الخيارات */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      {item.options.map((opt, oi) => {
-                        const isCorrect = oi === item.correct_index;
-                        const isUserWrong = oi === item.user_answer_index;
+                  <div className="p-4 border-t border-border space-y-2">
+                    {item.options.map((opt, oi) => {
+                      const isCorrect = oi === item.correct_index;
+                      const isUserWrong = oi === item.user_answer_index;
 
-                        let bg = '#F8FAFC';
-                        let border = '1px solid var(--border)';
-                        let color = '#1E293B';
+                      let cls = 'bg-surface-soft border-border text-content-muted';
+                      let prefix = '';
 
-                        if (isCorrect) {
-                          bg = '#F0FDF4';
-                          border = '2px solid #10B981';
-                          color = '#065F46';
-                        } else if (isUserWrong) {
-                          bg = '#FEF2F2';
-                          border = '2px solid #EF4444';
-                          color = '#991B1B';
-                        }
+                      if (isCorrect) {
+                        cls = 'bg-success/10 border-success/40 text-success';
+                        prefix = '✅ ';
+                      } else if (isUserWrong) {
+                        cls = 'bg-danger/10 border-danger/40 text-danger';
+                        prefix = '❌ ';
+                      }
 
-                        return (
-                          <div
-                            key={oi}
-                            style={{
-                              padding: '8px 12px',
-                              background: bg,
-                              border,
-                              borderRadius: 8,
-                              fontSize: '0.88em',
-                              color,
-                            }}
-                          >
-                            <strong>{String.fromCharCode(65 + oi)}.</strong> {opt}
-                            {isCorrect && ' ✅'}
-                            {isUserWrong && !isCorrect && ' ❌ إجابتك'}
-                          </div>
-                        );
-                      })}
-                    </div>
+                      return (
+                        <div
+                          key={oi}
+                          className={`flex items-center gap-2 p-3 rounded-md border text-sm ${cls}`}
+                        >
+                          <span className="font-bold flex-shrink-0">
+                            {String.fromCharCode(65 + oi)}.
+                          </span>
+                          <span className="flex-1">{prefix}{opt}</span>
+                          {isUserWrong && !isCorrect && (
+                            <span className="text-xs opacity-75 flex-shrink-0">إجابتك</span>
+                          )}
+                        </div>
+                      );
+                    })}
 
-                    {/* الشرح */}
                     {item.explanation && (
-                      <div style={{
-                        marginTop: 10,
-                        padding: 12,
-                        background: '#EFF6FF',
-                        borderRadius: 8,
-                        fontSize: '0.86em',
-                        color: '#1E40AF',
-                        lineHeight: 1.6,
-                      }}>
+                      <div className="bg-primary/10 border border-primary/20 rounded-md p-3 text-xs text-primary leading-relaxed">
                         💡 {item.explanation}
                       </div>
                     )}
 
-                    {/* حذف */}
                     <button
                       onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }}
-                      style={{
-                        marginTop: 12,
-                        background: 'transparent',
-                        border: '1px solid #EF4444',
-                        color: '#EF4444',
-                        padding: '6px 14px',
-                        borderRadius: 8,
-                        cursor: 'pointer',
-                        fontSize: '0.82em',
-                      }}
+                      className="text-xs border border-danger/40 text-danger hover:bg-danger/10 px-4 py-2 rounded-md font-semibold transition-colors mt-2"
                     >
                       🗑 حذف هذا السؤال
                     </button>
