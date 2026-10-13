@@ -14,6 +14,7 @@ import { useIsMobile } from './hooks/useMediaQuery';
 import ThemeToggle from './components/ThemeToggle';
 import ExamCountdown from './components/ExamCountdown';
 import MyConversations from './components/MyConversations';
+import { Button, Input, Card } from './components/ui';
 
 const MAIN_TABS = [
   { id: 'dashboard', label: 'الرئيسية', icon: '🏠' },
@@ -151,10 +152,21 @@ export default function App() {
     </>
   );
 
-  if (loading) {
+    if (loading) {
     return (
-      <div style={{ textAlign: 'center', padding: '100px', color: 'var(--primary)', background: 'var(--bg)', minHeight: '100vh' }}>
-        جاري التحميل...
+      <div className="flex flex-col items-center justify-center min-h-screen bg-surface text-content gap-6">
+        <div className="text-2xl font-bold text-primary">
+          🎨 اختبار Design Tokens
+        </div>
+        <div className="flex gap-3">
+          <div className="w-12 h-12 rounded-md bg-primary" />
+          <div className="w-12 h-12 rounded-md bg-success" />
+          <div className="w-12 h-12 rounded-md bg-warn" />
+          <div className="w-12 h-12 rounded-md bg-danger" />
+        </div>
+        <div className="text-content-muted">
+          الخلفية داكنة • النص واضح
+        </div>
       </div>
     );
   }
@@ -162,56 +174,71 @@ export default function App() {
   // ═══ تسجيل الدخول ═══
   if (!session) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: 'var(--bg)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: 16, direction: 'rtl',
-      }}>
-        <div style={{
-          width: '100%', maxWidth: 420,
-          padding: isMobile ? 24 : 40,
-          background: 'var(--bg-elevated)', borderRadius: 20,
-          boxShadow: 'var(--shadow-lg)',
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
-            <Logo size={isMobile ? 52 : 64} showText={false} />
+      <div className="min-h-screen flex items-center justify-center p-4 bg-surface" dir="rtl">
+        <Card className="w-full max-w-md animate-fade-in" padding="lg">
+          {/* Logo */}
+          <div className="flex justify-center mb-6">
+            <Logo size={64} showText={false} />
           </div>
-          <h2 style={{
-            color: 'var(--text)', textAlign: 'center',
-            margin: '0 0 8px', fontSize: isMobile ? '1.4em' : '1.6em', fontWeight: 800,
-          }}>
-            كوتش AI
-          </h2>
-          <p style={{
-            color: 'var(--text-muted)', textAlign: 'center',
-            fontSize: '0.88em', marginBottom: 24,
-          }}>
-            بوابتك للامتحان الوطني للطب في سوريا
-          </p>
-          <form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <input
-              type="email" required placeholder="البريد الإلكتروني"
-              value={email} onChange={e => setEmail(e.target.value)}
-              style={inputStyle}
+
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-2xl font-bold text-content mb-2">
+              كوتش AI
+            </h1>
+            <p className="text-sm text-content-muted">
+              بوابتك للامتحان الوطني للطب في سوريا
+            </p>
+          </div>
+
+          {/* Form */}
+          <form onSubmit={handleAuth} className="flex flex-col gap-4">
+            <Input
+              type="email"
+              label="البريد الإلكتروني"
+              placeholder="you@example.com"
+              icon="📧"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              required
             />
-            <input
-              type="password" required placeholder="كلمة المرور"
-              value={password} onChange={e => setPassword(e.target.value)}
-              style={inputStyle}
+
+            <Input
+              type="password"
+              label="كلمة المرور"
+              placeholder="••••••••"
+              icon="🔒"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
             />
-            <button type="submit" style={primaryBtn}>
-              {isSignUp ? 'إنشاء حساب جديد' : 'تسجيل الدخول'}
-            </button>
+
+            <Button
+              type="submit"
+              variant="primary"
+              size="lg"
+              fullWidth
+              loading={loading}
+              className="mt-2"
+            >
+              {isSignUp ? '✨ إنشاء حساب جديد' : '🚀 تسجيل الدخول'}
+            </Button>
           </form>
-          <p style={{ textAlign: 'center', marginTop: 16, fontSize: '0.85em', color: 'var(--text-muted)' }}>
-            {isSignUp ? 'لديك حساب؟' : 'ليس لديك حساب؟'}{' '}
-            <span onClick={() => setIsSignUp(!isSignUp)}
-              style={{ color: 'var(--primary)', cursor: 'pointer', fontWeight: 'bold' }}>
-              {isSignUp ? 'تسجيل الدخول' : 'أنشئ حساباً'}
-            </span>
-          </p>
-        </div>
+
+          {/* Footer */}
+          <div className="text-center mt-6 pt-6 border-t border-border">
+            <p className="text-sm text-content-muted">
+              {isSignUp ? 'لديك حساب بالفعل؟' : 'ليس لديك حساب؟'}{' '}
+              <button
+                type="button"
+                onClick={() => setIsSignUp(!isSignUp)}
+                className="text-primary font-semibold hover:text-primary-light transition-colors"
+              >
+                {isSignUp ? 'تسجيل الدخول' : 'أنشئ حساباً'}
+              </button>
+            </p>
+          </div>
+        </Card>
       </div>
     );
   }
