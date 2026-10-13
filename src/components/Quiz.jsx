@@ -1,33 +1,32 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { saveManyWrongAnswers } from '../lib/wrongAnswers';
+import { logActivity } from '../lib/streak';
+import { exportQuizPDF } from '../lib/pdfExport';
+
 const SUBJECTS = [
   'الداخلية العصبية', 'الداخلية القلبية', 'الداخلية الهضمية', 'الداخلية الصدرية',
   'الجراحة العامة', 'الأطفال', 'النسائية والتوليد', 'الفارماكولوجي', 'الباثولوجي',
   'المايكروبيولوجي', 'الفيزيولوجي',
 ];
-import { logActivity } from '../lib/streak';
+
 const DIFFICULTIES = ['سهل', 'متوسط', 'صعب'];
 const NUM_OPTIONS = [5, 10, 15, 20];
-import { exportQuizPDF } from '../lib/pdfExport';
 
 export default function Quiz({ profile, setActiveWork }) {
-  const [stage, setStage] = useState('setup'); // setup | loading | running | results
+  const [stage, setStage] = useState('setup');
   const [error, setError] = useState('');
-  
-  // إعدادات
+
   const [subject, setSubject] = useState(profile?.target_subjects?.[0] || SUBJECTS[0]);
   const [topic, setTopic] = useState('');
   const [numQuestions, setNumQuestions] = useState(5);
   const [difficulty, setDifficulty] = useState('متوسط');
   const [useFiles, setUseFiles] = useState(true);
 
-  // نتيجة الاختبار
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState([]);
   const [sourcesUsed, setSourcesUsed] = useState('');
 
-  // ─── التوليد ───
   const handleGenerate = async () => {
     setError('');
     setStage('loading');
@@ -53,13 +52,12 @@ export default function Quiz({ profile, setActiveWork }) {
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
-
       if (!data.questions?.length) throw new Error('لم يتم توليد أسئلة');
 
       setQuestions(data.questions);
       setAnswers(new Array(data.questions.length).fill(-1));
       setSourcesUsed(data.sourcesUsed);
-            setStage('running');
+      setStage('running');
       if (setActiveWork) setActiveWork({ type: 'اختبار' });
     } catch (err) {
       setError(err.message);
@@ -67,7 +65,6 @@ export default function Quiz({ profile, setActiveWork }) {
     }
   };
 
-  // ─── إجابة سؤال ───
   const handleAnswer = (qIdx, optIdx) => {
     setAnswers(prev => {
       const copy = [...prev];
@@ -76,54 +73,45 @@ export default function Quiz({ profile, setActiveWork }) {
     });
   };
 
-  // ─── إنهاء الاختبار ───
   const handleSubmit = async () => {
-  const unanswered = answers.filter(a => a === -1).length;
-  if (unanswered > 0) {
-    if (!confirm(`لديك ${unanswered} سؤال غير مُجاب. إنهاء الاختبار؟`)) return;
-  }
-
-  // حفظ الأسئلة الخاطئة في بنك الأخطاء
-  try {
-    const wrongOnes = questions
-      .map((q, i) => ({ q, i, userAns: answers[i] }))
-      .filter(({ q, i }) => answers[i] !== q.correct)
-      .map(({ q, i, userAns }) => ({
-        question: q.q,
-        options: q.options,
-        correctIndex: q.correct,
-        userAnswerIndex: userAns,
-        explanation: q.explanation,
-      }));
-
-    if (wrongOnes.length > 0) {
-      const { data: { session: freshSession } } = await supabase.auth.getSession();
-      if (freshSession?.user?.id) {
-        await saveManyWrongAnswers(
-          freshSession.user.id,
-          wrongOnes,
-          subject,
-          topic
-        );
-      }
+    const unanswered = answers.filter(a => a === -1).length;
+    if (unanswered > 0) {
+      if (!confirm(`لديك ${unanswered} سؤال غير مُجاب. إنهاء الاختبار؟`)) return;
     }
-  } catch (err) {
-    console.error('فشل حفظ الأخطاء:', err);
-  }
 
-          setStage('results');
+    try {
+      const wrongOnes = questions
+        .map((q, i) => ({ q, i, userAns: answers[i] }))
+        .filter(({ q, i }) => answers[i] !== q.correct)
+        .map(({ q, i, userAns }) => ({
+          question: q.q,
+          options: q.options,
+          correctIndex: q.correct,
+          userAnswerIndex: userAns,
+          explanation: q.explanation,
+        }));
+
+      if (wrongOnes.length > 0) {
+        const { data: { session: freshSession } } = await supabase.auth.getSession();
+        if (freshSession?.user?.id) {
+          await saveManyWrongAnswers(freshSession.user.id, wrongOnes, subject, topic);
+        }
+      }
+    } catch (err) {
+      console.error('فشل حفظ الأخطاء:', err);
+    }
+
+    setStage('results');
     if (setActiveWork) setActiveWork(null);
-    
-    // 🔥 سجّل النشاط
+
     try {
       const { data: { session: s } } = await supabase.auth.getSession();
       if (s?.user?.id) await logActivity(s.user.id, 'quiz');
     } catch (err) {
       console.error(err);
     }
-  };                                
+  };
 
-  // ─── إعادة ───
   const handleReset = () => {
     if (setActiveWork) setActiveWork(null);
     setStage('setup');
@@ -132,36 +120,38 @@ export default function Quiz({ profile, setActiveWork }) {
     setError('');
   };
 
-  // ─── حساب النتيجة ───
-  const score = questions.reduce((acc, q, i) => 
+  const score = questions.reduce((acc, q, i) =>
     acc + (answers[i] === q.correct ? 1 : 0), 0
   );
   const total = questions.length;
   const percentage = total > 0 ? Math.round((score / total) * 100) : 0;
 
-  // ═══════════════════════════════════════════════
-  // STAGE: Setup (اختيار الإعدادات)
-  // ═══════════════════════════════════════════════
+  // ═══════════════════════════════════════════
+  // Setup
+  // ═══════════════════════════════════════════
   if (stage === 'setup') {
     return (
-      <div style={{ maxWidth: 700, margin: '30px auto', padding: 25, direction: 'rtl' }}>
-        <div style={{
-          background: 'linear-gradient(135deg, #2A5C82 0%, #3B7BA8 100%)',
-          color: '#fff', padding: 30, borderRadius: 16, marginBottom: 25,
-        }}>
-          <h1 style={{ margin: '0 0 8px', fontSize: '1.5em' }}>🎯 مولّد الاختبارات</h1>
-          <p style={{ margin: 0, opacity: 0.9, fontSize: '0.95em' }}>
+      <div className="max-w-2xl mx-auto space-y-5" dir="rtl">
+
+        {/* Header */}
+        <div className="bg-surface-card border border-border rounded-lg p-6">
+          <h1 className="text-2xl font-bold text-content mb-2">
+            🎯 مولّد الاختبارات
+          </h1>
+          <p className="text-sm text-content-muted">
             اختر المادة والموضوع، وسيولّد الذكاء الاصطناعي أسئلة MCQ من ملفاتك أو من المعرفة العامة.
           </p>
         </div>
 
-        <div style={{ background: 'var(--bg-elevated)', padding: 24, borderRadius: 14, border: '1px solid var(--border)' }}>
-          {/* المادة */}
+        {/* Form Card */}
+        <div className="bg-surface-card border border-border rounded-lg p-6 space-y-5">
+
+          {/* Subject */}
           <Field label="المادة">
             <select
               value={subject}
               onChange={e => setSubject(e.target.value)}
-              style={selectStyle}
+              className="w-full bg-surface-soft border border-border rounded-md px-3 py-2.5 text-sm text-content focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
             >
               {SUBJECTS.map(s => (
                 <option key={s} value={s}>{s}</option>
@@ -169,117 +159,94 @@ export default function Quiz({ profile, setActiveWork }) {
             </select>
           </Field>
 
-          {/* الموضوع */}
+          {/* Topic */}
           <Field label="الموضوع (اختياري)">
             <input
               type="text"
               placeholder="مثال: فشل القلب، الربو، السكري..."
               value={topic}
               onChange={e => setTopic(e.target.value)}
-              style={inputStyle}
+              className="w-full bg-surface-soft border border-border rounded-md px-3 py-2.5 text-sm text-content placeholder:text-content-subtle focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
             />
           </Field>
 
-          {/* عدد الأسئلة */}
+          {/* Num Questions */}
           <Field label="عدد الأسئلة">
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
-              {NUM_OPTIONS.map(n => (
-  <button
-    key={n}
-    type="button"
-    onClick={() => setNumQuestions(n)}
-    style={{
-      padding: '10px 0',
-      borderRadius: 8,
-      border: numQuestions === n ? '2px solid var(--primary)' : '1px solid var(--border)',
-      background: numQuestions === n ? 'var(--bg-elevated)' : 'var(--bg-subtle)',
-      color: 'var(--text)',
-      cursor: 'pointer',
-      fontWeight: numQuestions === n ? 'bold' : 'normal',
-      fontFamily: 'inherit',
-    }}
-  >
-    {n}
-  </button>
-))}
+            <div className="grid grid-cols-4 gap-2">
+              {NUM_OPTIONS.map(n => {
+                const active = numQuestions === n;
+                return (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => setNumQuestions(n)}
+                    className={`
+                      py-2.5 rounded-md text-sm font-semibold transition-all border
+                      ${active
+                        ? 'bg-primary text-white border-primary shadow-sm'
+                        : 'bg-surface-soft text-content-muted border-border hover:border-content-subtle'
+                      }
+                    `}
+                  >
+                    {n}
+                  </button>
+                );
+              })}
             </div>
           </Field>
 
-          {/* الصعوبة */}
+          {/* Difficulty */}
           <Field label="مستوى الصعوبة">
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-              {DIFFICULTIES.map(d => (
-  <button
-    key={d}
-    type="button"
-    onClick={() => setDifficulty(d)}
-    style={{
-      padding: '10px 0',
-      borderRadius: 8,
-      border: difficulty === d ? '2px solid var(--primary)' : '1px solid var(--border)',
-      background: difficulty === d ? 'var(--bg-elevated)' : 'var(--bg-subtle)',
-      color: 'var(--text)',
-      cursor: 'pointer',
-      fontWeight: difficulty === d ? 'bold' : 'normal',
-      fontFamily: 'inherit',
-    }}
-  >
-    {d}
-  </button>
-))}
+            <div className="grid grid-cols-3 gap-2">
+              {DIFFICULTIES.map(d => {
+                const active = difficulty === d;
+                return (
+                  <button
+                    key={d}
+                    type="button"
+                    onClick={() => setDifficulty(d)}
+                    className={`
+                      py-2.5 rounded-md text-sm font-semibold transition-all border
+                      ${active
+                        ? 'bg-primary text-white border-primary shadow-sm'
+                        : 'bg-surface-soft text-content-muted border-border hover:border-content-subtle'
+                      }
+                    `}
+                  >
+                    {d}
+                  </button>
+                );
+              })}
             </div>
           </Field>
 
-          {/* استخدام الملفات */}
+          {/* Use Files */}
           <Field label="المصدر">
-            <label style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 10,
-              padding: 12,
-              background: 'var(--bg)',
-              borderRadius: 8,
-              cursor: 'pointer',
-            }}>
+            <label className="flex items-center gap-3 p-3 bg-surface-soft border border-border rounded-md cursor-pointer hover:border-content-subtle transition-colors">
               <input
                 type="checkbox"
                 checked={useFiles}
                 onChange={e => setUseFiles(e.target.checked)}
+                className="w-4 h-4 accent-primary cursor-pointer"
               />
-              <span style={{ fontSize: '0.9em' }}>
+              <span className="text-sm text-content">
                 استخدم ملفاتي المرفوعة كمصدر أساسي (RAG)
               </span>
             </label>
           </Field>
 
+          {/* Error */}
           {error && (
-            <div style={{
-              marginTop: 16,
-              padding: '10px 14px',
-              background: '#FEF2F2',
-              border: '1px solid #FECACA',
-              color: '#991B1B',
-              borderRadius: 8,
-              fontSize: '0.88em',
-            }}>
-              ⚠️ {error}
+            <div className="bg-danger/10 border border-danger/30 rounded-md p-3 flex items-center gap-2">
+              <span className="text-danger">⚠️</span>
+              <span className="text-sm text-danger">{error}</span>
             </div>
           )}
 
+          {/* Submit */}
           <button
             onClick={handleGenerate}
-            style={{
-              width: '100%',
-              marginTop: 20,
-              padding: 14,
-              background: '#2A5C82',
-              color: '#fff',
-              border: 'none',
-              borderRadius: 10,
-              fontSize: '1em',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-            }}
+            className="w-full bg-primary hover:bg-primary-light text-white font-semibold py-3 rounded-md transition-colors shadow-sm"
           >
             🚀 توليد الاختبار
           </button>
@@ -288,173 +255,107 @@ export default function Quiz({ profile, setActiveWork }) {
     );
   }
 
-  // ═══════════════════════════════════════════════
-  // STAGE: Loading
-  // ═══════════════════════════════════════════════
+  // ═══════════════════════════════════════════
+  // Loading
+  // ═══════════════════════════════════════════
   if (stage === 'loading') {
     return (
-      <div style={{
-        maxWidth: 500,
-        margin: '100px auto',
-        textAlign: 'center',
-        padding: 25,
-        direction: 'rtl',
-      }}>
-        <div style={{ fontSize: '3em', marginBottom: 20 }}>🧠</div>
-        <h2 style={{ 	color: 'var(--primary)' }}>جاري توليد الأسئلة...</h2>
-        <p style={{ color: 'var(--text-muted)' }}>
+      <div className="max-w-md mx-auto text-center py-16" dir="rtl">
+        <div className="text-5xl mb-6">🧠</div>
+        <h2 className="text-xl font-bold text-content mb-2">
+          جاري توليد الأسئلة...
+        </h2>
+        <p className="text-sm text-content-muted mb-8">
           يبحث الذكاء الاصطناعي في ملفاتك ويصيغ الأسئلة
         </p>
-        <div style={{
-          width: 50,
-          height: 50,
-          margin: '20px auto',
-          border: '4px solid #E2E8F0',
-          borderTop: '4px solid #2A5C82',
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite',
-        }} />
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        <div className="w-12 h-12 mx-auto border-2 border-border border-t-primary rounded-full animate-spin" />
       </div>
     );
   }
 
-  // ═══════════════════════════════════════════════
-  // STAGE: Running (الأسئلة)
-  // ═══════════════════════════════════════════════
-    if (stage === 'running') {
+  // ═══════════════════════════════════════════
+  // Running
+  // ═══════════════════════════════════════════
+  if (stage === 'running') {
     const answered = answers.filter(a => a !== -1).length;
+
     return (
-      <div style={{ maxWidth: 800, margin: '30px auto', padding: 25, direction: 'rtl' }}>
+      <div className="max-w-3xl mx-auto space-y-4" dir="rtl">
+
         {/* Header */}
-        <div style={{
-          background: 'var(--primary)',
-          color: '#fff',
-          padding: 18,
-          borderRadius: 14,
-          marginBottom: 20,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: 10,
-        }}>
+        <div className="bg-surface-card border border-border rounded-lg p-4 flex items-center justify-between gap-3">
           <div>
-            <div style={{ fontWeight: 'bold', fontSize: '1.1em' }}>{subject}</div>
-            {topic && <div style={{ fontSize: '0.85em', opacity: 0.9 }}>{topic}</div>}
+            <div className="font-semibold text-content text-sm">{subject}</div>
+            {topic && <div className="text-xs text-content-muted mt-0.5">{topic}</div>}
           </div>
-          <div style={{ fontSize: '0.9em' }}>
+          <div className="text-xs text-content-muted tabular-nums">
             {answered} / {total} تمت الإجابة
           </div>
         </div>
 
-        {/* شريط التقدم */}
-        <div style={{
-          height: 6,
-          background: 'var(--bg-subtle)',
-          borderRadius: 99,
-          marginBottom: 24,
-          overflow: 'hidden',
-        }}>
-          <div style={{
-            height: '100%',
-            width: `${(answered / total) * 100}%`,
-            background: '#10B981',
-            transition: 'width 0.3s',
-          }} />
+        {/* Progress */}
+        <div className="h-1.5 bg-surface-card rounded-full overflow-hidden">
+          <div
+            className="h-full bg-primary rounded-full transition-all duration-300"
+            style={{ width: `${(answered / total) * 100}%` }}
+          />
         </div>
 
-        {/* الأسئلة */}
-        {questions.map((q, qi) => (
-          <div
-            key={qi}
-            style={{
-              background: 'var(--bg-elevated)',
-              padding: 20,
-              borderRadius: 14,
-              border: '1px solid var(--border)',
-              marginBottom: 16,
-            }}
-          >
-            <div style={{
-              fontWeight: 'bold',
-              color: 'var(--text)',
-              marginBottom: 12,
-              fontSize: '1em',
-              lineHeight: 1.7,
-            }}>
-              {qi + 1}. {q.q}
-            </div>
+        {/* Questions */}
+        <div className="space-y-3">
+          {questions.map((q, qi) => (
+            <div
+              key={qi}
+              className="bg-surface-card border border-border rounded-lg p-5"
+            >
+              <div className="font-semibold text-content text-sm mb-4 leading-relaxed">
+                <span className="text-primary mr-1">{qi + 1}.</span> {q.q}
+              </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {q.options.map((opt, oi) => {
-                const selected = answers[qi] === oi;
-                return (
-                  <label
-                    key={oi}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 10,
-                      padding: '12px 14px',
-                      borderRadius: 8,
-                      border: selected ? '2px solid var(--primary)' : '1px solid var(--border)',
-                      background: selected ? 'var(--bg-subtle)' : 'var(--bg-elevated)',
-                      color: 'var(--text)',
-                      cursor: 'pointer',
-                      fontSize: '0.92em',
-                      fontFamily: 'inherit',
-                    }}
-                  >
-                    <input
-                      type="radio"
-                      name={`q-${qi}`}
-                      checked={selected}
-                      onChange={() => handleAnswer(qi, oi)}
-                      style={{ accentColor: 'var(--primary)' }}
-                    />
-                    <span>
-                      <strong>{String.fromCharCode(65 + oi)}.</strong> {opt}
-                    </span>
-                  </label>
-                );
-              })}
+              <div className="space-y-2">
+                {q.options.map((opt, oi) => {
+                  const selected = answers[qi] === oi;
+                  return (
+                    <label
+                      key={oi}
+                      className={`
+                        flex items-center gap-3 p-3 rounded-md cursor-pointer
+                        border transition-all
+                        ${selected
+                          ? 'bg-primary/10 border-primary'
+                          : 'bg-surface-soft border-border hover:border-content-subtle'
+                        }
+                      `}
+                    >
+                      <input
+                        type="radio"
+                        name={`q-${qi}`}
+                        checked={selected}
+                        onChange={() => handleAnswer(qi, oi)}
+                        className="w-4 h-4 accent-primary cursor-pointer"
+                      />
+                      <span className="text-sm text-content">
+                        <strong className="text-content-muted">{String.fromCharCode(65 + oi)}.</strong> {opt}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
 
-        {/* أزرار */}
-        <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+        {/* Actions */}
+        <div className="flex gap-2 sticky bottom-3 bg-surface py-3">
           <button
             onClick={handleReset}
-            style={{
-              flex: 1,
-              padding: 14,
-              background: 'var(--bg-elevated)',
-              color: 'var(--text-muted)',
-              border: '1px solid var(--border)',
-              borderRadius: 10,
-              fontSize: '1em',
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-            }}
+            className="flex-1 bg-surface-card border border-border text-content-muted hover:text-content hover:border-content-subtle py-3 rounded-md font-semibold text-sm transition-colors"
           >
             إلغاء
           </button>
           <button
             onClick={handleSubmit}
-            style={{
-              flex: 2,
-              padding: 14,
-              background: '#10B981',
-              color: '#fff',
-              border: 'none',
-              borderRadius: 10,
-              fontSize: '1em',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-            }}
+            className="flex-[2] bg-success hover:opacity-90 text-white py-3 rounded-md font-semibold text-sm transition-opacity"
           >
             ✅ إنهاء وعرض النتيجة
           </button>
@@ -463,174 +364,123 @@ export default function Quiz({ profile, setActiveWork }) {
     );
   }
 
-  // ═══════════════════════════════════════════════
-  // STAGE: Results (النتيجة)
-  // ═══════════════════════════════════════════════
+  // ═══════════════════════════════════════════
+  // Results
+  // ═══════════════════════════════════════════
   if (stage === 'results') {
-    const color = percentage >= 80 ? '#10B981' : percentage >= 60 ? '#F59E0B' : '#EF4444';
+    const colorClass = percentage >= 80 ? 'text-success'
+      : percentage >= 60 ? 'text-warn'
+      : 'text-danger';
+    const bgClass = percentage >= 80 ? 'bg-success/10 border-success/30'
+      : percentage >= 60 ? 'bg-warn/10 border-warn/30'
+      : 'bg-danger/10 border-danger/30';
     const emoji = percentage >= 80 ? '🎉' : percentage >= 60 ? '💪' : '📚';
     const message = percentage >= 80 ? 'ممتاز!' : percentage >= 60 ? 'جيد، تحتاج مراجعة' : 'يحتاج مراجعة شاملة';
 
     return (
-      <div style={{ maxWidth: 900, margin: '30px auto', padding: 25, direction: 'rtl' }}>
-        {/* بطاقة النتيجة */}
-        <div style={{
-          background: `linear-gradient(135deg, ${color} 0%, ${color}dd 100%)`,
-          color: '#fff',
-          padding: 40,
-          borderRadius: 20,
-          textAlign: 'center',
-          marginBottom: 30,
-        }}>
-          <div style={{ fontSize: '3em', marginBottom: 12 }}>{emoji}</div>
-          <div style={{ fontSize: '3em', fontWeight: 'bold', marginBottom: 8 }}>
+      <div className="max-w-3xl mx-auto space-y-4" dir="rtl">
+
+        {/* Score Card */}
+        <div className={`border-2 rounded-lg p-8 text-center ${bgClass}`}>
+          <div className="text-5xl mb-3">{emoji}</div>
+          <div className={`text-4xl font-bold ${colorClass} mb-2 tabular-nums`}>
             {score} / {total}
           </div>
-          <div style={{ fontSize: '1.4em', marginBottom: 6 }}>{percentage}%</div>
-          <div style={{ opacity: 0.9 }}>{message}</div>
+          <div className={`text-2xl font-bold ${colorClass} mb-1`}>
+            {percentage}%
+          </div>
+          <div className="text-sm text-content-muted">
+            {message}
+          </div>
         </div>
 
-        {/* الأخطاء */}
-        <h3 style={{ 	color: 'var(--primary)', marginBottom: 16 }}>
+        {/* Wrong answers */}
+        <h3 className="text-sm font-bold text-content">
           📋 الأسئلة الخاطئة ({total - score})
         </h3>
 
         {total - score === 0 ? (
-          <div style={{
-            background: '#F0FDF4',
-            border: '1px solid #86EFAC',
-            padding: 20,
-            borderRadius: 12,
-            textAlign: 'center',
-            color: '#065F46',
-          }}>
-            🏆 إجاباتك صحيحة بالكامل!
+          <div className="bg-success/10 border border-success/30 rounded-lg p-8 text-center">
+            <div className="text-3xl mb-2">🏆</div>
+            <div className="text-sm font-semibold text-success">إجاباتك صحيحة بالكامل!</div>
           </div>
         ) : (
-          questions.map((q, qi) => {
-            const userAns = answers[qi];
-            const isCorrect = userAns === q.correct;
-            if (isCorrect) return null;
+          <div className="space-y-3">
+            {questions.map((q, qi) => {
+              const userAns = answers[qi];
+              const isCorrect = userAns === q.correct;
+              if (isCorrect) return null;
 
-            return (
-              <div
-                key={qi}
-                style={{
-                  background: 'var(--bg-elevated)',
-                  padding: 20,
-                  borderRadius: 14,
-                  border: '2px solid #FECACA',
-                  marginBottom: 14,
-                }}
-              >
-                <div style={{
-                  fontWeight: 'bold',
-                  color: '#991B1B',
-                  marginBottom: 10,
-                }}>
-                  ❌ سؤال {qi + 1}: {q.q}
-                </div>
-
-                <div style={{
-                  padding: 12,
-                  background: '#FEF2F2',
-                  borderRadius: 8,
-                  marginBottom: 8,
-                  fontSize: '0.9em',
-                }}>
-                  <strong>إجابتك:</strong>{' '}
-                  {userAns === -1 ? 'لم تجب' : `${String.fromCharCode(65 + userAns)}. ${q.options[userAns]}`}
-                </div>
-
-                <div style={{
-                  padding: 12,
-                  background: '#F0FDF4',
-                  borderRadius: 8,
-                  marginBottom: 8,
-                  fontSize: '0.9em',
-                }}>
-                  <strong>الإجابة الصحيحة:</strong>{' '}
-                  {String.fromCharCode(65 + q.correct)}. {q.options[q.correct]}
-                </div>
-
-                {q.explanation && (
-                  <div style={{
-                    padding: 12,
-                    background: '#EFF6FF',
-                    borderRadius: 8,
-                    fontSize: '0.88em',
-                    color: '#1E40AF',
-                  }}>
-                    💡 {q.explanation}
+              return (
+                <div
+                  key={qi}
+                  className="bg-surface-card border-2 border-danger/30 rounded-lg p-5"
+                >
+                  <div className="font-semibold text-content text-sm mb-4 flex items-start gap-2">
+                    <span className="text-danger flex-shrink-0">❌</span>
+                    <span>سؤال {qi + 1}: {q.q}</span>
                   </div>
-                )}
-              </div>
-            );
-          })
+
+                  <div className="space-y-2 mb-3">
+                    {q.options.map((opt, oi) => {
+                      const isCorrectOpt = oi === q.correct;
+                      const isUserWrong = oi === userAns && !isCorrectOpt;
+
+                      let cls = 'bg-surface-soft border-border text-content-muted';
+                      if (isCorrectOpt) cls = 'bg-success/10 border-success/40 text-success';
+                      else if (isUserWrong) cls = 'bg-danger/10 border-danger/40 text-danger';
+
+                      return (
+                        <div
+                          key={oi}
+                          className={`flex items-center gap-2 p-2.5 rounded-md border text-xs ${cls}`}
+                        >
+                          <span className="font-bold">{String.fromCharCode(65 + oi)}.</span>
+                          <span className="flex-1">{opt}</span>
+                          {isCorrectOpt && <span>✅</span>}
+                          {isUserWrong && <span>❌</span>}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {q.explanation && (
+                    <div className="bg-primary/10 border border-primary/20 rounded-md p-3 text-xs text-primary">
+                      💡 {q.explanation}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         )}
 
-        {/* الإجراءات */}
-        <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
+        {/* Actions */}
+        <div className="flex gap-2 pt-2">
           <button
             onClick={async () => {
               try {
                 await exportQuizPDF({
-                  subject,
-                  topic,
-                  questions,
-                  answers,
-                  score,
-                  total,
-                  percentage,
-                  profile,
+                  subject, topic, questions, answers, score, total, percentage, profile,
                 });
               } catch (err) {
                 alert('فشل التصدير: ' + err.message);
               }
             }}
-            style={{
-              flex: 1,
-              padding: 14,
-              background: '#10B981',
-              color: '#fff',
-              border: 'none',
-              borderRadius: 10,
-              fontSize: '1em',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-            }}
+            className="flex-1 bg-success hover:opacity-90 text-white py-3 rounded-md font-semibold text-sm transition-opacity"
           >
             📄 تصدير PDF
           </button>
           <button
             onClick={handleReset}
-            style={{
-              flex: 1,
-              padding: 14,
-              background: '#2A5C82',
-              color: '#fff',
-              border: 'none',
-              borderRadius: 10,
-              fontSize: '1em',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-            }}
+            className="flex-1 bg-primary hover:bg-primary-light text-white py-3 rounded-md font-semibold text-sm transition-colors"
           >
             🎯 اختبار جديد
           </button>
         </div>
 
         {sourcesUsed === 'files' && (
-          <div style={{
-            marginTop: 16,
-            padding: 12,
-            background: '#F0FDF4',
-            borderRadius: 8,
-            fontSize: '0.85em',
-            color: '#065F46',
-            textAlign: 'center',
-          }}>
+          <div className="bg-success/10 border border-success/30 rounded-md p-3 text-center text-xs text-success font-semibold">
             📚 تم توليد الأسئلة من ملفاتك المرفوعة
           </div>
         )}
@@ -641,41 +491,13 @@ export default function Quiz({ profile, setActiveWork }) {
   return null;
 }
 
-// ─────────────────────────────────────────
-// مكونات مساعدة
-// ─────────────────────────────────────────
-
 function Field({ label, children }) {
   return (
-    <div style={{ marginBottom: 20 }}>
-      <label style={{
-        display: 'block',
-        fontWeight: 'bold',
-        marginBottom: 8,
-        color: 'var(--text)',
-        fontSize: '0.92em',
-      }}>
+    <div className="space-y-2">
+      <label className="block text-xs font-semibold text-content-muted">
         {label}
       </label>
       {children}
     </div>
   );
 }
-
-const inputStyle = {
-  width: '100%',
-  padding: 12,
-  borderRadius: 8,
-  border: '1px solid var(--border)',
-  fontSize: '0.95em',
-  fontFamily: 'inherit',
-  boxSizing: 'border-box',
-  background: 'var(--bg-subtle)',
-  color: 'var(--text)',
-};
-
-const selectStyle = {
-  ...inputStyle,
-  background: 'var(--bg-subtle)',
-  cursor: 'pointer',
-};
