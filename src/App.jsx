@@ -127,7 +127,6 @@ export default function App() {
     <>
       {activeTab === 'dashboard' && <Dashboard profile={profile} session={session} />}
       {activeTab === 'chat' && <ChatCoach profile={profile} session={session} />}
-      {activeTab === 'my-chats' && <MyConversations session={session} />}
       {activeTab === 'my-chats' && (
   <MyConversations
     session={session}
