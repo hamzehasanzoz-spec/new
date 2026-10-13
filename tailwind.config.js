@@ -8,34 +8,32 @@ export default {
   theme: {
     extend: {
       colors: {
-        // الألوان الأساسية
+        // ═══ ألوان ثابتة (لا تتغير مع الثيم) ═══
         primary: {
           DEFAULT: '#3B82F6',
           light: '#60A5FA',
           dark: '#1E40AF',
         },
-        // خلفيات
-        surface: {
-          DEFAULT: '#0A0A0A',
-          soft: '#141414',
-          card: '#1A1A1A',
-        },
-        // الحدود
-        border: {
-          DEFAULT: '#262626',
-          strong: '#333333',
-        },
-        // النصوص
-        content: {
-          DEFAULT: '#FAFAFA',
-          muted: '#A1A1AA',
-          subtle: '#71717A',
-        },
-        // الحالات
         success: '#22C55E',
         warn: '#F59E0B',
         danger: '#EF4444',
         info: '#3B82F6',
+
+        // ═══ ألوان تتغير مع الثيم (CSS Variables) ═══
+        surface: {
+          DEFAULT: 'var(--bg)',
+          soft: 'var(--bg-subtle)',
+          card: 'var(--bg-elevated)',
+        },
+        border: {
+          DEFAULT: 'var(--border)',
+          strong: 'var(--border)',
+        },
+        content: {
+          DEFAULT: 'var(--text)',
+          muted: 'var(--text-muted)',
+          subtle: 'var(--text-subtle)',
+        },
       },
       fontFamily: {
         sans: ['Inter', 'Tajawal', 'system-ui', 'sans-serif'],
