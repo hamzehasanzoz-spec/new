@@ -13,15 +13,17 @@ import Logo from './components/Logo';
 import { useIsMobile } from './hooks/useMediaQuery';
 import ThemeToggle from './components/ThemeToggle';
 import ExamCountdown from './components/ExamCountdown';
+import MyConversations from './components/MyConversations';
 
 const MAIN_TABS = [
   { id: 'dashboard', label: 'الرئيسية', icon: '🏠' },
   { id: 'chat', label: 'الدردشة', icon: '💬' },
-  { id: 'files', label: 'ملفاتي', icon: '📚' },
+  { id: 'my-chats', label: 'محادثاتي', icon: '📂' },
   { id: 'quiz', label: 'اختبارات', icon: '🎯' },
 ];
 
 const MORE_TABS = [
+  { id: 'files', label: 'ملفاتي', icon: '📚', color: '#2A5C82' },
   { id: 'exam', label: 'محاكاة امتحان', icon: '⏱️', color: '#7C3AED' },
   { id: 'bank', label: 'بنك الأخطاء', icon: '📖', color: '#EF4444' },
   { id: 'weekly', label: 'التقرير الأسبوعي', icon: '📊', color: '#10B981' },
@@ -31,6 +33,7 @@ const MORE_TABS = [
 const PAGE_TITLES = {
   dashboard: 'الرئيسية',
   chat: 'الدردشة',
+  'my-chats': 'محادثاتي',
   files: 'ملفاتي',
   quiz: 'اختبارات',
   exam: 'محاكاة امتحان',
@@ -124,6 +127,18 @@ export default function App() {
     <>
       {activeTab === 'dashboard' && <Dashboard profile={profile} session={session} />}
       {activeTab === 'chat' && <ChatCoach profile={profile} session={session} />}
+      {activeTab === 'my-chats' && <MyConversations session={session} />}
+      {activeTab === 'my-chats' && (
+  <MyConversations
+    session={session}
+    onOpenConversation={(id) => {
+      setActiveTab('chat');
+      // سيُفتح ChatCoach ويحتاج تحديث المحادثة
+      // للتبسيط: افتح في تبويب جديد
+      window.dispatchEvent(new CustomEvent('open-conversation', { detail: { id } }));
+    }}
+  />
+)}
       {activeTab === 'files' && <MyFiles session={session} />}
       {activeTab === 'quiz' && <Quiz profile={profile} setActiveWork={setActiveWork} />}
       {activeTab === 'bank' && <QuizBank session={session} />}
