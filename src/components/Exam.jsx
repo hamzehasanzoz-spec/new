@@ -468,7 +468,9 @@ export default function Exam({ profile, session, setActiveWork }) {
         {/* شريط التحميل */}
         {!allReady && (
           <div style={{
-            background: '#F5F3FF', border: '1px solid #A78BFA', borderRadius: 10,
+            background: 'var(--bg-subtle)',
+            border: '1px solid var(--primary)',
+            borderRadius: 10,
             padding: '10px 16px', marginBottom: 12,
             display: 'flex', alignItems: 'center', gap: 10,
             fontSize: '0.85em', color: '#5B21B6',
@@ -502,19 +504,20 @@ export default function Exam({ profile, session, setActiveWork }) {
           gridTemplateColumns: isMobile ? '1fr' : '2fr 1fr',
           gap: 20,
         }}>
-          {/* السؤال */}
+                    {/* السؤال */}
           <div style={{
-            background: 'var(--bg-elevated)', border: '1px solid var(--border)',
+            background: 'var(--bg-elevated)',
+            border: '1px solid var(--border)',
             borderRadius: 14, padding: 24,
           }}>
             <div style={{
               display: 'flex', justifyContent: 'space-between',
               alignItems: 'flex-start', marginBottom: 16, gap: 10,
             }}>
-              <div style={{ fontWeight: 'bold', fontSize: '0.95em', color: '#7C3AED' }}>
-                السؤال {currentQ + 1} من {questions.length}
-                {!allReady && <span style={{ fontSize: '0.75em', opacity: 0.7, marginRight: 8 }}>(الهدف: {targetCount})</span>}
-              </div>
+                          <div style={{ fontWeight: 'bold', fontSize: '0.95em', color: 'var(--primary)' }}>
+              السؤال {currentQ + 1} من {questions.length}
+              {!allReady && <span style={{ fontSize: '0.75em', opacity: 0.7, marginRight: 8 }}>(الهدف: {targetCount})</span>}
+            </div>
               <button
                 onClick={toggleFlag}
                 style={{
@@ -528,22 +531,29 @@ export default function Exam({ profile, session, setActiveWork }) {
               </button>
             </div>
 
-            <div style={{ fontSize: '1em', lineHeight: 1.7, marginBottom: 20, color: 'var(--text)' }}>
+                        <div style={{
+              fontSize: '1em',
+              lineHeight: 1.7,
+              marginBottom: 20,
+              color: 'var(--text)',
+            }}>
               {q.q}
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {q.options.map((opt, oi) => {
                 const selected = answers[currentQ] === oi;
-                return (
+                                return (
                   <label
                     key={oi}
                     style={{
                       display: 'flex', alignItems: 'center', gap: 12,
                       padding: '14px 16px', borderRadius: 10,
-                      border: selected ? '2px solid #7C3AED' : '1px solid var(--border)',
-                      background: selected ? '#F5F3FF' : '#F8FAFC',
+                      border: selected ? '2px solid var(--primary)' : '1px solid var(--border)',
+                      background: selected ? 'var(--bg-subtle)' : 'var(--bg-elevated)',
+                      color: 'var(--text)',
                       cursor: 'pointer', fontSize: '0.93em',
+                      fontFamily: 'inherit',
                     }}
                   >
                     <input
@@ -551,6 +561,7 @@ export default function Exam({ profile, session, setActiveWork }) {
                       name={`exam-q-${currentQ}`}
                       checked={selected}
                       onChange={() => handleAnswer(oi)}
+                        style={{ accentColor: 'var(--primary)' }}
                     />
                     <span><strong>{String.fromCharCode(65 + oi)}.</strong> {opt}</span>
                   </label>
@@ -615,19 +626,20 @@ export default function Exam({ profile, session, setActiveWork }) {
             </div>
           </div>
 
-          {/* خريطة الأسئلة */}
+                   {/* خريطة الأسئلة */}
           <div style={{
-            background: 'var(--bg-elevated)', border: '1px solid var(--border)',
+            background: 'var(--bg-elevated)',
+            border: '1px solid var(--border)',
             borderRadius: 14, padding: 16,
             alignSelf: 'flex-start',
             position: isMobile ? 'static' : 'sticky',
             top: isMobile ? 'auto' : 20,
           }}>
-            <div style={{
+                       <div style={{
               fontSize: '0.85em', fontWeight: 'bold',
-              	color: 'var(--primary)', marginBottom: 12,
+              color: 'var(--primary)', marginBottom: 12,
             }}>
-              🗺️ خريطة الأسئلة ({questions.length}/{targetCount})
+              🗺️ خريطة الأسئلة
             </div>
 
             <div style={{

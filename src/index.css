@@ -118,3 +118,29 @@ button, a, [role="button"] {
 [data-theme="dark"] button[data-keep-white] {
   color: #ffffff;
 }
+/* ═══ Dark Mode: ضمان ظهور النص في كل العناصر ═══ */
+[data-theme="dark"] label,
+[data-theme="dark"] span,
+[data-theme="dark"] p,
+[data-theme="dark"] div {
+  /* لا تفرض لوناً — اترك كل عنصر يستخدم ألوانه */
+}
+
+/* النصوص داخل الأزرار */
+[data-theme="dark"] button {
+  color: inherit;
+}
+
+/* الشارات الصفراء (Batch Loading) */
+[data-theme="dark"] .batch-info {
+  background: rgba(124, 58, 237, 0.15) !important;
+  color: var(--text) !important;
+  border-color: var(--primary) !important;
+}
+
+/* شريط التنبيه الأصفر */
+[data-theme="dark"] .warning-strip {
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: #FCD34D !important;
+  border-color: #F59E0B !important;
+}

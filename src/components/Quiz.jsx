@@ -322,13 +322,13 @@ export default function Quiz({ profile, setActiveWork }) {
   // ═══════════════════════════════════════════════
   // STAGE: Running (الأسئلة)
   // ═══════════════════════════════════════════════
-  if (stage === 'running') {
+    if (stage === 'running') {
     const answered = answers.filter(a => a !== -1).length;
     return (
       <div style={{ maxWidth: 800, margin: '30px auto', padding: 25, direction: 'rtl' }}>
         {/* Header */}
         <div style={{
-          background: '#2A5C82',
+          background: 'var(--primary)',
           color: '#fff',
           padding: 18,
           borderRadius: 14,
@@ -351,7 +351,7 @@ export default function Quiz({ profile, setActiveWork }) {
         {/* شريط التقدم */}
         <div style={{
           height: 6,
-          background: '#E2E8F0',
+          background: 'var(--bg-subtle)',
           borderRadius: 99,
           marginBottom: 24,
           overflow: 'hidden',
@@ -378,9 +378,10 @@ export default function Quiz({ profile, setActiveWork }) {
           >
             <div style={{
               fontWeight: 'bold',
-              	color: 'var(--primary)',
+              color: 'var(--text)',
               marginBottom: 12,
               fontSize: '1em',
+              lineHeight: 1.7,
             }}>
               {qi + 1}. {q.q}
             </div>
@@ -395,12 +396,14 @@ export default function Quiz({ profile, setActiveWork }) {
                       display: 'flex',
                       alignItems: 'center',
                       gap: 10,
-                      padding: '10px 14px',
+                      padding: '12px 14px',
                       borderRadius: 8,
-                      border: selected ? '2px solid #2A5C82' : '1px solid var(--border)',
-                      background: selected ? '#EFF6FF' : '#F8FAFC',
+                      border: selected ? '2px solid var(--primary)' : '1px solid var(--border)',
+                      background: selected ? 'var(--bg-subtle)' : 'var(--bg-elevated)',
+                      color: 'var(--text)',
                       cursor: 'pointer',
                       fontSize: '0.92em',
+                      fontFamily: 'inherit',
                     }}
                   >
                     <input
@@ -408,6 +411,7 @@ export default function Quiz({ profile, setActiveWork }) {
                       name={`q-${qi}`}
                       checked={selected}
                       onChange={() => handleAnswer(qi, oi)}
+                      style={{ accentColor: 'var(--primary)' }}
                     />
                     <span>
                       <strong>{String.fromCharCode(65 + oi)}.</strong> {opt}
@@ -432,6 +436,7 @@ export default function Quiz({ profile, setActiveWork }) {
               borderRadius: 10,
               fontSize: '1em',
               cursor: 'pointer',
+              fontFamily: 'inherit',
             }}
           >
             إلغاء
@@ -448,6 +453,7 @@ export default function Quiz({ profile, setActiveWork }) {
               fontSize: '1em',
               fontWeight: 'bold',
               cursor: 'pointer',
+              fontFamily: 'inherit',
             }}
           >
             ✅ إنهاء وعرض النتيجة
