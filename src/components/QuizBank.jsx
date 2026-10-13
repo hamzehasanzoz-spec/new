@@ -84,16 +84,18 @@ export default function QuizBank({ session }) {
         }}>
           {subjects.map(s => (
             <button
-              key={s}
-              onClick={() => setFilterSubject(filterSubject === s ? '' : s)}
-              style={{
-                padding: 14,
-                background: filterSubject === s ? '#EFF6FF' : '#fff',
-                border: filterSubject === s ? '2px solid #2A5C82' : '1px solid var(--border)',
-                borderRadius: 12,
-                cursor: 'pointer',
-                textAlign: 'right',
-              }}
+  key={s}
+  onClick={() => setFilterSubject(filterSubject === s ? '' : s)}
+  style={{
+    padding: 14,
+    background: filterSubject === s ? 'var(--bg-elevated)' : 'var(--bg-subtle)',
+    border: filterSubject === s ? '2px solid var(--primary)' : '1px solid var(--border)',
+    borderRadius: 12,
+    cursor: 'pointer',
+    textAlign: 'right',
+    color: 'var(--text)',
+    fontFamily: 'inherit',
+  }}
             >
               <div style={{ fontSize: '1.6em', fontWeight: 'bold', 	color: 'var(--primary)' }}>
                 {stats[s]}

@@ -109,3 +109,12 @@ button, a, [role="button"] {
 [data-theme="dark"] [data-bg-light] {
   background: rgba(255,255,255,0.05) !important;
 }
+/* ═══ ضمان ظهور النص داخل الأزرار في Dark Mode ═══ */
+[data-theme="dark"] button:not([data-keep-white]) {
+  color: inherit;
+}
+
+/* الأزرار ذات الخلفية الملونة (مثل إرسال) تحتفظ بنصها الأبيض */
+[data-theme="dark"] button[data-keep-white] {
+  color: #ffffff;
+}

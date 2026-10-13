@@ -184,23 +184,24 @@ export default function Quiz({ profile, setActiveWork }) {
           <Field label="عدد الأسئلة">
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
               {NUM_OPTIONS.map(n => (
-                <button
-                  key={n}
-                  type="button"
-                  onClick={() => setNumQuestions(n)}
-                  style={{
-                    padding: '10px 0',
-                    borderRadius: 8,
-                    border: numQuestions === n ? '2px solid #2A5C82' : '1px solid var(--border)',
-                    background: numQuestions === n ? '#EFF6FF' : '#F8FAFC',
-                    color: 'var(--text)',
-                    cursor: 'pointer',
-                    fontWeight: numQuestions === n ? 'bold' : 'normal',
-                  }}
-                >
-                  {n}
-                </button>
-              ))}
+  <button
+    key={n}
+    type="button"
+    onClick={() => setNumQuestions(n)}
+    style={{
+      padding: '10px 0',
+      borderRadius: 8,
+      border: numQuestions === n ? '2px solid var(--primary)' : '1px solid var(--border)',
+      background: numQuestions === n ? 'var(--bg-elevated)' : 'var(--bg-subtle)',
+      color: 'var(--text)',
+      cursor: 'pointer',
+      fontWeight: numQuestions === n ? 'bold' : 'normal',
+      fontFamily: 'inherit',
+    }}
+  >
+    {n}
+  </button>
+))}
             </div>
           </Field>
 
@@ -208,23 +209,24 @@ export default function Quiz({ profile, setActiveWork }) {
           <Field label="مستوى الصعوبة">
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
               {DIFFICULTIES.map(d => (
-                <button
-                  key={d}
-                  type="button"
-                  onClick={() => setDifficulty(d)}
-                  style={{
-                    padding: '10px 0',
-                    borderRadius: 8,
-                    border: difficulty === d ? '2px solid #2A5C82' : '1px solid var(--border)',
-                    background: difficulty === d ? '#EFF6FF' : '#F8FAFC',
-                    color: 'var(--text)',
-                    cursor: 'pointer',
-                    fontWeight: difficulty === d ? 'bold' : 'normal',
-                  }}
-                >
-                  {d}
-                </button>
-              ))}
+  <button
+    key={d}
+    type="button"
+    onClick={() => setDifficulty(d)}
+    style={{
+      padding: '10px 0',
+      borderRadius: 8,
+      border: difficulty === d ? '2px solid var(--primary)' : '1px solid var(--border)',
+      background: difficulty === d ? 'var(--bg-elevated)' : 'var(--bg-subtle)',
+      color: 'var(--text)',
+      cursor: 'pointer',
+      fontWeight: difficulty === d ? 'bold' : 'normal',
+      fontFamily: 'inherit',
+    }}
+  >
+    {d}
+  </button>
+))}
             </div>
           </Field>
 
@@ -658,14 +660,16 @@ const inputStyle = {
   width: '100%',
   padding: 12,
   borderRadius: 8,
-  border: '1px solid #CBD5E1',
+  border: '1px solid var(--border)',
   fontSize: '0.95em',
   fontFamily: 'inherit',
   boxSizing: 'border-box',
+  background: 'var(--bg-subtle)',
+  color: 'var(--text)',
 };
 
 const selectStyle = {
   ...inputStyle,
-  background: 'var(--bg-elevated)',
+  background: 'var(--bg-subtle)',
   cursor: 'pointer',
 };

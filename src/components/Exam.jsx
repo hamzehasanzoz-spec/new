@@ -293,22 +293,23 @@ export default function Exam({ profile, session, setActiveWork }) {
           <Field label="حجم الامتحان">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {EXAM_PRESETS.map((p, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => setPresetIndex(i)}
-                  style={{
-                    padding: '14px 18px',
-                    borderRadius: 10,
-                    border: presetIndex === i ? '2px solid #7C3AED' : '1px solid var(--border)',
-                    background: presetIndex === i ? '#F5F3FF' : '#F8FAFC',
-                    color: 'var(--text)',
-                    cursor: 'pointer',
-                    textAlign: 'right',
-                    fontSize: '0.95em',
-                    fontWeight: presetIndex === i ? 'bold' : 'normal',
-                  }}
-                >
+  <button
+    key={i}
+    type="button"
+    onClick={() => setPresetIndex(i)}
+    style={{
+      padding: '14px 18px',
+      borderRadius: 10,
+      border: presetIndex === i ? '2px solid #7C3AED' : '1px solid var(--border)',
+      background: presetIndex === i ? 'var(--bg-elevated)' : 'var(--bg-subtle)',
+      color: 'var(--text)',
+      cursor: 'pointer',
+      textAlign: 'right',
+      fontSize: '0.95em',
+      fontWeight: presetIndex === i ? 'bold' : 'normal',
+      fontFamily: 'inherit',
+    }}
+  >
                   {p.label}
                   <span style={{ fontSize: '0.75em', opacity: 0.7, marginRight: 8 }}>
                     ({Math.ceil(p.numQuestions / BATCH_SIZE)} دفعات)
@@ -832,8 +833,8 @@ function Field({ label, children }) {
 
 const selectStyle = {
   width: '100%', padding: 12, borderRadius: 8,
-  border: '1px solid #CBD5E1', fontSize: '0.95em',
-  fontFamily: 'inherit', background: 'var(--bg-elevated)',
+  border: '1px solid var(--border)', fontSize: '0.95em',
+  fontFamily: 'inherit', background: 'var(--bg-subtle)',
+  color: 'var(--text)',
   cursor: 'pointer', boxSizing: 'border-box',
-  
 };
