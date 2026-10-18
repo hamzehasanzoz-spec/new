@@ -42,11 +42,14 @@ export default async function handler(req, res) {
     excludeQuestions = [],
   } = req.body || {};
 
-  const openrouterKey = process.env.OPENROUTER_KEY;
   const jinaKey = process.env.JINA_API_KEY;
   const groqKeys = parseKeys(process.env.GROQ_API_KEYS);
   const supabaseUrl = process.env.VITE_SUPABASE_URL;
   const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
+
+  if (groqKeys.length === 0) {
+    return res.status(500).json({ error: 'مفاتيح Groq مفقودة في إعدادات Vercel' });
+  }
 
   // ── 1. RAG: البحث في ملفات الطالب ──
   let context = '';
@@ -57,40 +60,21 @@ export default async function handler(req, res) {
       const query = `${subject} ${topic}`.trim() || 'أسئلة طبية';
       const embRes = await fetch('https://api.jina.ai/v1/embeddings', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${jinaKey}`,
-        },
-        body: JSON.stringify({
-          model: 'jina-embeddings-v3',
-          input: [query],
-          task: 'retrieval.query',
-          dimensions: 1024,
-        }),
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${jinaKey}` },
+        body: JSON.stringify({ model: 'jina-embeddings-v3', input: [query], task: 'retrieval.query', dimensions: 1024 }),
       });
       const embData = await embRes.json();
 
       if (embRes.ok && embData.data?.[0]?.embedding) {
         const searchRes = await fetch(`${supabaseUrl}/rest/v1/rpc/match_document_chunks`, {
           method: 'POST',
-          headers: {
-            apikey: supabaseAnonKey,
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            query_embedding: embData.data[0].embedding,
-            match_threshold: 0.1,
-            match_count: 10,
-            filter_user_id: userId,
-          }),
+          headers: { apikey: supabaseAnonKey, Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query_embedding: embData.data[0].embedding, match_threshold: 0.1, match_count: 10, filter_user_id: userId }),
         });
         const matches = await searchRes.json();
 
         if (Array.isArray(matches) && matches.length > 0) {
-          context = matches
-            .map((m, i) => `[مصدر ${i + 1} — ${m.filename}]:\n${m.content}`)
-            .join('\n\n---\n\n');
+          context = matches.map((m, i) => `[مصدر ${i + 1} — ${m.filename}]:\n${m.content}`).join('\n\n---\n\n');
           sourcesUsed = 'files';
         }
       }
@@ -100,130 +84,85 @@ export default async function handler(req, res) {
   }
 
   // ── 2. بناء الـ Prompt ──
-  const systemPrompt = `أنت خبير في كتابة أسئلة الامتحان الوطني السوري (NMLE) لطلاب الطب.
-
-## قواعد صارمة
-1. أعد **JSON فقط** — بدون أي نص خارجه، بدون markdown code fences.
-2. لا ترحيب، لا شرح خارج JSON، لا مقدمة.
-3. التزم بالعدد المطلوب بالضبط.
-
-## صيغة JSON المطلوبة
+  const systemPrompt = `أنت خبير في كتابة أسئلة الامتحان. أعد **JSON فقط** بدون أي نصوص أخرى أو علامات markdown.
+صيغة JSON:
 {
   "questions": [
-    {
-      "q": "نص السؤال بالعربية والمصطلحات بالإنجليزية",
-      "options": ["الخيار A", "الخيار B", "الخيار C", "الخيار D"],
-      "correct": 0,
-      "explanation": "شرح مختصر لسبب صحة الإجابة (سطر واحد)"
-    }
+    { "q": "نص السؤال", "options": ["A", "B", "C", "D"], "correct": 0, "explanation": "شرح قصير" }
   ]
 }
-
-ملاحظات:
-- "correct" هو فهرس الإجابة الصحيحة (0-3).
-- شرح كل سؤال في سطر واحد فقط.
-- الأسئلة بصيغة سريرية عملية إن أمكن.${context ? `\n\n## مقاطع من ملفات الطالب (استخدمها كمصدر أساسي للأسئلة)\n\n${context}` : ''}`;
+ملاحظات: "correct" هو رقم الخيار الصحيح (0-3).${context ? `\n\nاستخدم هذه المقاطع كمصدر:\n${context}` : ''}`;
 
   const excludePart = excludeQuestions.length > 0
-    ? `\n\n⚠️ **لا تكرر هذه الأسئلة** (سبق طرحها):\n${excludeQuestions.slice(-15).map((q, i) => `${i + 1}. ${typeof q === 'string' ? q : q.q}`).join('\n')}`
+    ? `\n\nلا تكرر هذه الأسئلة:\n${excludeQuestions.slice(-10).map((q, i) => `${i + 1}. ${typeof q === 'string' ? q : q.q}`).join('\n')}`
     : '';
 
-  const userPrompt = `أنشئ ${numQuestions} سؤال MCQ${subject ? ` في مادة **${subject}**` : ''}${topic ? ` عن موضوع "${topic}"` : ''}.
+  const userPrompt = `أنشئ ${numQuestions} سؤال اختيار من متعدد (MCQ) في مادة ${subject} ${topic ? `عن موضوع ${topic}` : ''}.
 مستوى الصعوبة: ${difficulty}.
+التزم بـ ${numQuestions} سؤال بالضبط. أعد JSON فقط.${excludePart}`;
 
-⚠️ **مهم جدًا:**
-- التزم بـ **${numQuestions} سؤال بالضبط**.
-- عدّ قبل الإرجاع.
-- إذا وصلت إلى ${numQuestions}، توقف.
-- أعد JSON فقط بدون أي نص خارجه.${excludePart}`;
-
-  // ── 3. بناء قائمة النماذج والمفاتيح ──
-  const models = [];
-  
-  if (groqKeys.length > 0) {
-    groqKeys.forEach(key => {
-      // نبدأ بالنموذج الأسرع لتجنب Timeout
-      models.push({ provider: 'groq', key, id: 'llama-3.1-8b-instant' });
-      models.push({ provider: 'groq', key, id: 'llama-3.3-70b-versatile' });
-    });
-  }
-  
-  if (openrouterKey) {
-    models.push({ provider: 'openrouter', key: openrouterKey, id: 'nvidia/nemotron-3-super-120b-a12b:free' });
-  }
-
-  if (models.length === 0) {
-    return res.status(500).json({ error: 'لا توجد مفاتيح AI متاحة' });
-  }
-
+  // ── 3. استخدام نماذج Groq فقط ──
+  const groqModels = ['llama-3.3-70b-versatile', 'openai/gpt-oss-120b', 'llama-3.1-8b-instant'];
   let lastError = '';
 
-  for (const entry of models) {
-    const { provider, key, id: model } = entry;
-    let url, headers, requestBody;
-
-    if (provider === 'groq') {
-      url = 'https://api.groq.com/openai/v1/chat/completions';
-      headers = { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' };
-      requestBody = { model, messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }], temperature: 0.5, max_completion_tokens: 8000 };
-    } else {
-      url = 'https://openrouter.ai/api/v1/chat/completions';
-      headers = { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', 'HTTP-Referer': process.env.SITE_URL || 'https://new-theta-five-73.vercel.app', 'X-Title': 'Coach AI' };
-      requestBody = { model, messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }], temperature: 0.5, max_tokens: 8000 };
-    }
-
-    try {
-      const r = await fetch(url, { method: 'POST', headers, body: JSON.stringify(requestBody) });
-
-      if (!r.ok) {
-        const txt = await r.text().catch(() => '');
-        lastError = `HTTP ${r.status} - ${txt.slice(0, 100)}`;
-        continue; 
-      }
-
-      const data = await r.json();
-      let text = data.choices?.[0]?.message?.content || '';
-
-      text = text.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
-      const start = text.indexOf('{');
-      const end = text.lastIndexOf('}');
-      
-      if (start === -1 || end === -1) {
-        lastError = `لا يوجد JSON في رد النموذج: ${text.slice(0, 50)}...`;
-        continue;
-      }
-
-      const jsonStr = text.slice(start, end + 1);
-      let parsed;
+  for (const key of groqKeys) {
+    for (const model of groqModels) {
       try {
-        parsed = JSON.parse(jsonStr);
-      } catch (e) {
-        lastError = `JSON غير صالح: ${e.message}`;
-        continue;
+        const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model,
+            messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }],
+            temperature: 0.3,
+            max_completion_tokens: 8000,
+            response_format: { type: "json_object" } // إجبار Groq على إرجاع JSON
+          }),
+        });
+
+        if (!r.ok) {
+          const txt = await r.text().catch(() => '');
+          lastError = `HTTP ${r.status} - ${txt.slice(0, 100)}`;
+          continue; 
+        }
+
+        const data = await r.json();
+        let text = data.choices?.[0]?.message?.content || '';
+
+        // تنظيف احتياطي
+        text = text.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+        
+        let parsed;
+        try {
+          parsed = JSON.parse(text);
+        } catch (e) {
+          lastError = `JSON غير صالح من ${model}`;
+          continue;
+        }
+
+        if (!Array.isArray(parsed.questions) || parsed.questions.length === 0) {
+          lastError = 'الرد لا يحتوي على مصفوفة أسئلة';
+          continue;
+        }
+
+        const validQuestions = parsed.questions.filter(q =>
+          q.q && Array.isArray(q.options) && q.options.length === 4 &&
+          typeof q.correct === 'number' && q.correct >= 0 && q.correct <= 3
+        );
+
+        if (validQuestions.length === 0) {
+          lastError = 'الأسئلة لا تتوافق مع الصيغة';
+          continue;
+        }
+
+        // نجح التوليد!
+        return res.status(200).json({ success: true, model, sourcesUsed, questions: validQuestions });
+
+      } catch (err) {
+        lastError = err.message;
       }
-
-      if (!Array.isArray(parsed.questions) || parsed.questions.length === 0) {
-        lastError = 'الرد بدون مصفوفة questions';
-        continue;
-      }
-
-      const validQuestions = parsed.questions.filter(q =>
-        q.q && Array.isArray(q.options) && q.options.length === 4 &&
-        typeof q.correct === 'number' && q.correct >= 0 && q.correct <= 3
-      );
-
-      if (validQuestions.length === 0) {
-        lastError = 'الأسئلة لا تتوافق مع الصيغة المطلوبة';
-        continue;
-      }
-
-      return res.status(200).json({ success: true, model, sourcesUsed, questions: validQuestions });
-    } catch (err) {
-      lastError = err.message;
     }
   }
 
-  // إذا وصلنا هنا، فكل المحاولات فشلت
-  console.error("All models failed. Last error:", lastError);
-  return res.status(500).json({ error: 'فشل التوليد من جميع المزودين', details: lastError });
+  return res.status(500).json({ error: 'فشل التوليد من Groq', details: lastError });
 }
