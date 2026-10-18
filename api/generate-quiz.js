@@ -11,6 +11,12 @@ function decodeJWT(token) {
   }
 }
 
+// تحليل مفاتيح Groq المتعددة
+function parseKeys(envValue) {
+  if (!envValue) return [];
+  return envValue.split(',').map(k => k.trim()).filter(Boolean);
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -38,31 +44,29 @@ export default async function handler(req, res) {
   } = req.body || {};
 
   const openrouterKey = process.env.OPENROUTER_KEY;
-  if (!openrouterKey) {
-    return res.status(500).json({ error: 'OPENROUTER_KEY مفقود' });
-  }
-
-  const voyageKey = process.env.VOYAGE_API_KEY;
+  const jinaKey = process.env.JINA_API_KEY;
+  const groqKeys = parseKeys(process.env.GROQ_API_KEYS); // استخدام الجمع
   const supabaseUrl = process.env.VITE_SUPABASE_URL;
   const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
 
-  // ── 1. RAG: البحث في ملفات الطالب ──
+  // ── 1. RAG: البحث في ملفات الطالب (باستخدام Jina AI) ──
   let context = '';
   let sourcesUsed = 'general';
 
-  if (useFiles && voyageKey && supabaseUrl) {
+  if (useFiles && jinaKey && supabaseUrl) {
     try {
       const query = `${subject} ${topic}`.trim() || 'أسئلة طبية';
-      const embRes = await fetch('https://api.voyageai.com/v1/embeddings', {
+      const embRes = await fetch('https://api.jina.ai/v1/embeddings', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${voyageKey}`,
+          Authorization: `Bearer ${jinaKey}`,
         },
         body: JSON.stringify({
-          model: 'voyage-multilingual-2',
+          model: 'jina-embeddings-v3',
           input: [query],
-          input_type: 'query',
+          task: 'retrieval.query',
+          dimensions: 1024,
         }),
       });
       const embData = await embRes.json();
@@ -121,12 +125,10 @@ export default async function handler(req, res) {
 - شرح كل سؤال في سطر واحد فقط.
 - الأسئلة بصيغة سريرية عملية إن أمكن.${context ? `\n\n## مقاطع من ملفات الطالب (استخدمها كمصدر أساسي للأسئلة)\n\n${context}` : ''}`;
 
-  // ⭐ بناء جزء "لا تكرر"
   const excludePart = excludeQuestions.length > 0
     ? `\n\n⚠️ **لا تكرر هذه الأسئلة** (سبق طرحها):\n${excludeQuestions.slice(-15).map((q, i) => `${i + 1}. ${typeof q === 'string' ? q : q.q}`).join('\n')}`
     : '';
 
-  // ⭐ userPrompt النهائي
   const userPrompt = `أنشئ ${numQuestions} سؤال MCQ${subject ? ` في مادة **${subject}**` : ''}${topic ? ` عن موضوع "${topic}"` : ''}.
 مستوى الصعوبة: ${difficulty}.
 
@@ -136,34 +138,37 @@ export default async function handler(req, res) {
 - إذا وصلت إلى ${numQuestions}، توقف.
 - أعد JSON فقط بدون أي نص خارجه.${excludePart}`;
 
-  // ── 3. استدعاء النماذج ──
-    const groqKey = process.env.GROQ_API_KEY;
+  // ── 3. بناء قائمة النماذج والمفاتيح (Groq ثم OpenRouter) ──
+  const models = [];
+  
+  // إضافة كل مفاتيح Groq
+  if (groqKeys.length > 0) {
+    groqKeys.forEach(key => {
+      models.push({ provider: 'groq', key, id: 'llama-3.3-70b-versatile' });
+      models.push({ provider: 'groq', key, id: 'llama-3.1-8b-instant' });
+    });
+  }
+  
+  // إضافة OpenRouter كاحتياطي أخير
+  if (openrouterKey) {
+    models.push({ provider: 'openrouter', key: openrouterKey, id: 'nvidia/nemotron-3-super-120b-a12b:free' });
+    models.push({ provider: 'openrouter', key: openrouterKey, id: 'google/gemma-4-31b-it:free' });
+  }
 
-  // ⭐ استخدم Groq أولًا إن كان متوفرًا
-  const models = groqKey
-    ? [
-        { provider: 'groq', id: 'llama-3.3-70b-versatile' },
-        { provider: 'groq', id: 'openai/gpt-oss-120b' },
-        { provider: 'openrouter', id: 'nvidia/nemotron-3-super-120b-a12b:free' },
-        { provider: 'openrouter', id: 'google/gemma-4-31b-it:free' },
-      ]
-    : [
-        { provider: 'openrouter', id: 'nvidia/nemotron-3-super-120b-a12b:free' },
-        { provider: 'openrouter', id: 'google/gemma-4-31b-it:free' },
-        { provider: 'openrouter', id: 'nvidia/nemotron-3-ultra-550b-a55b:free' },
-      ];
+  if (models.length === 0) {
+    return res.status(500).json({ error: 'لا توجد مفاتيح AI متاحة' });
+  }
 
   let lastError = '';
 
-    for (const entry of models) {
-    const { provider, id: model } = entry;
-
+  for (const entry of models) {
+    const { provider, key, id: model } = entry;
     let url, headers, requestBody;
 
     if (provider === 'groq') {
       url = 'https://api.groq.com/openai/v1/chat/completions';
       headers = {
-        Authorization: `Bearer ${groqKey}`,
+        Authorization: `Bearer ${key}`,
         'Content-Type': 'application/json',
       };
       requestBody = {
@@ -173,12 +178,12 @@ export default async function handler(req, res) {
           { role: 'user', content: userPrompt },
         ],
         temperature: 0.5,
-        max_completion_tokens: 16000,
+        max_completion_tokens: 8000,
       };
     } else {
       url = 'https://openrouter.ai/api/v1/chat/completions';
       headers = {
-        Authorization: `Bearer ${openrouterKey}`,
+        Authorization: `Bearer ${key}`,
         'Content-Type': 'application/json',
         'HTTP-Referer': process.env.SITE_URL || 'https://new-theta-five-73.vercel.app',
         'X-Title': 'Coach AI',
@@ -190,7 +195,7 @@ export default async function handler(req, res) {
           { role: 'user', content: userPrompt },
         ],
         temperature: 0.5,
-        max_tokens: 16000,
+        max_tokens: 8000,
       };
     }
 
@@ -200,11 +205,11 @@ export default async function handler(req, res) {
         headers,
         body: JSON.stringify(requestBody),
       });
-      // ... باقي الكود كما هو
+
       if (!r.ok) {
         const txt = await r.text().catch(() => '');
         lastError = `HTTP ${r.status} ${txt.slice(0, 100)}`;
-        continue;
+        continue; // جرب المفتاح/النموذج التالي
       }
 
       const data = await r.json();
@@ -213,11 +218,10 @@ export default async function handler(req, res) {
       // تنظيف: إزالة markdown fences
       text = text.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
 
-      // استخراج أول JSON
       const start = text.indexOf('{');
       const end = text.lastIndexOf('}');
       if (start === -1 || end === -1) {
-        lastError = 'لا يوجد JSON';
+        lastError = 'لا يوجد JSON في الرد';
         continue;
       }
 
@@ -235,7 +239,6 @@ export default async function handler(req, res) {
         continue;
       }
 
-      // تحقق من صحة كل سؤال
       const validQuestions = parsed.questions.filter(q =>
         q.q && Array.isArray(q.options) && q.options.length === 4 &&
         typeof q.correct === 'number' && q.correct >= 0 && q.correct <= 3
@@ -250,7 +253,6 @@ export default async function handler(req, res) {
         success: true,
         model,
         sourcesUsed,
-        contextUsed: context ? context.slice(0, 200) + '...' : null,
         questions: validQuestions,
       });
     } catch (err) {
@@ -258,5 +260,5 @@ export default async function handler(req, res) {
     }
   }
 
-  return res.status(500).json({ error: 'فشل التوليد', details: lastError });
+  return res.status(500).json({ error: 'فشل التوليد من جميع المزودين', details: lastError });
 }
