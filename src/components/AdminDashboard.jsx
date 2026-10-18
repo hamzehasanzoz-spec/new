@@ -8,28 +8,31 @@ export default function AdminDashboard() {
   const [pendingDocs, setPendingDocs] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // حالات المعاينة
+  const [previewDoc, setPreviewDoc] = useState(null);
+  const [previewText, setPreviewText] = useState('');
+  const [loadingPreview, setLoadingPreview] = useState(false);
+
   useEffect(() => {
     fetchData();
   }, []);
 
-   const fetchData = async () => {
+  const fetchData = async () => {
     setLoading(true);
     try {
       const { count: usersCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true });
       const { count: waitlistCount } = await supabase.from('waitlist').select('*', { count: 'exact', head: true });
       
-      // 1. جلب الملفات قيد المراجعة
+      // جلب الملفات قيد المراجعة
       const { data: docsData, error: docsError } = await supabase
         .from('documents')
         .select('*')
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
 
-      if (docsError) {
-        console.error('Error fetching documents:', docsError);
-      }
+      if (docsError) console.error('Error fetching documents:', docsError);
 
-      // 2. جلب أسماء الطلاب الذين رفعوا هذه الملفات (لضمان عدم فشل الاستعلام)
+      // جلب أسماء الطلاب
       let docsWithProfiles = [];
       if (docsData && docsData.length > 0) {
         const userIds = [...new Set(docsData.map(d => d.user_id))];
@@ -63,6 +66,69 @@ export default function AdminDashboard() {
     }
   };
 
+  // دالة القبول والرفض
+  const handleReview = async (id, newStatus) => {
+    try {
+      const { data, error } = await supabase
+        .from('documents')
+        .update({ status: newStatus })
+        .eq('id', id)
+        .select();
+      
+      if (error) throw error;
+
+      if (!data || data.length === 0) {
+        throw new Error('لم يتم التحديث. قد لا تملك صلاحية أدمن أو الملف غير موجود.');
+      }
+      
+      // تحديث الواجهة
+      setPendingDocs(prev => prev.filter(doc => doc.id !== id));
+      setStats(prev => ({ ...prev, documents: Math.max(0, prev.documents - 1) }));
+      
+      alert(`تم ${newStatus === 'approved' ? 'قبول' : 'رفض'} الملف بنجاح ✅`);
+      
+    } catch (err) {
+      console.error(err);
+      alert('فشل في تحديث الملف: ' + err.message);
+    }
+  };
+
+  // دالة المعاينة
+  const handlePreview = async (doc) => {
+    setPreviewDoc(doc);
+    setLoadingPreview(true);
+    setPreviewText('');
+    try {
+      const { data, error } = await supabase
+        .from('document_chunks')
+        .select('content')
+        .eq('document_id', doc.id)
+        .order('chunk_index', { ascending: true })
+        .limit(500); 
+
+      if (error) throw error;
+      
+      const fullText = data.map(c => c.content).join('\n\n');
+      setPreviewText(fullText || 'لا يوجد نص متاح لهذا الملف.');
+    } catch (err) {
+      setPreviewText('حدث خطأ أثناء جلب النص: ' + err.message);
+    } finally {
+      setLoadingPreview(false);
+    }
+  };
+
+  // دالة تحميل النص
+  const downloadText = () => {
+    if (!previewText) return;
+    const element = document.createElement("a");
+    const file = new Blob([previewText], {type: 'text/plain;charset=utf-8'});
+    element.href = URL.createObjectURL(file);
+    element.download = `${previewDoc.filename}.txt`;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+  };
+
   if (loading) {
     return <div className="text-center py-20 text-content">جاري تحميل بيانات الإدارة...</div>;
   }
@@ -94,7 +160,6 @@ export default function AdminDashboard() {
 
       {activeTab === 'overview' && (
         <>
-          {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-surface-card border border-border rounded-lg p-6 text-center">
               <div className="text-3xl mb-2">👥</div>
@@ -113,7 +178,6 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* Waitlist Table */}
           <div className="bg-surface-card border border-border rounded-lg overflow-hidden">
             <div className="p-4 border-b border-border bg-surface-soft">
               <h2 className="font-bold text-content">قائمة الانتظار (Waitlist)</h2>
@@ -159,10 +223,16 @@ export default function AdminDashboard() {
                     رفعه: {doc.profiles?.full_name || 'طالب غير معروف'} ({doc.profiles?.faculty_name})
                   </div>
                   <div className="text-xs text-content-subtle">
-                    التاريخ: {new Date(doc.created_at).toLocaleString('ar-EG')} • الحجم: {(doc.file_size / 1024).toFixed(1)} KB
+                    الحجم: {(doc.file_size / 1024).toFixed(1)} KB • نوع الملف: {doc.file_type}
                   </div>
                 </div>
-                <div className="flex gap-2 flex-shrink-0">
+                <div className="flex gap-2 flex-shrink-0 items-center">
+                  <button
+                    onClick={() => handlePreview(doc)}
+                    className="bg-surface-soft border border-border text-content hover:border-content-subtle px-4 py-2 rounded-md text-sm font-semibold transition-colors"
+                  >
+                    🔍 معاينة النص
+                  </button>
                   <button
                     onClick={() => handleReview(doc.id, 'approved')}
                     className="bg-success hover:opacity-90 text-white font-semibold px-4 py-2 rounded-md text-sm transition-opacity"
@@ -181,6 +251,51 @@ export default function AdminDashboard() {
           )}
         </div>
       )}
+
+      {/* نافذة المعاينة المنبثقة */}
+      {previewDoc && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+          <div className="bg-surface-card border border-border rounded-lg w-full max-w-3xl max-h-[80vh] flex flex-col">
+            <div className="p-4 border-b border-border flex justify-between items-center">
+              <h3 className="font-bold text-content">معاينة: {previewDoc.filename}</h3>
+              <button onClick={() => setPreviewDoc(null)} className="text-content-muted hover:text-content text-xl">✕</button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto flex-1 text-content text-sm leading-relaxed whitespace-pre-wrap">
+              {loadingPreview ? (
+                <div className="text-center py-10">جاري جلب النص...</div>
+              ) : (
+                previewText
+              )}
+            </div>
+
+            <div className="p-4 border-t border-border flex justify-between items-center gap-2">
+               <button
+                  onClick={downloadText}
+                  className="bg-primary hover:bg-primary-light text-white font-semibold px-4 py-2 rounded-md text-sm transition-colors"
+                >
+                  ⬇️ تحميل النص كاملاً (TXT)
+                </button>
+                
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => { handleReview(previewDoc.id, 'approved'); setPreviewDoc(null); }}
+                    className="bg-success hover:opacity-90 text-white font-semibold px-4 py-2 rounded-md text-sm transition-opacity"
+                  >
+                    ✅ قبول
+                  </button>
+                  <button
+                    onClick={() => { handleReview(previewDoc.id, 'rejected'); setPreviewDoc(null); }}
+                    className="bg-danger hover:opacity-90 text-white font-semibold px-4 py-2 rounded-md text-sm transition-opacity"
+                  >
+                    ❌ رفض
+                  </button>
+                </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
