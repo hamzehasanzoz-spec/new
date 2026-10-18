@@ -9,28 +9,49 @@ const FACULTIES = [
   { slug: 'pharmacy', name: 'الصيدلة', icon: '💊' },
 ];
 
-export default function Waitlist({ onSuccess, onBack }) {
-  const [form, setForm] = useState({ full_name: '', email: '', faculty_slug: '', year: '' });
+export default function Waitlist({ onSuccess, onBack, onLoginClick }) {
+  const [form, setForm] = useState({ full_name: '', email: '', password: '', faculty_slug: '', year: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.faculty_slug || !form.year) return setError('الرجاء اختيار الكلية والسنة.');
+    if (form.password.length < 6) return setError('كلمة المرور يجب أن تكون 6 أحرف على الأقل.');
     
     setLoading(true);
     setError('');
     
     try {
-      const { error: dbError } = await supabase.from('waitlist').insert([form]);
-      if (dbError) {
-        if (dbError.code === '23505') throw new Error('هذا الإيميل مسجل بالفعل في قائمة الانتظار.');
+      // 1. إنشاء حساب للطالب (Auth)
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: form.email,
+        password: form.password,
+      });
+
+      if (authError) {
+        if (authError.message.includes('already registered')) {
+          throw new Error('هذا البريد مسجل مسبقاً. الرجاء تسجيل الدخول من الزر أدناه.');
+        }
+        throw authError;
+      }
+
+      // 2. حفظه في جدول الـ Waitlist
+      const { error: dbError } = await supabase.from('waitlist').insert([{
+        full_name: form.full_name,
+        email: form.email,
+        faculty_slug: form.faculty_slug,
+        year: form.year
+      }]);
+
+      if (dbError && dbError.code !== '23505') { // نتجاهل خطأ التكرار إذا كان الحساب قد أنشئ
         throw dbError;
       }
       
-      // حفظ الإيميل في الـ local storage للاستخدام لاحقاً عند الإطلاق
+      // 3. نجاح
       localStorage.setItem('waitlist_email', form.email);
-            onSuccess(form.full_name);
+      onSuccess(form.full_name);
+      
     } catch (err) {
       setError(err.message);
     } finally {
@@ -49,7 +70,7 @@ export default function Waitlist({ onSuccess, onBack }) {
         
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-content mb-2">احجز مقعدك في النسخة التجريبية</h1>
-          <p className="text-sm text-content-muted">أول 1000 طالب فقط. انضم إلينا الآن!</p>
+          <p className="text-sm text-content-muted">أول 1000 طالب فقط. أكمل بياناتك للانضمام إلينا!</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -63,6 +84,12 @@ export default function Waitlist({ onSuccess, onBack }) {
             <label className="block text-xs font-bold text-content-muted mb-1">البريد الإلكتروني</label>
             <input required type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})}
               className="w-full bg-surface-soft border border-border rounded-md px-3 py-2.5 text-sm text-content focus:border-primary focus:outline-none" placeholder="you@example.com" />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-content-muted mb-1">كلمة المرور (لإنشاء حسابك)</label>
+            <input required type="password" value={form.password} onChange={e => setForm({...form, password: e.target.value})}
+              className="w-full bg-surface-soft border border-border rounded-md px-3 py-2.5 text-sm text-content focus:border-primary focus:outline-none" placeholder="6 أحرف على الأقل" />
           </div>
 
           <div>
@@ -94,14 +121,21 @@ export default function Waitlist({ onSuccess, onBack }) {
             </div>
           )}
 
-          {error && <div className="bg-danger/10 text-danger text-xs p-3 rounded-md">⚠️ {error}</div>}
+          {error && <div className="bg-danger/10 text-danger text-xs p-3 rounded-md font-semibold">⚠️ {error}</div>}
 
           <button disabled={loading} type="submit" className="w-full bg-primary hover:bg-primary-light text-white font-bold py-3 rounded-md transition-colors mt-4">
-            {loading ? 'جاري الحجز...' : 'تأكيد حجز المقعد 🚀'}
+            {loading ? 'جاري التسجيل...' : 'تأكيد الحجز والمتابعة للاستبيان 🚀'}
           </button>
-          
-          <button type="button" onClick={onBack} className="w-full text-xs text-content-subtle hover:text-content mt-2">← رجوع للرئيسية</button>
         </form>
+        
+        <div className="text-center mt-6 pt-6 border-t border-border flex flex-col gap-3">
+          <button type="button" onClick={onLoginClick} className="text-sm font-semibold text-primary hover:text-primary-light">
+            لديك حساب بالفعل؟ سجل دخولك من هنا
+          </button>
+          <button type="button" onClick={onBack} className="text-xs text-content-subtle hover:text-content">
+            ← رجوع للرئيسية
+          </button>
+        </div>
       </motion.div>
     </div>
   );

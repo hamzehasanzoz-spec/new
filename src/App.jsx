@@ -183,22 +183,21 @@ export default function App() {
     );
   }
 
-  // ═══ Waitlist Page ═══
+   // ═══ Waitlist Page ═══
   if (!session && waitlistStatus === 'in_progress') {
     return (
       <Waitlist
         onSuccess={(name) => {
           setWaitlistName(name);
-          setWaitlistStatus('waitlisted');
+          // لا نحتاج لتغيير الحالة هنا، لأن إنشاء الحساب سيغير الـ session تلقائياً
         }}
         onBack={() => setWaitlistStatus('none')}
+        onLoginClick={() => {
+          setShowLanding(false);
+          setWaitlistStatus('none');
+        }}
       />
     );
-  }
-
-  // ═══ Coming Soon (After Waitlist) ═══
-  if (!session && waitlistStatus === 'waitlisted') {
-    return <ComingSoon name={waitlistName || 'يا صديقي'} />;
   }
 
   // ═══ Login Page ═══
@@ -218,34 +217,10 @@ export default function App() {
           </div>
 
           <form onSubmit={handleAuth} className="flex flex-col gap-4">
-            <Input
-              type="email"
-              label="البريد الإلكتروني"
-              placeholder="you@example.com"
-              icon="📧"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              required
-            />
-
-            <Input
-              type="password"
-              label="كلمة المرور"
-              placeholder="••••••••"
-              icon="🔒"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              required
-            />
-
-            <Button
-              type="submit"
-              variant="primary"
-              size="lg"
-              fullWidth
-              loading={loading}
-              className="mt-2"
-            >
+            <Input type="email" label="البريد الإلكتروني" placeholder="you@example.com" icon="📧" value={email} onChange={e => setEmail(e.target.value)} required />
+            <Input type="password" label="كلمة المرور" placeholder="••••••••" icon="🔒" value={password} onChange={e => setPassword(e.target.value)} required />
+            
+            <Button type="submit" variant="primary" size="lg" fullWidth loading={loading} className="mt-2">
               {isSignUp ? '✨ إنشاء حساب جديد' : '🚀 تسجيل الدخول'}
             </Button>
           </form>
@@ -253,23 +228,15 @@ export default function App() {
           <div className="text-center mt-6 pt-6 border-t border-border">
             <p className="text-sm text-content-muted">
               {isSignUp ? 'لديك حساب بالفعل؟' : 'ليس لديك حساب؟'}{' '}
-              <button
-                type="button"
-                onClick={() => setIsSignUp(!isSignUp)}
-                className="text-primary font-semibold hover:text-primary-light transition-colors"
-              >
+              <button type="button" onClick={() => setIsSignUp(!isSignUp)} className="text-primary font-semibold hover:text-primary-light">
                 {isSignUp ? 'تسجيل الدخول' : 'أنشئ حساباً'}
               </button>
             </p>
           </div>
 
           <div className="text-center mt-4">
-            <button
-              type="button"
-              onClick={() => setWaitlistStatus('none')}
-              className="text-xs text-content-subtle hover:text-content transition-colors"
-            >
-              ← رجوع للصفحة الرئيسية
+            <button type="button" onClick={() => { setWaitlistStatus('in_progress'); setShowLanding(false); }} className="text-xs text-primary font-semibold hover:underline">
+              ← ليس لديك حساب؟ احجز مقعدك في النسخة التجريبية
             </button>
           </div>
         </Card>
@@ -277,18 +244,16 @@ export default function App() {
     );
   }
 
-  // ═══ Admin Gate ═══
-  // إذا لم يكن المستخدم أدمن، اعرض له شاشة الـ ComingSoon
-  if (profile && profile.role !== 'admin') {
-    return <ComingSoon name={profile?.full_name || 'يا صديقي'} />;
-  }
-
-  // ═══ Questionnaire ═══
-  // الأدمن فقط هم من سيمرون من هنا، ويملؤون الاستبيان
+  // ═══ Questionnaire (يُعرض فوراً بعد التسجيل أو إذا لم يكتمل) ═══
   if (!profile || !profile.questionnaire_completed) {
     return <Questionnaire session={session} onComplete={() => fetchProfile(session.user.id)} />;
   }
 
+  // ═══ Admin Gate (حماية المنصة) ═══
+  // بعد إكمال الاستبيان، إذا لم يكن أدمن، اعرض له ComingSoon
+  if (profile && profile.role !== 'admin') {
+    return <ComingSoon name={profile?.full_name || 'يا صديقي'} />;
+  }
   // ═════════════════════════════════════════════
   // Mobile Layout
   // ═════════════════════════════════════════════
