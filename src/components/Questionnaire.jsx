@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 
 const SECTIONS = [
@@ -10,14 +10,6 @@ const SECTIONS = [
   { id: 'ai',     title: 'تفضيلاتك مع AI',     icon: '🤖' },
 ];
 
-const SUBJECTS = [
-  'الداخلية العصبية', 'الداخلية القلبية', 'الداخلية الهضمية', 'الداخلية الصدرية',
-  'الجراحة العامة', 'الجراحة العصبية', 'الجراحة القلبية',
-  'الأطفال', 'النسائية والتوليد',
-  'الفارماكولوجي', 'الباثولوجي', 'المايكروبيولوجي', 'الفيزيولوجي', 'التشريح',
-  'الأنسجة', 'الطفيليات', 'الطب الشرعي', 'السموم', 'العينية', 'الجلدية',
-];
-
 const LEVELS = ['ضعيف', 'متوسط', 'جيد', 'ممتاز'];
 
 // ─────────────────────────────────────────────
@@ -27,10 +19,10 @@ const LEVELS = ['ضعيف', 'متوسط', 'جيد', 'ممتاز'];
 function Field({ label, hint, required, children }) {
   return (
     <div style={{ marginBottom: 20 }}>
-      <label style={{ display:'block', fontWeight:'bold', marginBottom:6, color:'#1E293B' }}>
+      <label style={{ display:'block', fontWeight:'bold', marginBottom:6, color:'var(--text)' }}>
         {label} {required && <span style={{ color:'#EF4444' }}>*</span>}
       </label>
-      {hint && <p style={{ color:'#64748B', fontSize:'0.82em', margin:'0 0 8px 0' }}>{hint}</p>}
+      {hint && <p style={{ color:'var(--text-muted)', fontSize:'0.82em', margin:'0 0 8px 0' }}>{hint}</p>}
       {children}
     </div>
   );
@@ -43,7 +35,7 @@ function TextInput({ value, onChange, placeholder }) {
       value={value || ''}
       onChange={e => onChange(e.target.value)}
       placeholder={placeholder}
-      style={{ width:'100%', padding:11, borderRadius:8, border:'1px solid #CBD5E1', fontSize:'0.95em' }}
+      style={{ width:'100%', padding:11, borderRadius:8, border:'1px solid var(--border)', background:'var(--bg-soft)', color:'var(--text)', fontSize:'0.95em' }}
     />
   );
 }
@@ -55,7 +47,7 @@ function TextArea({ value, onChange, placeholder, rows = 3 }) {
       onChange={e => onChange(e.target.value)}
       placeholder={placeholder}
       rows={rows}
-      style={{ width:'100%', padding:11, borderRadius:8, border:'1px solid #CBD5E1', fontSize:'0.95em', resize:'vertical', fontFamily:'inherit' }}
+      style={{ width:'100%', padding:11, borderRadius:8, border:'1px solid var(--border)', background:'var(--bg-soft)', color:'var(--text)', fontSize:'0.95em', resize:'vertical', fontFamily:'inherit' }}
     />
   );
 }
@@ -66,9 +58,9 @@ function RadioGroup({ options, value, onChange, columns = 2 }) {
       {options.map(opt => (
         <label key={opt} style={{
           display:'flex', alignItems:'center', gap:8, padding:'10px 12px',
-          background: value === opt ? '#EFF6FF' : '#F8FAFC',
-          border: value === opt ? '2px solid #2A5C82' : '1px solid var(--border)',
-          borderRadius:8, cursor:'pointer', fontSize:'0.9em'
+          background: value === opt ? 'var(--primary)' : 'var(--bg-soft)',
+          border: value === opt ? '2px solid var(--primary)' : '1px solid var(--border)',
+          borderRadius:8, cursor:'pointer', fontSize:'0.9em', color: value === opt ? '#fff' : 'var(--text)'
         }}>
           <input type="radio" checked={value === opt} onChange={() => onChange(opt)} />
           <span>{opt}</span>
@@ -87,9 +79,9 @@ function CheckGroup({ options, values = [], onChange, columns = 2 }) {
       {options.map(opt => (
         <label key={opt} style={{
           display:'flex', alignItems:'center', gap:8, padding:'10px 12px',
-          background: values.includes(opt) ? '#EFF6FF' : '#F8FAFC',
-          border: values.includes(opt) ? '2px solid #2A5C82' : '1px solid var(--border)',
-          borderRadius:8, cursor:'pointer', fontSize:'0.9em'
+          background: values.includes(opt) ? 'var(--primary)' : 'var(--bg-soft)',
+          border: values.includes(opt) ? '2px solid var(--primary)' : '1px solid var(--border)',
+          borderRadius:8, cursor:'pointer', fontSize:'0.9em', color: values.includes(opt) ? '#fff' : 'var(--text)'
         }}>
           <input type="checkbox" checked={values.includes(opt)} onChange={() => toggle(opt)} />
           <span>{opt}</span>
@@ -103,30 +95,70 @@ function CheckGroup({ options, values = [], onChange, columns = 2 }) {
 // المكوّن الرئيسي
 // ─────────────────────────────────────────────
 
-export default function Questionnaire({ session, onComplete, initialData = null }) {
+export default function Questionnaire({ session, onComplete }) {
   const [currentSection, setCurrentSection] = useState(0);
   const [loading, setLoading] = useState(false);
+  
+  // جلب المواد ديناميكياً
+  const [faculties, setFaculties] = useState([]);
+  const [subjects, setSubjects] = useState([]);
+  const [fetchingData, setFetchingData] = useState(true);
 
-  const [data, setData] = useState(initialData || {
+  const [data, setData] = useState({
     full_name: '', current_stage: '', university: '',
+    faculty_slug: '', faculty_name: '', year: '',
     exam_type: '', target_subjects: [],
     daily_hours: '', weekly_hours: '', preferred_times: [],
-    score_goal: '',
-    subject_levels: {},
+    score_goal: '', subject_levels: {},
     hardest_subjects: [{ subject:'', reason:'' }, { subject:'', reason:'' }, { subject:'', reason:'' }],
-    difficulty_reasons: [],
-    confusing_question_types: [],
-    study_methods: [], understanding_methods: [],
-    preferred_language: '', use_english_terms: true,
-    available_resources: [], internet_access: '', study_location: '',
-    biggest_obstacles: [], review_style: '', plan_preference: '',
-    ai_help_needs: [], wants_quizzes: false, quiz_question_count: 5, quiz_feedback_style: '',
-    progress_measurement: [], special_conditions: '',
+    confusing_question_types: [], study_methods: [], understanding_methods: [],
+    preferred_language: '', use_english_terms: true, available_resources: [], internet_access: '', study_location: '',
+    biggest_obstacles: [], review_style: '', plan_preference: '', ai_help_needs: [],
+    wants_quizzes: false, quiz_question_count: 5, quiz_feedback_style: '', progress_measurement: [], special_conditions: '',
   });
+
+  // 1. جلب الكليات عند فتح الصفحة
+  useEffect(() => {
+    const fetchFaculties = async () => {
+      const { data: facData } = await supabase.from('faculties').select('*');
+      if (facData) setFaculties(facData);
+      setFetchingData(false);
+    };
+    fetchFaculties();
+  }, []);
+
+  // 2. جلب المواد عند اختيار الكلية والسنة
+  useEffect(() => {
+    const fetchSubjects = async () => {
+      if (!data.faculty_slug || !data.year) {
+        setSubjects([]);
+        return;
+      }
+      
+      // نبحث عن الـ faculty_id بناءً على الـ slug
+      const selectedFaculty = faculties.find(f => f.slug === data.faculty_slug);
+      if (!selectedFaculty) return;
+
+      // جلب المواد من جدول subjects بناءً على الـ faculty_id والسنة
+      // ملاحظة: في قاعدة بياناتك، specialty_id هو الذي يربط المادة بالكلية
+      const { data: subjData, error } = await supabase
+        .from('subjects')
+        .select('*')
+        .eq('specialty_id', selectedFaculty.id)
+        .eq('year', parseInt(data.year));
+
+      if (subjData && !error) {
+        setSubjects(subjData.map(s => s.name)); // نأخذ أسماء المواد فقط
+      } else {
+        console.error('Error fetching subjects:', error);
+        setSubjects([]);
+      }
+    };
+    fetchSubjects();
+  }, [data.faculty_slug, data.year, faculties]);
 
   const upd = (key, value) => setData(prev => ({ ...prev, [key]: value }));
 
-  // حفظ المستوى لكل مادة
   const setSubjectLevel = (subject, level) => {
     upd('subject_levels', { ...data.subject_levels, [subject]: level });
   };
@@ -136,18 +168,22 @@ export default function Questionnaire({ session, onComplete, initialData = null 
 
   const handleSubmit = async () => {
     if (!data.full_name) { alert('الرجاء إدخال الاسم'); setCurrentSection(0); return; }
+    if (!data.faculty_slug) { alert('الرجاء اختيار الكلية'); setCurrentSection(0); return; }
+    if (!data.year) { alert('الرجاء اختيار السنة الدراسية'); setCurrentSection(0); return; }
+    
     setLoading(true);
     try {
+      const selectedFaculty = faculties.find(f => f.slug === data.faculty_slug);
+      
       const payload = {
         id: session.user.id,
         ...data,
-        // نحذف أي مواد لم يتم تحديد مستواها
-        subject_levels: Object.fromEntries(
-          Object.entries(data.subject_levels).filter(([_, v]) => v)
-        ),
+        faculty_name: selectedFaculty?.name || '',
+        subject_levels: Object.fromEntries(Object.entries(data.subject_levels).filter(([_, v]) => v)),
         questionnaire_completed: true,
         updated_at: new Date().toISOString(),
       };
+      
       const { error } = await supabase.from('profiles').upsert(payload);
       if (error) throw error;
       if (onComplete) onComplete();
@@ -174,34 +210,28 @@ export default function Questionnaire({ session, onComplete, initialData = null 
             <TextInput value={data.full_name} onChange={v => upd('full_name', v)} placeholder="الاسم الثلاثي" />
           </Field>
 
-          <Field label="ما مرحلتك الحالية؟" required hint="اختر واحدة">
+          <Field label="اختر كليتك" required>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8 }}>
+              {faculties.map(f => (
+                <button key={f.slug} type="button" onClick={() => upd('faculty_slug', f.slug)}
+                  style={{ padding:12, borderRadius:8, border: data.faculty_slug === f.slug ? '2px solid var(--primary)' : '1px solid var(--border)', background: data.faculty_slug === f.slug ? 'var(--primary)' : 'var(--bg-soft)', color: data.faculty_slug === f.slug ? '#fff' : 'var(--text)', cursor:'pointer', fontWeight:'bold' }}>
+                  {f.name}
+                </button>
+              ))}
+            </div>
+          </Field>
+
+          <Field label="اختر سنتك الدراسية" required>
             <RadioGroup
-              options={['سنة رابعة', 'سنة خامسة', 'متخرج', 'إعادة']}
-              value={data.current_stage}
-              onChange={v => upd('current_stage', v)}
+              options={['1', '2', '3', '4', '5', '6']}
+              value={data.year}
+              onChange={v => upd('year', v)}
+              columns={6}
             />
           </Field>
 
           <Field label="ما اسم جامعتك؟" required>
             <TextInput value={data.university} onChange={v => upd('university', v)} placeholder="مثال: جامعة دمشق، جامعة حلب..." />
-          </Field>
-
-          <Field label="هل الامتحان الذي تستعد له هو الوطني السوري؟" required>
-            <RadioGroup
-              options={['نعم، الوطني السوري', 'لا، امتحان آخر', 'الوطني + امتحان آخر']}
-              value={data.exam_type}
-              onChange={v => upd('exam_type', v)}
-              columns={1}
-            />
-          </Field>
-
-          <Field label="ما المواد أو المحاور المقررة عليك بالضبط؟" hint="اختر كل ما ينطبق (يمكنك اختيار عدة مواد)">
-            <CheckGroup
-              options={SUBJECTS}
-              values={data.target_subjects}
-              onChange={v => upd('target_subjects', v)}
-              columns={3}
-            />
           </Field>
         </>
       );
@@ -250,28 +280,25 @@ export default function Questionnaire({ session, onComplete, initialData = null 
       // ========== 3. المستوى والمواد ==========
       case 'level': return (
         <>
-          <Field label="كيف تقيّم مستواك الحالي في كل مادة؟" hint="قيّم فقط المواد التي حددتها سابقًا، واترك الباقي فارغًا">
+          <Field label={`كيف تقيّم مستواك في مواد ${data.faculty_name || 'كليتك'} للسنة ${data.year}؟`} hint="قيّم فقط المواد التي تظهر أدناه، واترك الباقي فارغًا">
             <div style={{ display:'flex', flexDirection:'column', gap:10, marginTop:8 }}>
-              {(data.target_subjects.length > 0 ? data.target_subjects : SUBJECTS.slice(0, 8)).map(subj => (
-                <div key={subj} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 12px', background:'#F8FAFC', borderRadius:8, flexWrap:'wrap' }}>
-                  <span style={{ minWidth:140, fontWeight:'bold', fontSize:'0.9em' }}>{subj}</span>
+              {subjects.length > 0 ? subjects.map(subj => (
+                <div key={subj} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 12px', background:'var(--bg-soft)', borderRadius:8, flexWrap:'wrap' }}>
+                  <span style={{ minWidth:140, fontWeight:'bold', fontSize:'0.9em', color:'var(--text)' }}>{subj}</span>
                   <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
                     {LEVELS.map(lvl => (
-                      <button
-                        key={lvl}
-                        type="button"
-                        onClick={() => setSubjectLevel(subj, lvl)}
-                        style={{
-                          padding:'6px 12px', borderRadius:6, fontSize:'0.85em', cursor:'pointer',
-                          border: data.subject_levels[subj] === lvl ? '2px solid #2A5C82' : '1px solid var(--border)',
-                          background: data.subject_levels[subj] === lvl ? '#2A5C82' : '#fff',
-                          color: data.subject_levels[subj] === lvl ? '#fff' : '#1E293B',
-                        }}
-                      >{lvl}</button>
+                      <button key={lvl} type="button" onClick={() => setSubjectLevel(subj, lvl)}
+                        style={{ padding:'6px 12px', borderRadius:6, fontSize:'0.85em', cursor:'pointer', border: data.subject_levels[subj] === lvl ? '2px solid var(--primary)' : '1px solid var(--border)', background: data.subject_levels[subj] === lvl ? 'var(--primary)' : 'var(--bg)', color: data.subject_levels[subj] === lvl ? '#fff' : 'var(--text)' }}>
+                        {lvl}
+                      </button>
                     ))}
                   </div>
                 </div>
-              ))}
+              )) : (
+                <p style={{ color:'var(--text-muted)', textAlign:'center', padding: '20px 0' }}>
+                  {data.faculty_slug && data.year ? 'لا توجد مواد مسجلة لهذه السنة، أو جاري التحميل...' : 'الرجاء العودة للخطوة الأولى واختيار الكلية والسنة.'}
+                </p>
+              )}
             </div>
           </Field>
 
@@ -300,15 +327,6 @@ export default function Questionnaire({ session, onComplete, initialData = null 
                 </div>
               ))}
             </div>
-          </Field>
-
-          <Field label="ما نوع الأسئلة اللي يربكك؟" hint="يمكنك اختيار أكثر من نوع">
-            <CheckGroup
-              options={['MCQ', 'حالات سريرية', 'أسئلة صور', 'تشخيص تفريقي', 'أسئلة أرقام وجرعات', 'أسئلة المقارنة', 'أسئلة متعددة الإجابات']}
-              values={data.confusing_question_types}
-              onChange={v => upd('confusing_question_types', v)}
-              columns={2}
-            />
           </Field>
         </>
       );
@@ -343,15 +361,6 @@ export default function Questionnaire({ session, onComplete, initialData = null 
             />
           </Field>
 
-          <Field label="هل تفضّل أن تكون المصطلحات الطبية بالإنجليزية؟">
-            <RadioGroup
-              options={['نعم دائمًا', 'فقط عند الضرورة', 'لا، عرّبها']}
-              value={data.use_english_terms ? 'نعم دائمًا' : 'لا، عرّبها'}
-              onChange={v => upd('use_english_terms', v === 'نعم دائمًا')}
-              columns={3}
-            />
-          </Field>
-
           <Field label="شو المصادر المتوفرة عندك؟">
             <CheckGroup
               options={['كتب مرجعية (Harrison, Bailey...)', 'ملخصات جاهزة', 'بنوك أسئلة (Past papers)', 'فيديوهات تعليمية', 'تطبيقات وقنوات تلغرام', 'دورات مدفوعة', 'مصادر الجامعة فقط']}
@@ -372,15 +381,6 @@ export default function Questionnaire({ session, onComplete, initialData = null 
               value={data.internet_access}
               onChange={v => upd('internet_access', v)}
               columns={2}
-            />
-          </Field>
-
-          <Field label="هل تدرس أونلاين أم أوفلاين؟">
-            <RadioGroup
-              options={['أونلاين أساسًا', 'أوفلاين أساسًا', 'الاثنان معًا']}
-              value={data.study_location}
-              onChange={v => upd('study_location', v)}
-              columns={3}
             />
           </Field>
 
@@ -480,17 +480,21 @@ export default function Questionnaire({ session, onComplete, initialData = null 
     }
   };
 
+  if (fetchingData) {
+    return <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', color:'var(--text)' }}>جاري تحميل البيانات...</div>;
+  }
+
   // ─────────────────────────────────────────
   // Render
   // ─────────────────────────────────────────
 
   return (
-    <div style={{ maxWidth:700, margin:'30px auto', padding:'25px', background:'#fff', borderRadius:16, boxShadow:'0 4px 20px rgba(0,0,0,0.05)', direction:'rtl' }}>
+    <div style={{ maxWidth:700, margin:'30px auto', padding:'25px', background:'var(--bg-card)', borderRadius:16, boxShadow:'0 4px 20px rgba(0,0,0,0.1)', direction:'rtl' }}>
 
       {/* رأس الصفحة */}
       <div style={{ textAlign:'center', marginBottom:20 }}>
-        <h2 style={{ color:'#2A5C82', margin:'0 0 8px' }}>استبيان كوتش AI 🩺</h2>
-        <p style={{ color:'#64748B', margin:0, fontSize:'0.9em' }}>
+        <h2 style={{ color:'var(--primary)', margin:'0 0 8px' }}>استبيان كوتش AI 🩺</h2>
+        <p style={{ color:'var(--text-muted)', margin:0, fontSize:'0.9em' }}>
           المرحلة {currentSection + 1} من {SECTIONS.length} — {section.title}
         </p>
       </div>
@@ -500,7 +504,7 @@ export default function Questionnaire({ session, onComplete, initialData = null 
         {SECTIONS.map((s, i) => (
           <div key={s.id} style={{
             flex:1, height:6, borderRadius:99,
-            background: i <= currentSection ? '#2A5C82' : '#E2E8F0',
+            background: i <= currentSection ? 'var(--primary)' : 'var(--border)',
             transition:'background 0.3s'
           }} />
         ))}
@@ -518,8 +522,8 @@ export default function Questionnaire({ session, onComplete, initialData = null 
           onClick={prev}
           disabled={currentSection === 0}
           style={{
-            padding:'12px 24px', borderRadius:8, border:'1px solid var(--border)', background:'#fff',
-            color: currentSection === 0 ? '#CBD5E1' : '#1E293B',
+            padding:'12px 24px', borderRadius:8, border:'1px solid var(--border)', background:'var(--bg-soft)',
+            color: currentSection === 0 ? 'var(--text-subtle)' : 'var(--text)',
             cursor: currentSection === 0 ? 'not-allowed' : 'pointer', fontWeight:'bold'
           }}
         >← السابق</button>
@@ -528,7 +532,7 @@ export default function Questionnaire({ session, onComplete, initialData = null 
           <button
             type="button"
             onClick={next}
-            style={{ padding:'12px 32px', borderRadius:8, border:'none', background:'#2A5C82', color:'#fff', cursor:'pointer', fontWeight:'bold' }}
+            style={{ padding:'12px 32px', borderRadius:8, border:'none', background:'var(--primary)', color:'#fff', cursor:'pointer', fontWeight:'bold' }}
           >التالي →</button>
         ) : (
           <button

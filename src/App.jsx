@@ -277,7 +277,14 @@ export default function App() {
     );
   }
 
+  // ═══ Admin Gate ═══
+  // إذا لم يكن المستخدم أدمن، اعرض له شاشة الـ ComingSoon
+  if (profile && profile.role !== 'admin') {
+    return <ComingSoon name={profile?.full_name || 'يا صديقي'} />;
+  }
+
   // ═══ Questionnaire ═══
+  // الأدمن فقط هم من سيمرون من هنا، ويملؤون الاستبيان
   if (!profile || !profile.questionnaire_completed) {
     return <Questionnaire session={session} onComplete={() => fetchProfile(session.user.id)} />;
   }
