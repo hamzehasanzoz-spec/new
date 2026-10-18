@@ -11,7 +11,6 @@ function decodeJWT(token) {
   }
 }
 
-// تحليل مفاتيح Groq المتعددة
 function parseKeys(envValue) {
   if (!envValue) return [];
   return envValue.split(',').map(k => k.trim()).filter(Boolean);
@@ -45,11 +44,11 @@ export default async function handler(req, res) {
 
   const openrouterKey = process.env.OPENROUTER_KEY;
   const jinaKey = process.env.JINA_API_KEY;
-  const groqKeys = parseKeys(process.env.GROQ_API_KEYS); // استخدام الجمع
+  const groqKeys = parseKeys(process.env.GROQ_API_KEYS);
   const supabaseUrl = process.env.VITE_SUPABASE_URL;
   const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
 
-  // ── 1. RAG: البحث في ملفات الطالب (باستخدام Jina AI) ──
+  // ── 1. RAG: البحث في ملفات الطالب ──
   let context = '';
   let sourcesUsed = 'general';
 
@@ -138,21 +137,19 @@ export default async function handler(req, res) {
 - إذا وصلت إلى ${numQuestions}، توقف.
 - أعد JSON فقط بدون أي نص خارجه.${excludePart}`;
 
-  // ── 3. بناء قائمة النماذج والمفاتيح (Groq ثم OpenRouter) ──
+  // ── 3. بناء قائمة النماذج والمفاتيح ──
   const models = [];
   
-  // إضافة كل مفاتيح Groq
   if (groqKeys.length > 0) {
     groqKeys.forEach(key => {
-      models.push({ provider: 'groq', key, id: 'llama-3.3-70b-versatile' });
+      // نبدأ بالنموذج الأسرع لتجنب Timeout
       models.push({ provider: 'groq', key, id: 'llama-3.1-8b-instant' });
+      models.push({ provider: 'groq', key, id: 'llama-3.3-70b-versatile' });
     });
   }
   
-  // إضافة OpenRouter كاحتياطي أخير
   if (openrouterKey) {
     models.push({ provider: 'openrouter', key: openrouterKey, id: 'nvidia/nemotron-3-super-120b-a12b:free' });
-    models.push({ provider: 'openrouter', key: openrouterKey, id: 'google/gemma-4-31b-it:free' });
   }
 
   if (models.length === 0) {
@@ -167,61 +164,32 @@ export default async function handler(req, res) {
 
     if (provider === 'groq') {
       url = 'https://api.groq.com/openai/v1/chat/completions';
-      headers = {
-        Authorization: `Bearer ${key}`,
-        'Content-Type': 'application/json',
-      };
-      requestBody = {
-        model,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt },
-        ],
-        temperature: 0.5,
-        max_completion_tokens: 8000,
-      };
+      headers = { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' };
+      requestBody = { model, messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }], temperature: 0.5, max_completion_tokens: 8000 };
     } else {
       url = 'https://openrouter.ai/api/v1/chat/completions';
-      headers = {
-        Authorization: `Bearer ${key}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': process.env.SITE_URL || 'https://new-theta-five-73.vercel.app',
-        'X-Title': 'Coach AI',
-      };
-      requestBody = {
-        model,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt },
-        ],
-        temperature: 0.5,
-        max_tokens: 8000,
-      };
+      headers = { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', 'HTTP-Referer': process.env.SITE_URL || 'https://new-theta-five-73.vercel.app', 'X-Title': 'Coach AI' };
+      requestBody = { model, messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }], temperature: 0.5, max_tokens: 8000 };
     }
 
     try {
-      const r = await fetch(url, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(requestBody),
-      });
+      const r = await fetch(url, { method: 'POST', headers, body: JSON.stringify(requestBody) });
 
       if (!r.ok) {
         const txt = await r.text().catch(() => '');
-        lastError = `HTTP ${r.status} ${txt.slice(0, 100)}`;
-        continue; // جرب المفتاح/النموذج التالي
+        lastError = `HTTP ${r.status} - ${txt.slice(0, 100)}`;
+        continue; 
       }
 
       const data = await r.json();
       let text = data.choices?.[0]?.message?.content || '';
 
-      // تنظيف: إزالة markdown fences
       text = text.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
-
       const start = text.indexOf('{');
       const end = text.lastIndexOf('}');
+      
       if (start === -1 || end === -1) {
-        lastError = 'لا يوجد JSON في الرد';
+        lastError = `لا يوجد JSON في رد النموذج: ${text.slice(0, 50)}...`;
         continue;
       }
 
@@ -235,7 +203,7 @@ export default async function handler(req, res) {
       }
 
       if (!Array.isArray(parsed.questions) || parsed.questions.length === 0) {
-        lastError = 'الرد بدون questions';
+        lastError = 'الرد بدون مصفوفة questions';
         continue;
       }
 
@@ -245,20 +213,17 @@ export default async function handler(req, res) {
       );
 
       if (validQuestions.length === 0) {
-        lastError = 'لا يوجد سؤال صالح';
+        lastError = 'الأسئلة لا تتوافق مع الصيغة المطلوبة';
         continue;
       }
 
-      return res.status(200).json({
-        success: true,
-        model,
-        sourcesUsed,
-        questions: validQuestions,
-      });
+      return res.status(200).json({ success: true, model, sourcesUsed, questions: validQuestions });
     } catch (err) {
       lastError = err.message;
     }
   }
 
+  // إذا وصلنا هنا، فكل المحاولات فشلت
+  console.error("All models failed. Last error:", lastError);
   return res.status(500).json({ error: 'فشل التوليد من جميع المزودين', details: lastError });
 }

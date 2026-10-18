@@ -76,7 +76,7 @@ export default function Exam({ profile, session, setActiveWork }) {
     });
 
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    if (!res.ok) throw new Error((data.error || `HTTP ${res.status}`) + (data.details ? ` - ${data.details}` : ''));
     if (!data.questions?.length) throw new Error('لم يتم توليد أسئلة');
     return data.questions;
   };
