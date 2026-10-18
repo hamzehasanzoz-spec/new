@@ -12,18 +12,37 @@ export default function AdminDashboard() {
     fetchData();
   }, []);
 
-  const fetchData = async () => {
+   const fetchData = async () => {
     setLoading(true);
     try {
       const { count: usersCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true });
       const { count: waitlistCount } = await supabase.from('waitlist').select('*', { count: 'exact', head: true });
       
-      // جلب الملفات قيد المراجعة
-      const { data: docsData } = await supabase
+      // 1. جلب الملفات قيد المراجعة
+      const { data: docsData, error: docsError } = await supabase
         .from('documents')
-        .select('*, profiles(full_name, faculty_name)')
+        .select('*')
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
+
+      if (docsError) {
+        console.error('Error fetching documents:', docsError);
+      }
+
+      // 2. جلب أسماء الطلاب الذين رفعوا هذه الملفات (لضمان عدم فشل الاستعلام)
+      let docsWithProfiles = [];
+      if (docsData && docsData.length > 0) {
+        const userIds = [...new Set(docsData.map(d => d.user_id))];
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('id, full_name, faculty_name')
+          .in('id', userIds);
+
+        docsWithProfiles = docsData.map(doc => ({
+          ...doc,
+          profiles: profilesData?.find(p => p.id === doc.user_id) || { full_name: 'طالب غير معروف', faculty_name: 'غير محدد' }
+        }));
+      }
 
       const { data: waitlistData } = await supabase
         .from('waitlist')
@@ -33,30 +52,14 @@ export default function AdminDashboard() {
       setStats({
         users: usersCount || 0,
         waitlist: waitlistCount || 0,
-        documents: docsData?.length || 0,
+        documents: docsWithProfiles.length || 0,
       });
       setWaitlist(waitlistData || []);
-      setPendingDocs(docsData || []);
+      setPendingDocs(docsWithProfiles);
     } catch (err) {
       console.error('Error fetching admin data:', err);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleReview = async (id, newStatus) => {
-    try {
-      const { error } = await supabase
-        .from('documents')
-        .update({ status: newStatus })
-        .eq('id', id);
-      if (error) throw error;
-      
-      // إزالة الملف من القائمة فوراً
-      setPendingDocs(prev => prev.filter(doc => doc.id !== id));
-      setStats(prev => ({ ...prev, documents: prev.documents - 1 }));
-    } catch (err) {
-      alert('خطأ في تحديث حالة الملف: ' + err.message);
     }
   };
 
