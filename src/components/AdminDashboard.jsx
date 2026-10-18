@@ -67,21 +67,19 @@ export default function AdminDashboard() {
   };
 
   // دالة القبول والرفض
-  const handleReview = async (id, newStatus) => {
+   const handleReview = async (id, newStatus) => {
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('documents')
         .update({ status: newStatus })
-        .eq('id', id)
-        .select();
+        .eq('id', id);
       
-      if (error) throw error;
-
-      if (!data || data.length === 0) {
-        throw new Error('لم يتم التحديث. قد لا تملك صلاحية أدمن أو الملف غير موجود.');
+      if (error) {
+        console.error('Supabase Error:', error);
+        throw error;
       }
-      
-      // تحديث الواجهة
+
+      // تحديث الواجهة (إزالة الملف من القائمة)
       setPendingDocs(prev => prev.filter(doc => doc.id !== id));
       setStats(prev => ({ ...prev, documents: Math.max(0, prev.documents - 1) }));
       
