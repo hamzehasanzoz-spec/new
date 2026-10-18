@@ -18,6 +18,7 @@ import ExamCountdown from './components/ExamCountdown';
 import MyConversations from './components/MyConversations';
 import Landing from './components/Landing';
 import { Button, Input, Card } from './components/ui';
+import AdminDashboard from './components/AdminDashboard';
 
 const MAIN_TABS = [
   { id: 'dashboard', label: 'الرئيسية', icon: '🏠' },
@@ -25,8 +26,9 @@ const MAIN_TABS = [
   { id: 'my-chats', label: 'محادثاتي', icon: '📂' },
   { id: 'quiz', label: 'اختبارات', icon: '🎯' },
 ];
-
+// أضفنا تبويب الإدارة هنا
 const MORE_TABS = [
+  { id: 'admin', label: 'لوحة الإدارة', icon: '🛡️', color: '#EF4444' },
   { id: 'files', label: 'ملفاتي', icon: '📚', color: '#2A5C82' },
   { id: 'exam', label: 'محاكاة امتحان', icon: '⏱️', color: '#7C3AED' },
   { id: 'bank', label: 'بنك الأخطاء', icon: '📖', color: '#EF4444' },
@@ -137,7 +139,9 @@ export default function App() {
 
   const renderContent = () => (
     <>
+    
       {activeTab === 'dashboard' && <Dashboard profile={profile} session={session} />}
+        {activeTab === 'admin' && profile?.role === 'admin' && <AdminDashboard />}
       {activeTab === 'chat' && <ChatCoach profile={profile} session={session} />}
       {activeTab === 'my-chats' && (
         <MyConversations
