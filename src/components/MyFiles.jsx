@@ -247,7 +247,6 @@ export default function MyFiles({ session }) {
     </div>
   );
 }
-
 function StatusBadge({ status }) {
   if (status === 'approved') {
     return <span className="text-xs font-bold px-3 py-1 rounded-full bg-success/15 text-success">✅ معتمد</span>;
@@ -255,5 +254,6 @@ function StatusBadge({ status }) {
   if (status === 'rejected') {
     return <span className="text-xs font-bold px-3 py-1 rounded-full bg-danger/15 text-danger">❌ مرفوض</span>;
   }
+  // pending أو processing
   return <span className="text-xs font-bold px-3 py-1 rounded-full bg-warn/15 text-warn">⏳ قيد المراجعة</span>;
 }

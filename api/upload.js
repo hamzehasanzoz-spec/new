@@ -168,7 +168,7 @@ export default async function handler(req, res) {
     await fetch(`${supabaseUrl}/rest/v1/documents?id=eq.${documentId}`, {
       method: 'PATCH',
       headers: apiHeaders,
-      body: JSON.stringify({ num_chunks: chunkRows.length, status: 'ready' }),
+      body: JSON.stringify({ num_chunks: chunkRows.length, status: 'pending' }),
     });
 
     return res.status(200).json({
