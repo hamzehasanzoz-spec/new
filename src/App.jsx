@@ -467,6 +467,7 @@ export default function App() {
         activeTab={activeTab}
         switchTab={switchTab}
         onSignOut={() => supabase.auth.signOut()}
+        isAdmin={profile?.role === 'admin'}
       />
 
       <div style={{
@@ -500,7 +501,7 @@ export default function App() {
 // ═════════════════════════════════════════════
 // Desktop Sidebar
 // ═════════════════════════════════════════════
-function DesktopNav({ activeTab, switchTab, onSignOut }) {
+function DesktopNav({ activeTab, switchTab, onSignOut,isAdmin }) {
   const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
@@ -533,7 +534,14 @@ function DesktopNav({ activeTab, switchTab, onSignOut }) {
       ],
     },
   ];
-
+  if (isAdmin) {
+    groups.push({
+      title: 'الإدارة',
+      tabs: [
+        { id: 'admin', label: 'لوحة الإدارة', icon: '🛡️' },
+      ],
+    });
+  }
   return (
     <aside style={{
       width: 'var(--sidebar-width)',
