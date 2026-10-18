@@ -19,23 +19,26 @@ import MyConversations from './components/MyConversations';
 import Landing from './components/Landing';
 import { Button, Input, Card } from './components/ui';
 import AdminDashboard from './components/AdminDashboard';
+import { 
+  Home, MessageSquare, FolderOpen, Target, BookOpen, 
+  Clock, AlertCircle, BarChart2, User, ShieldAlert, LogOut
+} from 'lucide-react';
 
 const MAIN_TABS = [
-  { id: 'dashboard', label: 'الرئيسية', icon: '🏠' },
-  { id: 'chat', label: 'الدردشة', icon: '💬' },
-  { id: 'my-chats', label: 'محادثاتي', icon: '📂' },
-  { id: 'quiz', label: 'اختبارات', icon: '🎯' },
-];
-// أضفنا تبويب الإدارة هنا
-const MORE_TABS = [
-  { id: 'admin', label: 'لوحة الإدارة', icon: '🛡️', color: '#EF4444' },
-  { id: 'files', label: 'ملفاتي', icon: '📚', color: '#2A5C82' },
-  { id: 'exam', label: 'محاكاة امتحان', icon: '⏱️', color: '#7C3AED' },
-  { id: 'bank', label: 'بنك الأخطاء', icon: '📖', color: '#EF4444' },
-  { id: 'weekly', label: 'التقرير الأسبوعي', icon: '📊', color: '#10B981' },
-  { id: 'profile', label: 'حسابي', icon: '👤', color: '#2A5C82' },
+  { id: 'dashboard', label: 'الرئيسية', icon: <Home size={20} /> },
+  { id: 'chat', label: 'الدردشة', icon: <MessageSquare size={20} /> },
+  { id: 'my-chats', label: 'محادثاتي', icon: <FolderOpen size={20} /> },
+  { id: 'quiz', label: 'اختبارات', icon: <Target size={20} /> },
 ];
 
+const MORE_TABS = [
+  { id: 'admin', label: 'لوحة الإدارة', icon: <ShieldAlert size={20} />, color: '#EF4444' },
+  { id: 'files', label: 'ملفاتي', icon: <BookOpen size={20} />, color: '#2A5C82' },
+  { id: 'exam', label: 'محاكاة امتحان', icon: <Clock size={20} />, color: '#7C3AED' },
+  { id: 'bank', label: 'بنك الأخطاء', icon: <AlertCircle size={20} />, color: '#EF4444' },
+  { id: 'weekly', label: 'التقرير الأسبوعي', icon: <BarChart2 size={20} />, color: '#10B981' },
+  { id: 'profile', label: 'حسابي', icon: <User size={20} />, color: '#2A5C82' },
+];
 const PAGE_TITLES = {
   dashboard: 'الرئيسية',
   chat: 'الدردشة',
@@ -311,10 +314,12 @@ export default function App() {
                 }}
               >
                 <div style={{
-                  fontSize: '1.4em',
-                  lineHeight: 1,
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
                   transform: active ? 'scale(1.1)' : 'scale(1)',
                   transition: 'transform 0.2s',
+                  color: active ? 'var(--primary)' : 'var(--text-subtle)'
                 }}>
                   {t.icon}
                 </div>
@@ -403,7 +408,9 @@ export default function App() {
                         fontFamily: 'inherit',
                       }}
                     >
-                      <div style={{ fontSize: '1.8em', lineHeight: 1 }}>{t.icon}</div>
+                      <div style={{ color: active ? t.color : 'var(--text-muted)' }}>
+                        {t.icon}
+                      </div>
                       <div style={{
                         fontSize: '0.82em',
                         fontWeight: 700,
@@ -443,7 +450,7 @@ export default function App() {
                     gap: 8,
                   }}
                 >
-                  <span>🚪</span>
+                  <LogOut size={20} />
                   <span>تسجيل الخروج</span>
                 </button>
               </div>
@@ -639,7 +646,9 @@ function DesktopNav({ activeTab, switchTab, onSignOut,isAdmin }) {
                       textAlign: 'right',
                     }}
                   >
-                    <span style={{ fontSize: '1.2em', flexShrink: 0 }}>{t.icon}</span>
+                    <span style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                      {t.icon}
+                    </span>
                     {!collapsed && <span>{t.label}</span>}
                   </button>
                 );
@@ -682,7 +691,7 @@ function DesktopNav({ activeTab, switchTab, onSignOut,isAdmin }) {
             gap: 8,
           }}
         >
-          <span>🚪</span>
+          <LogOut size={20} />
           {!collapsed && <span>خروج</span>}
         </button>
       </div>

@@ -42,9 +42,9 @@ html, body, #root {
   font-family: 'Tajawal', 'Segoe UI', Tahoma, system-ui, sans-serif;
   background: var(--bg);
   color: var(--text);
+  font-size: 16px; /* كبرنا الحجم الأساسي */
+  font-weight: 500; /* جعلنا الخط أعرض قليلاً ليكون أوضح */
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-tap-highlight-color: transparent;
   transition: background 0.2s, color 0.2s;
 }
 
