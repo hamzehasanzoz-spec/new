@@ -249,23 +249,11 @@ export default function MyFiles({ session }) {
 }
 
 function StatusBadge({ status }) {
-  if (status === 'ready') {
-    return (
-      <span className="text-xs font-bold px-3 py-1 rounded-full bg-success/15 text-success">
-        ✅ جاهز
-      </span>
-    );
+  if (status === 'approved') {
+    return <span className="text-xs font-bold px-3 py-1 rounded-full bg-success/15 text-success">✅ معتمد</span>;
   }
-  if (status === 'failed') {
-    return (
-      <span className="text-xs font-bold px-3 py-1 rounded-full bg-danger/15 text-danger">
-        ❌ فشل
-      </span>
-    );
+  if (status === 'rejected') {
+    return <span className="text-xs font-bold px-3 py-1 rounded-full bg-danger/15 text-danger">❌ مرفوض</span>;
   }
-  return (
-    <span className="text-xs font-bold px-3 py-1 rounded-full bg-warn/15 text-warn">
-      ⏳ قيد المعالجة
-    </span>
-  );
+  return <span className="text-xs font-bold px-3 py-1 rounded-full bg-warn/15 text-warn">⏳ قيد المراجعة</span>;
 }
