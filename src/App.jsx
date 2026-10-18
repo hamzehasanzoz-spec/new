@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './lib/supabase';
+import Waitlist from './components/Waitlist';
+import ComingSoon from './components/ComingSoon';
 import Questionnaire from './components/Questionnaire';
 import Dashboard from './components/Dashboard';
 import ChatCoach from './components/ChatCoach';
@@ -54,7 +56,9 @@ export default function App() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [activeWork, setActiveWork] = useState(null);
   const [moreOpen, setMoreOpen] = useState(false);
-    const [showLanding, setShowLanding] = useState(true);
+  const [waitlistStatus, setWaitlistStatus] = useState('none');
+  const [waitlistName, setWaitlistName] = useState('');
+  const [showLanding, setShowLanding] = useState(true);
 
   const isMobile = useIsMobile();
 
@@ -159,7 +163,7 @@ export default function App() {
     </>
   );
 
-    if (loading) {
+  if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-surface gap-4">
         <div className="w-12 h-12 border-2 border-border border-t-primary rounded-full animate-spin" />
@@ -169,38 +173,50 @@ export default function App() {
   }
 
   // ═══ Landing Page ═══
-  if (!session && showLanding) {
+  if (!session && showLanding && waitlistStatus === 'none') {
     return (
       <Landing
-        onEnter={(isSignup) => {
-          setIsSignUp(isSignup);
-          setShowLanding(false);
+        onEnter={() => {
+          setWaitlistStatus('in_progress');
         }}
       />
     );
   }
 
-  // ═══ تسجيل الدخول ═══
+  // ═══ Waitlist Page ═══
+  if (!session && waitlistStatus === 'in_progress') {
+    return (
+      <Waitlist
+        onSuccess={(name) => {
+          setWaitlistName(name);
+          setWaitlistStatus('waitlisted');
+        }}
+        onBack={() => setWaitlistStatus('none')}
+      />
+    );
+  }
+
+  // ═══ Coming Soon (After Waitlist) ═══
+  if (!session && waitlistStatus === 'waitlisted') {
+    return <ComingSoon name={waitlistName || 'يا صديقي'} />;
+  }
+
+  // ═══ Login Page ═══
   if (!session) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-surface" dir="rtl">
         <Card className="w-full max-w-md animate-fade-in" padding="lg">
-          {/* Logo */}
           <div className="flex justify-center mb-6">
             <Logo size={64} showText={false} />
           </div>
 
-          {/* Header */}
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-content mb-2">
-              كوتش AI
-            </h1>
+            <h1 className="text-2xl font-bold text-content mb-2">كوتش AI</h1>
             <p className="text-sm text-content-muted">
-             مساعدك الشخصي في الدراسة والتحضير للامتحان 
+              منصة الدراسة الذكية لطلاب الجامعات السورية
             </p>
           </div>
 
-          {/* Form */}
           <form onSubmit={handleAuth} className="flex flex-col gap-4">
             <Input
               type="email"
@@ -233,17 +249,7 @@ export default function App() {
               {isSignUp ? '✨ إنشاء حساب جديد' : '🚀 تسجيل الدخول'}
             </Button>
           </form>
-          {/* Back to Landing */}
-          <div className="text-center mt-4">
-            <button
-              type="button"
-              onClick={() => setShowLanding(true)}
-              className="text-xs text-content-subtle hover:text-content transition-colors"
-            >
-              ← رجوع للصفحة الرئيسية
-            </button>
-          </div>
-          {/* Footer */}
+
           <div className="text-center mt-6 pt-6 border-t border-border">
             <p className="text-sm text-content-muted">
               {isSignUp ? 'لديك حساب بالفعل؟' : 'ليس لديك حساب؟'}{' '}
@@ -256,16 +262,29 @@ export default function App() {
               </button>
             </p>
           </div>
+
+          <div className="text-center mt-4">
+            <button
+              type="button"
+              onClick={() => setWaitlistStatus('none')}
+              className="text-xs text-content-subtle hover:text-content transition-colors"
+            >
+              ← رجوع للصفحة الرئيسية
+            </button>
+          </div>
         </Card>
       </div>
     );
   }
 
+  // ═══ Questionnaire ═══
   if (!profile || !profile.questionnaire_completed) {
     return <Questionnaire session={session} onComplete={() => fetchProfile(session.user.id)} />;
   }
 
-  // ═══ Mobile Layout ═══
+  // ═════════════════════════════════════════════
+  // Mobile Layout
+  // ═════════════════════════════════════════════
   if (isMobile) {
     return (
       <div style={{
@@ -459,7 +478,9 @@ export default function App() {
     );
   }
 
-  // ═══ Desktop Layout ═══
+  // ═════════════════════════════════════════════
+  // Desktop Layout
+  // ═════════════════════════════════════════════
   return (
     <div style={{
       minHeight: '100vh',
@@ -552,7 +573,6 @@ function DesktopNav({ activeTab, switchTab, onSignOut }) {
       zIndex: 100,
       overflow: 'hidden',
     }}>
-      {/* Logo + Collapse */}
       <div style={{
         padding: collapsed ? '16px 8px' : '16px',
         borderBottom: '1px solid var(--border)',
@@ -585,7 +605,6 @@ function DesktopNav({ activeTab, switchTab, onSignOut }) {
         </button>
       </div>
 
-      {/* Tabs */}
       <nav style={{
         flex: 1,
         overflowY: 'auto',
@@ -646,7 +665,6 @@ function DesktopNav({ activeTab, switchTab, onSignOut }) {
         ))}
       </nav>
 
-      {/* Footer */}
       <div style={{
         padding: collapsed ? '12px 8px' : '12px',
         borderTop: '1px solid var(--border)',
@@ -743,17 +761,4 @@ const moreDrawerStyle = {
   paddingBottom: 'calc(16px + env(safe-area-inset-bottom))',
   boxShadow: 'var(--shadow-lg)',
   animation: 'slideUp 0.25s ease-out',
-};
-
-const inputStyle = {
-  width: '100%', padding: 12, borderRadius: 10,
-  border: '1px solid var(--border)', fontSize: '0.95em',
-  fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none',
-  background: 'var(--bg-subtle)', color: 'var(--text)',
-};
-
-const primaryBtn = {
-  background: 'var(--primary)', color: '#fff', padding: 14,
-  border: 'none', borderRadius: 10, fontWeight: 'bold',
-  cursor: 'pointer', fontSize: '0.95em', fontFamily: 'inherit',
 };
