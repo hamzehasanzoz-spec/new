@@ -54,7 +54,7 @@ export default function AdminDashboard() {
 
       // 4. الجداول الجديدة (الطلاب، المواد، كل الملفات، الدكاترة)
       const { data: allUsersData } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
-      const { data: subjectsData } = await supabase.from('subjects').select('*, faculties(name)').order('name');
+      const { data: subjectsData } = await supabase.from('subjects').select('*').order('year');
       const { data: allDocsData } = await supabase.from('documents').select('*, profiles(full_name)').order('created_at', { ascending: false });
       const { data: profsData } = await supabase.from('professors').select('*, professor_styles(*)').order('name');
 
@@ -203,9 +203,9 @@ export default function AdminDashboard() {
               {allSubjects.map(s => (
                 <tr key={s.id} className="border-b border-border">
                   <td className="p-4 font-medium">{s.name}</td>
-                  <td className="p-4">{s.faculties?.name}</td>
+                  <td className="p-4 text-content-muted text-xs">{s.slug}</td>
                   <td className="p-4">السنة {s.year}</td>
-                  <td className="p-4"><button className="text-primary hover:underline text-xs">تعديل</button></td>
+                  <td className="p-4"><button className="text-content-subtle hover:text-content text-xs">تعديل</button></td>
                 </tr>
               ))}
             </tbody>
