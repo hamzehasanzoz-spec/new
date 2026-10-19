@@ -4,11 +4,7 @@ import { saveManyWrongAnswers } from '../lib/wrongAnswers';
 import { logActivity } from '../lib/streak';
 import { exportQuizPDF } from '../lib/pdfExport';
 
-const SUBJECTS = [
-  'الداخلية العصبية', 'الداخلية القلبية', 'الداخلية الهضمية', 'الداخلية الصدرية',
-  'الجراحة العامة', 'الأطفال', 'النسائية والتوليد', 'الفارماكولوجي', 'الباثولوجي',
-  'المايكروبيولوجي', 'الفيزيولوجي',
-];
+// حذفنا المصفوفة الثابتة، وسنجلب المواد من قاعدة البيانات
 
 const DIFFICULTIES = ['سهل', 'متوسط', 'صعب'];
 const NUM_OPTIONS = [5, 10, 15, 20];
@@ -17,7 +13,8 @@ export default function Quiz({ profile, setActiveWork }) {
   const [stage, setStage] = useState('setup');
   const [error, setError] = useState('');
 
-  const [subject, setSubject] = useState(profile?.target_subjects?.[0] || SUBJECTS[0]);
+  const [subject, setSubject] = useState('');
+  const [subjectsList, setSubjectsList] = useState([]);
   const [topic, setTopic] = useState('');
   const [numQuestions, setNumQuestions] = useState(5);
   const [difficulty, setDifficulty] = useState('متوسط');
@@ -30,6 +27,22 @@ export default function Quiz({ profile, setActiveWork }) {
   const [sourcesUsed, setSourcesUsed] = useState('');
 
   useEffect(() => {
+    const fetchSubjects = async () => {
+      if (!profile?.faculty_slug) return;
+      const { data } = await supabase
+        .from('subjects')
+        .select('*')
+        .eq('faculty_slug', profile.faculty_slug)
+        .eq('year', parseInt(profile?.year || 1)) // نجلب مواد سنة الطالب فقط
+        .order('name');
+      
+      if (data) {
+        setSubjectsList(data);
+        if (data.length > 0) setSubject(data[0].name); // اختيار المادة الأولى افتراضياً
+      }
+    };
+    fetchSubjects();
+
     const fetchProfs = async () => {
       if (!profile?.faculty_slug) return;
       const { data } = await supabase.from('professors').select('*, professor_styles(*)').eq('faculty_slug', profile.faculty_slug);
@@ -165,9 +178,13 @@ export default function Quiz({ profile, setActiveWork }) {
               onChange={e => setSubject(e.target.value)}
               className="w-full bg-surface-soft border border-border rounded-md px-3 py-2.5 text-sm text-content focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
             >
-              {SUBJECTS.map(s => (
-                <option key={s} value={s}>{s}</option>
-              ))}
+              {subjectsList.length > 0 ? (
+                subjectsList.map(s => (
+                  <option key={s.id} value={s.name}>{s.name}</option>
+                ))
+              ) : (
+                <option value="">لا توجد مواد مضافة لهذه السنة بعد.</option>
+              )}
             </select>
           </Field>
 

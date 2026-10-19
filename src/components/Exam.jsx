@@ -5,11 +5,7 @@ import { saveManyWrongAnswers } from '../lib/wrongAnswers';
 import { logActivity } from '../lib/streak';
 import { exportExamPDF } from '../lib/pdfExport';
 
-const SUBJECTS = [
-  'الداخلية العصبية', 'الداخلية القلبية', 'الداخلية الهضمية', 'الداخلية الصدرية',
-  'الجراحة العامة', 'الأطفال', 'النسائية والتوليد', 'الفارماكولوجي',
-  'الباثولوجي', 'المايكروبيولوجي', 'الفيزيولوجي', 'التشريح',
-];
+// حذفنا المصفوفة الثابتة
 
 const EXAM_PRESETS = [
   { label: 'قصير', sub: '30 سؤال - 45 د', numQuestions: 30, minutes: 45 },
@@ -24,7 +20,8 @@ export default function Exam({ profile, session, setActiveWork }) {
   const [stage, setStage] = useState('setup');
   const [error, setError] = useState('');
 
-  const [subject, setSubject] = useState(profile?.target_subjects?.[0] || SUBJECTS[0]);
+  const [subject, setSubject] = useState('');
+  const [subjectsList, setSubjectsList] = useState([]);
   const [presetIndex, setPresetIndex] = useState(0);
   const [useFiles, setUseFiles] = useState(true);
   const [professors, setProfessors] = useState([]);
@@ -58,6 +55,22 @@ export default function Exam({ profile, session, setActiveWork }) {
   }, [stage, timeLeft > 0]);
 
   useEffect(() => {
+    const fetchSubjects = async () => {
+      if (!profile?.faculty_slug) return;
+      const { data } = await supabase
+        .from('subjects')
+        .select('*')
+        .eq('faculty_slug', profile.faculty_slug)
+        .eq('year', parseInt(profile?.year || 1))
+        .order('name');
+      
+      if (data) {
+        setSubjectsList(data);
+        if (data.length > 0) setSubject(data[0].name);
+      }
+    };
+    fetchSubjects();
+
     const fetchProfs = async () => {
       if (!profile?.faculty_slug) return;
       const { data } = await supabase.from('professors').select('*, professor_styles(*)').eq('faculty_slug', profile.faculty_slug);
@@ -280,7 +293,13 @@ export default function Exam({ profile, session, setActiveWork }) {
               onChange={e => setSubject(e.target.value)}
               className="w-full bg-surface-soft border border-border rounded-md px-3 py-2.5 text-sm text-content focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
             >
-              {SUBJECTS.map(s => <option key={s} value={s}>{s}</option>)}
+              {subjectsList.length > 0 ? (
+                subjectsList.map(s => (
+                  <option key={s.id} value={s.name}>{s.name}</option>
+                ))
+              ) : (
+                <option value="">لا توجد مواد مضافة لهذه السنة بعد.</option>
+              )}
             </select>
           </Field>
 
