@@ -21,6 +21,11 @@ export default function ChatCoach({ profile, session }) {
   const [conversations, setConversations] = useState([]);
   const [ragStatus, setRagStatus] = useState('');
   const [lastProvider, setLastProvider] = useState('');
+  
+  // حالات الدكاترة الجديدة
+  const [professors, setProfessors] = useState([]);
+  const [selectedProf, setSelectedProf] = useState(null);
+
   const bottomRef = useRef(null);
   const textareaRef = useRef(null);
 
@@ -43,6 +48,24 @@ export default function ChatCoach({ profile, session }) {
     refreshConversations();
   }, [userId]);
 
+  // جلب الدكاترة المتاحين لكلية الطالب
+  useEffect(() => {
+    const fetchProfessors = async () => {
+      if (!profile?.faculty_slug) return;
+      const { data } = await supabase
+        .from('professors')
+        .select('*, professor_styles(*)')
+        .eq('faculty_slug', profile.faculty_slug);
+      
+      if (data) {
+        // نعرض فقط الدكاترة الذين تمت إضافة أسلوب لهم
+        const validProfs = data.filter(p => p.professor_styles && p.professor_styles.length > 0);
+        setProfessors(validProfs);
+      }
+    };
+    fetchProfessors();
+  }, [profile?.faculty_slug]);
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
@@ -60,7 +83,6 @@ export default function ChatCoach({ profile, session }) {
     ta.style.height = Math.min(ta.scrollHeight, 200) + 'px';
   }, [input]);
 
-  // استقبل حدث فتح محادثة
   useEffect(() => {
     const handler = (e) => {
       const id = e.detail?.id;
@@ -192,7 +214,17 @@ export default function ChatCoach({ profile, session }) {
       setRagStatus('📚 جاري البحث في ملفاتك...');
       const relevantChunks = await searchUserDocuments(userMessage);
 
-      let systemPrompt = buildSystemPrompt(profile);
+      // ⭐ هنا نجهز شخصية الدكتور المختار ⭐
+      let professorStyle = null;
+      if (selectedProf && selectedProf.professor_styles?.length > 0) {
+        professorStyle = {
+          ...selectedProf.professor_styles[0],
+          professor_name: selectedProf.name
+        };
+      }
+
+      // ⭐ نمرر شخصية الدكتور لدالة بناء الـ Prompt ⭐
+      let systemPrompt = buildSystemPrompt(profile, professorStyle);
 
       if (relevantChunks.length > 0) {
         setRagStatus(`📚 وجدت ${relevantChunks.length} جزء ذو صلة`);
@@ -286,7 +318,7 @@ export default function ChatCoach({ profile, session }) {
       console.error('Chat error:', err);
       let msg;
       if (err.name === 'AbortError') {
-        msg = '⏱️ استغرق الرد وقتًا طويلًا.';
+        msg = '⏱️ استغرق الرد وقتًا طويلاً.';
       } else {
         msg = '⚠️ حدث خطأ:\n' + err.message;
       }
@@ -352,7 +384,7 @@ export default function ChatCoach({ profile, session }) {
         ${showSidebar && !isMobile ? 'rounded-r-none rounded-l-lg' : 'rounded-lg'}
       `}>
         {/* Header */}
-        <div className="bg-surface-soft border-b border-border p-4 flex items-center justify-between gap-3">
+        <div className="bg-surface-soft border-b border-border p-4 flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setShowSidebar(s => !s)}
@@ -374,7 +406,25 @@ export default function ChatCoach({ profile, session }) {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            
+            {/* ⭐ قائمة اختيار الدكتور المضافة ⭐ */}
+            {professors.length > 0 && (
+              <select
+                value={selectedProf?.id || ''}
+                onChange={(e) => {
+                  const prof = professors.find(p => p.id === e.target.value);
+                  setSelectedProf(prof || null);
+                }}
+                className="text-xs bg-surface-card border border-border rounded-md px-2 py-1.5 text-content focus:outline-none focus:border-primary max-w-[180px] truncate"
+              >
+                <option value="">🤖 AI افتراضي</option>
+                {professors.map(p => (
+                  <option key={p.id} value={p.id}>د. {p.name} - {p.subject}</option>
+                ))}
+              </select>
+            )}
+
             {messages.length > 1 && (
               <button
                 onClick={async () => {
@@ -392,15 +442,9 @@ export default function ChatCoach({ profile, session }) {
             )}
 
             {lastProvider && (
-              <div className="hidden sm:flex items-center gap-1 text-xs bg-primary/10 text-primary px-2.5 py-1 rounded-full">
+              <div className="hidden md:flex items-center gap-1 text-xs bg-primary/10 text-primary px-2.5 py-1 rounded-full">
                 <span>⚡</span>
                 <span className="font-medium">{lastProvider}</span>
-              </div>
-            )}
-
-            {ragStatus && (
-              <div className="hidden md:block text-xs text-content-muted">
-                {ragStatus}
               </div>
             )}
           </div>
@@ -408,6 +452,11 @@ export default function ChatCoach({ profile, session }) {
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-surface">
+          {ragStatus && (
+            <div className="text-center text-xs text-primary animate-pulse mb-2">
+              {ragStatus}
+            </div>
+          )}
           {messages.map((msg, i) => {
             const isEmpty = msg.role === 'assistant' && msg.content === '' && loading;
             const isUser = msg.role === 'user';
