@@ -17,8 +17,10 @@ import ThemeToggle from './components/ThemeToggle';
 import ExamCountdown from './components/ExamCountdown';
 import MyConversations from './components/MyConversations';
 import Landing from './components/Landing';
-import { Button, Input, Card } from './components/ui';
 import AdminDashboard from './components/AdminDashboard';
+import { Button, Input, Card } from './components/ui';
+
+// استيراد الأيقونات الاحترافية
 import { 
   Home, MessageSquare, FolderOpen, Target, BookOpen, 
   Clock, AlertCircle, BarChart2, User, ShieldAlert, LogOut
@@ -39,6 +41,7 @@ const MORE_TABS = [
   { id: 'weekly', label: 'التقرير الأسبوعي', icon: <BarChart2 size={20} />, color: '#10B981' },
   { id: 'profile', label: 'حسابي', icon: <User size={20} />, color: '#2A5C82' },
 ];
+
 const PAGE_TITLES = {
   dashboard: 'الرئيسية',
   chat: 'الدردشة',
@@ -49,6 +52,7 @@ const PAGE_TITLES = {
   bank: 'بنك الأخطاء',
   weekly: 'التقرير الأسبوعي',
   profile: 'حسابي',
+  admin: 'لوحة الإدارة',
 };
 
 export default function App() {
@@ -66,6 +70,32 @@ export default function App() {
   const [showLanding, setShowLanding] = useState(true);
 
   const isMobile = useIsMobile();
+
+  // تغيير ألوان الموقع بناءً على كلية الطالب
+  useEffect(() => {
+    if (!profile?.faculty_slug) {
+      document.documentElement.style.setProperty('--primary', '#3B82F6');
+      document.documentElement.style.setProperty('--primary-hover', '#60A5FA');
+      return;
+    }
+
+    const colors = {
+      medicine: { primary: '#3B82F6', light: '#60A5FA' }, // أزرق
+      dentistry: { primary: '#10B981', light: '#34D399' }, // أخضر/تركواز
+      pharmacy: { primary: '#8B5CF6', light: '#A78BFA' }, // بنفسجي
+      step: { primary: '#F59E0B', light: '#FBBF24' },     // ذهبي/برتقالي
+    };
+
+    const theme = colors[profile.faculty_slug] || colors.medicine;
+    
+    document.documentElement.style.setProperty('--primary', theme.primary);
+    document.documentElement.style.setProperty('--primary-hover', theme.light);
+  }, [profile?.faculty_slug]);
+
+  // تحديد ما إذا كان الطالب يستعد للامتحان الوطني (لإظهار العدّاد)
+  const showCountdown = 
+    (profile?.faculty_slug === 'medicine' && profile?.year === '6') || 
+    ((profile?.faculty_slug === 'dentistry' || profile?.faculty_slug === 'pharmacy') && profile?.year === '5');
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -142,9 +172,7 @@ export default function App() {
 
   const renderContent = () => (
     <>
-    
       {activeTab === 'dashboard' && <Dashboard profile={profile} session={session} />}
-      {activeTab === 'admin' && profile?.role === 'admin' && <AdminDashboard />}
       {activeTab === 'chat' && <ChatCoach profile={profile} session={session} />}
       {activeTab === 'my-chats' && (
         <MyConversations
@@ -164,6 +192,7 @@ export default function App() {
       {activeTab === 'bank' && <QuizBank session={session} />}
       {activeTab === 'weekly' && <WeeklyCheckin session={session} profile={profile} />}
       {activeTab === 'exam' && <Exam profile={profile} session={session} setActiveWork={setActiveWork} />}
+      {activeTab === 'admin' && profile?.role === 'admin' && <AdminDashboard />}
       {activeTab === 'profile' && (
         <Profile profile={profile} session={session} onUpdate={() => fetchProfile(session.user.id)} />
       )}
@@ -183,20 +212,23 @@ export default function App() {
   if (!session && showLanding && waitlistStatus === 'none') {
     return (
       <Landing
-        onEnter={() => {
-          setWaitlistStatus('in_progress');
+        onEnter={(isSignup) => {
+          if (isSignup) {
+            setWaitlistStatus('in_progress');
+          } else {
+            setShowLanding(false);
+          }
         }}
       />
     );
   }
 
-   // ═══ Waitlist Page ═══
+  // ═══ Waitlist Page ═══
   if (!session && waitlistStatus === 'in_progress') {
     return (
       <Waitlist
         onSuccess={(name) => {
           setWaitlistName(name);
-          // لا نحتاج لتغيير الحالة هنا، لأن إنشاء الحساب سيغير الـ session تلقائياً
         }}
         onBack={() => setWaitlistStatus('none')}
         onLoginClick={() => {
@@ -251,27 +283,22 @@ export default function App() {
     );
   }
 
-  // ═══ Questionnaire (يُعرض فوراً بعد التسجيل أو إذا لم يكتمل) ═══
+  // ═══ Questionnaire ═══
   if (!profile || !profile.questionnaire_completed) {
     return <Questionnaire session={session} onComplete={() => fetchProfile(session.user.id)} />;
   }
 
-  // ═══ Admin Gate (حماية المنصة) ═══
-  // بعد إكمال الاستبيان، إذا لم يكن أدمن، اعرض له ComingSoon
+  // ═══ Admin Gate ═══
   if (profile && profile.role !== 'admin') {
     return <ComingSoon name={profile?.full_name || 'يا صديقي'} />;
   }
+
   // ═════════════════════════════════════════════
   // Mobile Layout
   // ═════════════════════════════════════════════
   if (isMobile) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: 'var(--bg)',
-        direction: 'rtl',
-        paddingBottom: 68,
-      }}>
+      <div style={{ minHeight: '100vh', background: 'var(--bg)', direction: 'rtl', paddingBottom: 68 }}>
         <nav style={mobileTopBar}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <Logo size={28} showText={false} />
@@ -281,18 +308,13 @@ export default function App() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <ExamCountdown />
+            {showCountdown && <ExamCountdown />}
             <ThemeToggle />
           </div>
         </nav>
 
         {activeWork && (
-          <div style={{
-            background: '#FEF3C7',
-            borderBottom: '1px solid #F59E0B',
-            padding: '8px 16px', fontSize: '0.82em',
-            color: '#92400E', textAlign: 'center', fontWeight: 600,
-          }}>
+          <div style={{ background: '#FEF3C7', borderBottom: '1px solid #F59E0B', padding: '8px 16px', fontSize: '0.82em', color: '#92400E', textAlign: 'center', fontWeight: 600 }}>
             ⏸️ {activeWork.type} قيد التنفيذ — لا تغادر الصفحة
           </div>
         )}
@@ -305,58 +327,23 @@ export default function App() {
           {MAIN_TABS.map(t => {
             const active = activeTab === t.id;
             return (
-              <button
-                key={t.id}
-                onClick={() => switchTab(t.id)}
-                style={{
-                  ...bottomTabBtn,
-                  color: active ? 'var(--primary)' : 'var(--text-subtle)',
-                }}
-              >
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  transform: active ? 'scale(1.1)' : 'scale(1)',
-                  transition: 'transform 0.2s',
-                  color: active ? 'var(--primary)' : 'var(--text-subtle)'
-                }}>
+              <button key={t.id} onClick={() => switchTab(t.id)} style={{ ...bottomTabBtn, color: active ? 'var(--primary)' : 'var(--text-subtle)' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', transform: active ? 'scale(1.1)' : 'scale(1)', transition: 'transform 0.2s', color: active ? 'var(--primary)' : 'var(--text-subtle)' }}>
                   {t.icon}
                 </div>
-                <div style={{
-                  fontSize: '0.68em',
-                  fontWeight: active ? 700 : 500,
-                  marginTop: 3,
-                }}>
+                <div style={{ fontSize: '0.68em', fontWeight: active ? 700 : 500, marginTop: 3 }}>
                   {t.label}
                 </div>
                 {active && (
-                  <div style={{
-                    position: 'absolute',
-                    top: 0,
-                    width: 24,
-                    height: 3,
-                    background: 'var(--primary)',
-                    borderRadius: 2,
-                  }} />
+                  <div style={{ position: 'absolute', top: 0, width: 24, height: 3, background: 'var(--primary)', borderRadius: 2 }} />
                 )}
               </button>
             );
           })}
 
-          <button
-            onClick={() => setMoreOpen(true)}
-            style={{
-              ...bottomTabBtn,
-              color: MORE_TABS.some(t => t.id === activeTab) ? 'var(--primary)' : 'var(--text-subtle)',
-            }}
-          >
-            <div style={{ fontSize: '1.4em', lineHeight: 1 }}>⋯</div>
-            <div style={{
-              fontSize: '0.68em',
-              fontWeight: MORE_TABS.some(t => t.id === activeTab) ? 700 : 500,
-              marginTop: 3,
-            }}>
+          <button onClick={() => setMoreOpen(true)} style={{ ...bottomTabBtn, color: MORE_TABS.some(t => t.id === activeTab) ? 'var(--primary)' : 'var(--text-subtle)' }}>
+            <div style={{ fontSize: '1.4em', lineHeight: 1, fontWeight: 'bold' }}>⋯</div>
+            <div style={{ fontSize: '0.68em', fontWeight: MORE_TABS.some(t => t.id === activeTab) ? 700 : 500, marginTop: 3 }}>
               المزيد
             </div>
           </button>
@@ -364,58 +351,19 @@ export default function App() {
 
         {moreOpen && (
           <>
-            <div
-              onClick={() => setMoreOpen(false)}
-              style={{
-                position: 'fixed',
-                inset: 0,
-                background: 'rgba(0,0,0,0.5)',
-                zIndex: 300,
-                animation: 'fadeIn 0.2s',
-              }}
-            />
+            <div onClick={() => setMoreOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 300, animation: 'fadeIn 0.2s' }} />
             <div style={moreDrawerStyle}>
-              <div style={{
-                width: 40, height: 4,
-                background: 'var(--border)',
-                borderRadius: 2,
-                margin: '12px auto 16px',
-              }} />
+              <div style={{ width: 40, height: 4, background: 'var(--border)', borderRadius: 2, margin: '12px auto 16px' }} />
 
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: 12,
-                padding: '0 16px',
-              }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, padding: '0 16px' }}>
                 {MORE_TABS.map(t => {
                   const active = activeTab === t.id;
                   return (
-                    <button
-                      key={t.id}
-                      onClick={() => switchTab(t.id)}
-                      style={{
-                        background: active ? `${t.color}20` : 'var(--bg-subtle)',
-                        border: active ? `2px solid ${t.color}` : '1px solid var(--border)',
-                        borderRadius: 14,
-                        padding: '18px 12px',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: 8,
-                        textAlign: 'center',
-                        fontFamily: 'inherit',
-                      }}
-                    >
+                    <button key={t.id} onClick={() => switchTab(t.id)} style={{ background: active ? `${t.color}20` : 'var(--bg-subtle)', border: active ? `2px solid ${t.color}` : '1px solid var(--border)', borderRadius: 14, padding: '18px 12px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, textAlign: 'center', fontFamily: 'inherit' }}>
                       <div style={{ color: active ? t.color : 'var(--text-muted)' }}>
                         {t.icon}
                       </div>
-                      <div style={{
-                        fontSize: '0.82em',
-                        fontWeight: 700,
-                        color: active ? t.color : 'var(--text)',
-                      }}>
+                      <div style={{ fontSize: '0.82em', fontWeight: 700, color: active ? t.color : 'var(--text)' }}>
                         {t.label}
                       </div>
                     </button>
@@ -423,33 +371,8 @@ export default function App() {
                 })}
               </div>
 
-              <div style={{
-                padding: '20px 16px',
-                borderTop: '1px solid var(--border)',
-                marginTop: 20,
-              }}>
-                <button
-                  onClick={() => {
-                    setMoreOpen(false);
-                    supabase.auth.signOut();
-                  }}
-                  style={{
-                    width: '100%',
-                    padding: 14,
-                    background: '#FEF2F2',
-                    border: '1px solid #FECACA',
-                    color: '#EF4444',
-                    borderRadius: 12,
-                    fontWeight: 700,
-                    fontSize: '0.95em',
-                    cursor: 'pointer',
-                    fontFamily: 'inherit',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 8,
-                  }}
-                >
+              <div style={{ padding: '20px 16px', borderTop: '1px solid var(--border)', marginTop: 20 }}>
+                <button onClick={() => { setMoreOpen(false); supabase.auth.signOut(); }} style={{ width: '100%', padding: 14, background: '#FEF2F2', border: '1px solid #FECACA', color: '#EF4444', borderRadius: 12, fontWeight: 700, fontSize: '0.95em', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                   <LogOut size={20} />
                   <span>تسجيل الخروج</span>
                 </button>
@@ -465,39 +388,17 @@ export default function App() {
   // Desktop Layout
   // ═════════════════════════════════════════════
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'var(--bg)',
-      direction: 'rtl',
-    }}>
-      <DesktopNav
-        activeTab={activeTab}
-        switchTab={switchTab}
-        onSignOut={() => supabase.auth.signOut()}
-        isAdmin={profile?.role === 'admin'}
-      />
+    <div style={{ minHeight: '100vh', background: 'var(--bg)', direction: 'rtl' }}>
+      <DesktopNav activeTab={activeTab} switchTab={switchTab} onSignOut={() => supabase.auth.signOut()} isAdmin={profile?.role === 'admin'} />
 
-      <div style={{
-        paddingRight: 'var(--sidebar-width)',
-        transition: 'padding-right 0.2s ease',
-        minHeight: '100vh',
-      }}>
+      <div style={{ paddingRight: 'var(--sidebar-width)', transition: 'padding-right 0.2s ease', minHeight: '100vh' }}>
         {activeWork && (
-          <div style={{
-            background: '#FEF3C7',
-            borderBottom: '1px solid #F59E0B',
-            padding: '8px 16px', fontSize: '0.82em',
-            color: '#92400E', textAlign: 'center', fontWeight: 600,
-          }}>
+          <div style={{ background: '#FEF3C7', borderBottom: '1px solid #F59E0B', padding: '8px 16px', fontSize: '0.82em', color: '#92400E', textAlign: 'center', fontWeight: 600 }}>
             ⏸️ {activeWork.type} قيد التنفيذ — لا تغادر الصفحة
           </div>
         )}
 
-        <main style={{
-          maxWidth: 1200,
-          margin: '0 auto',
-          padding: '20px 24px',
-        }}>
+        <main style={{ maxWidth: 1200, margin: '0 auto', padding: '20px 24px' }}>
           {renderContent()}
         </main>
       </div>
@@ -508,7 +409,7 @@ export default function App() {
 // ═════════════════════════════════════════════
 // Desktop Sidebar
 // ═════════════════════════════════════════════
-function DesktopNav({ activeTab, switchTab, onSignOut,isAdmin }) {
+function DesktopNav({ activeTab, switchTab, onSignOut, isAdmin }) {
   const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
@@ -519,103 +420,52 @@ function DesktopNav({ activeTab, switchTab, onSignOut,isAdmin }) {
     {
       title: 'الرئيسية',
       tabs: [
-        { id: 'dashboard', label: 'الرئيسية', icon: '🏠' },
-        { id: 'chat', label: 'الدردشة', icon: '💬' },
-        { id: 'my-chats', label: 'محادثاتي', icon: '📂' },
+        { id: 'dashboard', label: 'الرئيسية', icon: <Home size={20} /> },
+        { id: 'chat', label: 'الدردشة', icon: <MessageSquare size={20} /> },
+        { id: 'my-chats', label: 'محادثاتي', icon: <FolderOpen size={20} /> },
       ],
     },
     {
       title: 'الدراسة',
       tabs: [
-        { id: 'quiz', label: 'اختبارات', icon: '🎯' },
-        { id: 'exam', label: 'محاكاة امتحان', icon: '⏱️' },
-        { id: 'bank', label: 'بنك الأخطاء', icon: '📖' },
-        { id: 'files', label: 'ملفاتي', icon: '📚' },
+        { id: 'quiz', label: 'اختبارات', icon: <Target size={20} /> },
+        { id: 'exam', label: 'محاكاة امتحان', icon: <Clock size={20} /> },
+        { id: 'bank', label: 'بنك الأخطاء', icon: <AlertCircle size={20} /> },
+        { id: 'files', label: 'ملفاتي', icon: <BookOpen size={20} /> },
       ],
     },
     {
       title: 'شخصي',
       tabs: [
-        { id: 'weekly', label: 'التقرير الأسبوعي', icon: '📊' },
-        { id: 'profile', label: 'حسابي', icon: '👤' },
+        { id: 'weekly', label: 'التقرير الأسبوعي', icon: <BarChart2 size={20} /> },
+        { id: 'profile', label: 'حسابي', icon: <User size={20} /> },
       ],
     },
   ];
+
   if (isAdmin) {
     groups.push({
       title: 'الإدارة',
       tabs: [
-        { id: 'admin', label: 'لوحة الإدارة', icon: '🛡️' },
+        { id: 'admin', label: 'لوحة الإدارة', icon: <ShieldAlert size={20} /> },
       ],
     });
   }
+
   return (
-    <aside style={{
-      width: 'var(--sidebar-width)',
-      background: 'var(--bg-elevated)',
-      borderLeft: '1px solid var(--border)',
-      height: '100vh',
-      position: 'fixed',
-      top: 0,
-      right: 0,
-      display: 'flex',
-      flexDirection: 'column',
-      transition: 'width 0.2s ease',
-      zIndex: 100,
-      overflow: 'hidden',
-    }}>
-      <div style={{
-        padding: collapsed ? '16px 8px' : '16px',
-        borderBottom: '1px solid var(--border)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: collapsed ? 'center' : 'space-between',
-        gap: 8,
-        minHeight: 64,
-      }}>
+    <aside style={{ width: 'var(--sidebar-width)', background: 'var(--bg-elevated)', borderLeft: '1px solid var(--border)', height: '100vh', position: 'fixed', top: 0, right: 0, display: 'flex', flexDirection: 'column', transition: 'width 0.2s ease', zIndex: 100, overflow: 'hidden' }}>
+      <div style={{ padding: collapsed ? '16px 8px' : '16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'space-between', gap: 8, minHeight: 64 }}>
         {!collapsed && <Logo size={30} />}
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          style={{
-            background: 'var(--bg-subtle)',
-            border: 'none',
-            color: 'var(--text-muted)',
-            width: 32,
-            height: 32,
-            borderRadius: 8,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '1em',
-            flexShrink: 0,
-          }}
-          title={collapsed ? 'توسيع القائمة' : 'تصغير القائمة'}
-        >
+        <button onClick={() => setCollapsed(!collapsed)} style={{ background: 'var(--bg-subtle)', border: 'none', color: 'var(--text-muted)', width: 32, height: 32, borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1em', flexShrink: 0 }} title={collapsed ? 'توسيع القائمة' : 'تصغير القائمة'}>
           {collapsed ? '⟩' : '⟨'}
         </button>
       </div>
 
-      <nav style={{
-        flex: 1,
-        overflowY: 'auto',
-        padding: '12px 8px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 16,
-      }}>
+      <nav style={{ flex: 1, overflowY: 'auto', padding: '12px 8px', display: 'flex', flexDirection: 'column', gap: 16 }}>
         {groups.map((group, gi) => (
           <div key={gi}>
             {!collapsed && (
-              <div style={{
-                fontSize: '0.68em',
-                fontWeight: 700,
-                color: 'var(--text-subtle)',
-                textTransform: 'uppercase',
-                padding: '0 12px',
-                marginBottom: 6,
-                letterSpacing: 1,
-              }}>
+              <div style={{ fontSize: '0.68em', fontWeight: 700, color: 'var(--text-subtle)', textTransform: 'uppercase', padding: '0 12px', marginBottom: 6, letterSpacing: 1 }}>
                 {group.title}
               </div>
             )}
@@ -624,28 +474,7 @@ function DesktopNav({ activeTab, switchTab, onSignOut,isAdmin }) {
               {group.tabs.map(t => {
                 const active = activeTab === t.id;
                 return (
-                  <button
-                    key={t.id}
-                    onClick={() => switchTab(t.id)}
-                    title={collapsed ? t.label : undefined}
-                    style={{
-                      background: active ? 'var(--primary)' : 'transparent',
-                      color: active ? '#fff' : 'var(--text-muted)',
-                      border: 'none',
-                      padding: collapsed ? '10px 8px' : '10px 12px',
-                      borderRadius: 8,
-                      cursor: 'pointer',
-                      fontWeight: active ? 700 : 500,
-                      fontSize: '0.88em',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 10,
-                      transition: 'all 0.15s',
-                      fontFamily: 'inherit',
-                      justifyContent: collapsed ? 'center' : 'flex-start',
-                      textAlign: 'right',
-                    }}
-                  >
+                  <button key={t.id} onClick={() => switchTab(t.id)} title={collapsed ? t.label : undefined} style={{ background: active ? 'var(--primary)' : 'transparent', color: active ? '#fff' : 'var(--text-muted)', border: 'none', padding: collapsed ? '10px 8px' : '10px 12px', borderRadius: 8, cursor: 'pointer', fontWeight: active ? 700 : 500, fontSize: '0.88em', display: 'flex', alignItems: 'center', gap: 10, transition: 'all 0.15s', fontFamily: 'inherit', justifyContent: collapsed ? 'center' : 'flex-start', textAlign: 'right' }}>
                     <span style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
                       {t.icon}
                     </span>
@@ -658,40 +487,13 @@ function DesktopNav({ activeTab, switchTab, onSignOut,isAdmin }) {
         ))}
       </nav>
 
-      <div style={{
-        padding: collapsed ? '12px 8px' : '12px',
-        borderTop: '1px solid var(--border)',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 8,
-      }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: collapsed ? 'center' : 'flex-start',
-        }}>
+      <div style={{ padding: collapsed ? '12px 8px' : '12px', borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ display: 'flex', justifyContent: collapsed ? 'center' : 'flex-start' }}>
           <ThemeToggle />
         </div>
 
-        <button
-          onClick={onSignOut}
-          title={collapsed ? 'خروج' : undefined}
-          style={{
-            background: '#FEF2F2',
-            border: '1px solid #FECACA',
-            color: '#EF4444',
-            padding: collapsed ? '10px 8px' : '10px 12px',
-            borderRadius: 8,
-            cursor: 'pointer',
-            fontWeight: 600,
-            fontSize: '0.85em',
-            fontFamily: 'inherit',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 8,
-          }}
-        >
-          <LogOut size={20} />
+        <button onClick={onSignOut} title={collapsed ? 'خروج' : undefined} style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#EF4444', padding: collapsed ? '10px 8px' : '10px 12px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: '0.85em', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          <LogOut size={18} />
           {!collapsed && <span>خروج</span>}
         </button>
       </div>

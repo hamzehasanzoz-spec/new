@@ -85,7 +85,11 @@ export default function Dashboard({ profile, session }) {
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
-            <ExamCountdown />
+            {/* تم تعديل هذا الجزء لإخفاء العدّاد حسب الكلية والسنة */}
+            {((profile?.faculty_slug === 'medicine' && profile?.year === '6') || 
+              ((profile?.faculty_slug === 'dentistry' || profile?.faculty_slug === 'pharmacy') && profile?.year === '5')) && (
+              <ExamCountdown />
+            )}
             <StreakCard userId={session?.user?.id} />
           </div>
         </div>
