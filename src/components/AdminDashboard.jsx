@@ -10,11 +10,14 @@ export default function AdminDashboard() {
   const [pendingDocs, setPendingDocs] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // حالات الجداول الجديدة
+  // حالات الجداول
   const [allUsers, setAllUsers] = useState([]);
   const [allSubjects, setAllSubjects] = useState([]);
   const [allDocs, setAllDocs] = useState([]);
   const [professors, setProfessors] = useState([]);
+
+  // حالة تبويب المواد (الجديدة)
+  const [selectedFacultyTab, setSelectedFacultyTab] = useState('medicine');
 
   // حالات المعاينة
   const [previewDoc, setPreviewDoc] = useState(null);
@@ -52,7 +55,7 @@ export default function AdminDashboard() {
         }));
       }
 
-      // 4. الجداول الجديدة (الطلاب، المواد، كل الملفات، الدكاترة)
+      // 4. الجداول الجديدة
       const { data: allUsersData } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
       const { data: subjectsData } = await supabase.from('subjects').select('*').order('year');
       const { data: allDocsData } = await supabase.from('documents').select('*, profiles(full_name)').order('created_at', { ascending: false });
@@ -85,7 +88,7 @@ export default function AdminDashboard() {
       setPendingDocs(prev => prev.filter(doc => doc.id !== id));
       setStats(prev => ({ ...prev, documents: Math.max(0, prev.documents - 1) }));
       alert(`تم ${newStatus === 'approved' ? 'قبول' : 'رفض'} الملف بنجاح ✅`);
-      fetchData(); // تحديث الجداول
+      fetchData(); 
     } catch (err) {
       alert('فشل في تحديث الملف: ' + err.message);
     }
@@ -129,7 +132,7 @@ export default function AdminDashboard() {
   return (
     <div className="max-w-7xl mx-auto space-y-6" dir="rtl">
       
-      {/* التبويبات */}
+      {/* التبويبات الرئيسية */}
       <div className="bg-surface-card border border-border rounded-lg p-4 flex gap-2 flex-wrap">
         {[
           { id: 'overview', label: 'النظرة العامة' },
@@ -192,24 +195,56 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* 3. المواد */}
+            {/* 3. المواد */}
       {activeTab === 'subjects' && (
-        <div className="bg-surface-card border border-border rounded-lg overflow-hidden">
-          <table className="w-full text-right text-sm">
-            <thead className="bg-surface-soft text-content-muted border-b border-border">
-              <tr><th className="p-4">المادة</th><th className="p-4">الكلية</th><th className="p-4">السنة</th><th className="p-4">إجراء</th></tr>
-            </thead>
-            <tbody>
-              {allSubjects.map(s => (
-                <tr key={s.id} className="border-b border-border">
-                  <td className="p-4 font-medium">{s.name}</td>
-                  <td className="p-4 text-content-muted text-xs">{s.slug}</td>
-                  <td className="p-4">السنة {s.year}</td>
-                  <td className="p-4"><button className="text-content-subtle hover:text-content text-xs">تعديل</button></td>
+        <div className="space-y-4">
+          {/* التبويبات الفرعية للكليات */}
+          <div className="flex gap-2 flex-wrap bg-surface-soft p-2 rounded-lg border border-border">
+            {[
+              { id: 'medicine', label: 'الطب البشري' },
+              { id: 'dentistry', label: 'طب الأسنان' },
+              { id: 'pharmacy', label: 'الصيدلة' },
+              { id: 'step', label: 'مسار STEP' }
+            ].map(fac => (
+              <button
+                key={fac.id}
+                onClick={() => setSelectedFacultyTab(fac.id)}
+                className={`px-4 py-2 rounded-md font-semibold text-sm transition-colors ${selectedFacultyTab === fac.id ? 'bg-primary text-white' : 'text-content-muted hover:text-content'}`}
+              >
+                {fac.label}
+              </button>
+            ))}
+          </div>
+
+          {/* جدول المواد المعروضة */}
+          <div className="bg-surface-card border border-border rounded-lg overflow-hidden">
+            <table className="w-full text-right text-sm">
+              <thead className="bg-surface-soft text-content-muted border-b border-border">
+                <tr>
+                  <th className="p-4">اسم المادة</th>
+                  <th className="p-4">السنة الدراسية</th>
+                  <th className="p-4">إجراءات</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {allSubjects
+                  .filter(s => s.faculty_slug === selectedFacultyTab)
+                  .map(s => (
+                  <tr key={s.id} className="border-b border-border hover:bg-surface-soft">
+                    <td className="p-4 font-medium text-content">{s.name}</td>
+                    <td className="p-4 text-content-muted">السنة {s.year}</td>
+                    <td className="p-4 flex gap-2">
+                      <button className="bg-surface-soft border border-border text-content px-3 py-1 rounded text-xs hover:border-content-subtle">رؤية الملفات</button>
+                      <button onClick={() => alert('ميزة التعديل ستتوفر قريباً!')} className="text-primary hover:underline text-xs">تعديل</button>
+                    </td>
+                  </tr>
+                ))}
+                {allSubjects.filter(s => s.faculty_slug === selectedFacultyTab).length === 0 && (
+                  <tr><td colSpan="3" className="p-8 text-center text-content-subtle">لا توجد مواد مضافة لهذه الكلية بعد.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
@@ -264,7 +299,6 @@ export default function AdminDashboard() {
             </form>
           </div>
           
-          {/* عرض الدكاترة المضافين */}
           <div className="md:col-span-2 bg-surface-card border border-border rounded-lg p-6">
              <h2 className="font-bold text-lg mb-4">قائمة الدكاترة</h2>
              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -282,7 +316,7 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* 6. طلبات التدقيق (نفس الكود القديم) */}
+      {/* 6. طلبات التدقيق */}
       {activeTab === 'review' && (
         <div className="space-y-4">
           {pendingDocs.length === 0 ? <div className="p-12 text-center text-content-muted bg-surface-card border border-border rounded-lg">🎉 لا توجد ملفات للتدقيق</div> : 
