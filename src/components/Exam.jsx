@@ -22,6 +22,8 @@ export default function Exam({ profile, session, setActiveWork }) {
 
   const [subject, setSubject] = useState('');
   const [subjectsList, setSubjectsList] = useState([]);
+  const [isCustomSubject, setIsCustomSubject] = useState(false);
+  const [customSubject, setCustomSubject] = useState('');
   const [presetIndex, setPresetIndex] = useState(0);
   const [useFiles, setUseFiles] = useState(true);
   const [professors, setProfessors] = useState([]);
@@ -90,7 +92,7 @@ export default function Exam({ profile, session, setActiveWork }) {
         Authorization: `Bearer ${freshSession.access_token}`,
       },
       body: JSON.stringify({
-        subject,
+        subject: isCustomSubject ? customSubject : subject, // ⬅️ التعديل هنا
         topic: '',
         numQuestions: count,
         difficulty: 'متوسط',
@@ -289,18 +291,33 @@ export default function Exam({ profile, session, setActiveWork }) {
         <div className="bg-surface-card border border-border rounded-lg p-6 space-y-5">
           <Field label="المادة">
             <select
-              value={subject}
-              onChange={e => setSubject(e.target.value)}
+              value={isCustomSubject ? 'custom' : subject}
+              onChange={e => {
+                if (e.target.value === 'custom') {
+                  setIsCustomSubject(true);
+                } else {
+                  setIsCustomSubject(false);
+                  setSubject(e.target.value);
+                }
+              }}
               className="w-full bg-surface-soft border border-border rounded-md px-3 py-2.5 text-sm text-content focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
             >
-              {subjectsList.length > 0 ? (
-                subjectsList.map(s => (
-                  <option key={s.id} value={s.name}>{s.name}</option>
-                ))
-              ) : (
-                <option value="">لا توجد مواد مضافة لهذه السنة بعد.</option>
-              )}
+              {subjectsList.map(s => (
+                <option key={s.id} value={s.name}>{s.name}</option>
+              ))}
+              <option value="custom">✏️ مادة أخرى (اكتبها يدوياً)...</option>
             </select>
+
+            {/* حقل الكتابة اليدوية للمادة */}
+            {isCustomSubject && (
+              <input
+                type="text"
+                placeholder="اكتب اسم المادة هنا (مثال: الطب النووي)..."
+                value={customSubject}
+                onChange={e => setCustomSubject(e.target.value)}
+                className="w-full mt-2 bg-surface-soft border border-border rounded-md px-3 py-2.5 text-sm text-content placeholder:text-content-subtle focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+              />
+            )}
           </Field>
 
           <Field label="حجم الامتحان">

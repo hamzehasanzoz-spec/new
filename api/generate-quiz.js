@@ -110,6 +110,7 @@ export default async function handler(req, res) {
 - عدّ قبل الإرجاع.
 - إذا وصلت إلى ${numQuestions}، توقف.
 - أعد JSON فقط بدون أي نص خارجه.${professorPrompt}${excludePart}`;
+
   // ── 3. استخدام نماذج Groq فقط ──
   const groqModels = ['llama-3.3-70b-versatile', 'openai/gpt-oss-120b', 'llama-3.1-8b-instant'];
   let lastError = '';
