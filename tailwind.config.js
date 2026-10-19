@@ -10,8 +10,8 @@ export default {
       colors: {
         // ═══ ألوان ثابتة (لا تتغير مع الثيم) ═══
         primary: {
-          DEFAULT: '#3B82F6',
-          light: '#60A5FA',
+          DEFAULT: 'var(--primary)',
+          light: 'var(--primary-hover)',
           dark: '#1E40AF',
         },
         success: '#22C55E',
