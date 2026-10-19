@@ -40,6 +40,7 @@ export default async function handler(req, res) {
     difficulty = 'متوسط',
     useFiles = true,
     excludeQuestions = [],
+    professor = null, // تمت الإضافة
   } = req.body || {};
 
   const jinaKey = process.env.JINA_API_KEY;
@@ -96,11 +97,19 @@ export default async function handler(req, res) {
   const excludePart = excludeQuestions.length > 0
     ? `\n\nلا تكرر هذه الأسئلة:\n${excludeQuestions.slice(-10).map((q, i) => `${i + 1}. ${typeof q === 'string' ? q : q.q}`).join('\n')}`
     : '';
+  let professorPrompt = '';
+  if (professor) {
+    professorPrompt = `\n\n⚠️ **أنت الآن تتقمص شخصية الدكتور (${professor.name})**.\n- نمط الأسئلة المطلوب: ${professor.question_style || 'عام'}\n- نقاط التركيز: ${professor.focus_areas || 'عام'}\nاجعل جميع الأسئلة تحاكي أسلوب هذا الدكتور تماماً.`;
+  }
 
-  const userPrompt = `أنشئ ${numQuestions} سؤال اختيار من متعدد (MCQ) في مادة ${subject} ${topic ? `عن موضوع ${topic}` : ''}.
+  const userPrompt = `أنشئ ${numQuestions} سؤال MCQ${subject ? ` في مادة **${subject}**` : ''}${topic ? ` عن موضوع "${topic}"` : ''}.
 مستوى الصعوبة: ${difficulty}.
-التزم بـ ${numQuestions} سؤال بالضبط. أعد JSON فقط.${excludePart}`;
 
+⚠️ **مهم جدًا:**
+- التزم بـ **${numQuestions} سؤال بالضبط**.
+- عدّ قبل الإرجاع.
+- إذا وصلت إلى ${numQuestions}، توقف.
+- أعد JSON فقط بدون أي نص خارجه.${professorPrompt}${excludePart}`;
   // ── 3. استخدام نماذج Groq فقط ──
   const groqModels = ['llama-3.3-70b-versatile', 'openai/gpt-oss-120b', 'llama-3.1-8b-instant'];
   let lastError = '';

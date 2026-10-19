@@ -27,6 +27,8 @@ export default function Exam({ profile, session, setActiveWork }) {
   const [subject, setSubject] = useState(profile?.target_subjects?.[0] || SUBJECTS[0]);
   const [presetIndex, setPresetIndex] = useState(0);
   const [useFiles, setUseFiles] = useState(true);
+  const [professors, setProfessors] = useState([]);
+  const [selectedProf, setSelectedProf] = useState(null);
 
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState([]);
@@ -55,6 +57,15 @@ export default function Exam({ profile, session, setActiveWork }) {
     return () => clearInterval(timerRef.current);
   }, [stage, timeLeft > 0]);
 
+  useEffect(() => {
+    const fetchProfs = async () => {
+      if (!profile?.faculty_slug) return;
+      const { data } = await supabase.from('professors').select('*, professor_styles(*)').eq('faculty_slug', profile.faculty_slug);
+      if (data) setProfessors(data.filter(p => p.professor_styles && p.professor_styles.length > 0));
+    };
+    fetchProfs();
+  }, [profile?.faculty_slug]);
+
   const generateBatch = async (count, exclude) => {
     const { data: { session: freshSession } } = await supabase.auth.getSession();
     if (!freshSession?.access_token) throw new Error('انتهت الجلسة');
@@ -72,6 +83,7 @@ export default function Exam({ profile, session, setActiveWork }) {
         difficulty: 'متوسط',
         useFiles,
         excludeQuestions: exclude,
+        professor: selectedProf ? { name: selectedProf.name, ...selectedProf.professor_styles[0] } : null,
       }),
     });
 
@@ -307,6 +319,22 @@ export default function Exam({ profile, session, setActiveWork }) {
               })}
             </div>
           </Field>
+
+          {/* اختيار الدكتور */}
+          {professors.length > 0 && (
+            <Field label="شخصية الدكتور (اختياري)">
+              <select
+                value={selectedProf?.id || ''}
+                onChange={(e) => setSelectedProf(professors.find(p => p.id === e.target.value) || null)}
+                className="w-full bg-surface-soft border border-border rounded-md px-3 py-2.5 text-sm text-content focus:outline-none focus:border-primary"
+              >
+                <option value="">بدون شخصية (امتحان عام)</option>
+                {professors.map(p => (
+                  <option key={p.id} value={p.id}>د. {p.name} - {p.subject}</option>
+                ))}
+              </select>
+            </Field>
+          )}
 
           <Field label="المصدر">
             <label className="flex items-center gap-3 p-3 bg-surface-soft border border-border rounded-md cursor-pointer hover:border-content-subtle transition-colors">
