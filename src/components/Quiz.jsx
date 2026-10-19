@@ -4,8 +4,6 @@ import { saveManyWrongAnswers } from '../lib/wrongAnswers';
 import { logActivity } from '../lib/streak';
 import { exportQuizPDF } from '../lib/pdfExport';
 
-// حذفنا المصفوفة الثابتة، وسنجلب المواد من قاعدة البيانات
-
 const DIFFICULTIES = ['سهل', 'متوسط', 'صعب'];
 const NUM_OPTIONS = [5, 10, 15, 20];
 
@@ -17,6 +15,7 @@ export default function Quiz({ profile, setActiveWork }) {
   const [subjectsList, setSubjectsList] = useState([]);
   const [isCustomSubject, setIsCustomSubject] = useState(false);
   const [customSubject, setCustomSubject] = useState('');
+
   const [topic, setTopic] = useState('');
   const [numQuestions, setNumQuestions] = useState(5);
   const [difficulty, setDifficulty] = useState('متوسط');
@@ -29,33 +28,41 @@ export default function Quiz({ profile, setActiveWork }) {
   const [sourcesUsed, setSourcesUsed] = useState('');
 
   useEffect(() => {
-    const fetchSubjects = async () => {
+    const fetchData = async () => {
       if (!profile?.faculty_slug) return;
-      const { data } = await supabase
+      
+      const { data: subData } = await supabase
         .from('subjects')
         .select('*')
         .eq('faculty_slug', profile.faculty_slug)
-        .eq('year', parseInt(profile?.year || 1)) // نجلب مواد سنة الطالب فقط
         .order('name');
       
-      if (data) {
-        setSubjectsList(data);
-        if (data.length > 0) setSubject(data[0].name); // اختيار المادة الأولى افتراضياً
+      if (subData && subData.length > 0) {
+        setSubjectsList(subData);
+        setSubject(subData[0].name);
+      }
+
+      const { data: profData } = await supabase
+        .from('professors')
+        .select('*, professor_styles(*)')
+        .eq('faculty_slug', profile.faculty_slug);
+      if (profData) {
+        setProfessors(profData.filter(p => p.professor_styles && p.professor_styles.length > 0));
       }
     };
-    fetchSubjects();
-
-    const fetchProfs = async () => {
-      if (!profile?.faculty_slug) return;
-      const { data } = await supabase.from('professors').select('*, professor_styles(*)').eq('faculty_slug', profile.faculty_slug);
-      if (data) setProfessors(data.filter(p => p.professor_styles && p.professor_styles.length > 0));
-    };
-    fetchProfs();
+    fetchData();
   }, [profile?.faculty_slug]);
 
   const handleGenerate = async () => {
     setError('');
     setStage('loading');
+
+    const activeSubject = isCustomSubject ? customSubject : subject;
+    if (!activeSubject) {
+      setError('الرجاء اختيار أو كتابة اسم المادة');
+      setStage('setup');
+      return;
+    }
 
     try {
       const { data: { session: freshSession } } = await supabase.auth.getSession();
@@ -68,7 +75,7 @@ export default function Quiz({ profile, setActiveWork }) {
           Authorization: `Bearer ${freshSession.access_token}`,
         },
         body: JSON.stringify({
-          subject: isCustomSubject ? customSubject : subject, // ⬅️ استخدمنا المادة المخصصة إذا تم اختيارها
+          subject: activeSubject,
           topic: topic.trim(),
           numQuestions,
           difficulty,
@@ -121,7 +128,7 @@ export default function Quiz({ profile, setActiveWork }) {
       if (wrongOnes.length > 0) {
         const { data: { session: freshSession } } = await supabase.auth.getSession();
         if (freshSession?.user?.id) {
-          await saveManyWrongAnswers(freshSession.user.id, wrongOnes, subject, topic);
+          await saveManyWrongAnswers(freshSession.user.id, wrongOnes, isCustomSubject ? customSubject : subject, topic);
         }
       }
     } catch (err) {
@@ -153,27 +160,19 @@ export default function Quiz({ profile, setActiveWork }) {
   const total = questions.length;
   const percentage = total > 0 ? Math.round((score / total) * 100) : 0;
 
-  // ═══════════════════════════════════════════
-  // Setup
-  // ═══════════════════════════════════════════
   if (stage === 'setup') {
     return (
       <div className="max-w-2xl mx-auto space-y-5" dir="rtl">
-
-        {/* Header */}
         <div className="bg-surface-card border border-border rounded-lg p-6">
           <h1 className="text-2xl font-bold text-content mb-2">
             🎯 مولّد الاختبارات
           </h1>
           <p className="text-sm text-content-muted">
-            اختر المادة والموضوع، وسيولّد الذكاء الاصطناعي أسئلة MCQ من ملفاتك أو من المعرفة العامة.
+            اختر المادة والموضوع، وسيولّد الذكاء الاصطناعي أسئلة MCQ.
           </p>
         </div>
 
-        {/* Form Card */}
         <div className="bg-surface-card border border-border rounded-lg p-6 space-y-5">
-
-          {/* Subject */}
           <Field label="المادة">
             <select
               value={isCustomSubject ? 'custom' : subject}
@@ -193,7 +192,6 @@ export default function Quiz({ profile, setActiveWork }) {
               <option value="custom">✏️ مادة أخرى (اكتبها يدوياً)...</option>
             </select>
 
-            {/* حقل الكتابة اليدوية للمادة */}
             {isCustomSubject && (
               <input
                 type="text"
@@ -205,7 +203,6 @@ export default function Quiz({ profile, setActiveWork }) {
             )}
           </Field>
 
-          {/* Topic */}
           <Field label="الموضوع (اختياري)">
             <input
               type="text"
@@ -216,7 +213,6 @@ export default function Quiz({ profile, setActiveWork }) {
             />
           </Field>
 
-          {/* Num Questions */}
           <Field label="عدد الأسئلة">
             <div className="grid grid-cols-4 gap-2">
               {NUM_OPTIONS.map(n => {
@@ -241,7 +237,6 @@ export default function Quiz({ profile, setActiveWork }) {
             </div>
           </Field>
 
-          {/* Difficulty */}
           <Field label="مستوى الصعوبة">
             <div className="grid grid-cols-3 gap-2">
               {DIFFICULTIES.map(d => {
@@ -266,7 +261,6 @@ export default function Quiz({ profile, setActiveWork }) {
             </div>
           </Field>
 
-          {/* اختيار الدكتور */}
           {professors.length > 0 && (
             <Field label="شخصية الدكتور (اختياري)">
               <select
@@ -282,7 +276,6 @@ export default function Quiz({ profile, setActiveWork }) {
             </Field>
           )}
 
-          {/* Use Files */}
           <Field label="المصدر">
             <label className="flex items-center gap-3 p-3 bg-surface-soft border border-border rounded-md cursor-pointer hover:border-content-subtle transition-colors">
               <input
@@ -297,7 +290,6 @@ export default function Quiz({ profile, setActiveWork }) {
             </label>
           </Field>
 
-          {/* Error */}
           {error && (
             <div className="bg-danger/10 border border-danger/30 rounded-md p-3 flex items-center gap-2">
               <span className="text-danger">⚠️</span>
@@ -305,7 +297,6 @@ export default function Quiz({ profile, setActiveWork }) {
             </div>
           )}
 
-          {/* Submit */}
           <button
             onClick={handleGenerate}
             className="w-full bg-primary hover:bg-primary-light text-white font-semibold py-3 rounded-md transition-colors shadow-sm"
@@ -317,37 +308,25 @@ export default function Quiz({ profile, setActiveWork }) {
     );
   }
 
-  // ═══════════════════════════════════════════
-  // Loading
-  // ═══════════════════════════════════════════
   if (stage === 'loading') {
     return (
       <div className="max-w-md mx-auto text-center py-16" dir="rtl">
         <div className="text-5xl mb-6">🧠</div>
-        <h2 className="text-xl font-bold text-content mb-2">
-          جاري توليد الأسئلة...
-        </h2>
-        <p className="text-sm text-content-muted mb-8">
-          يبحث الذكاء الاصطناعي في ملفاتك ويصيغ الأسئلة
-        </p>
+        <h2 className="text-xl font-bold text-content mb-2">جاري توليد الأسئلة...</h2>
+        <p className="text-sm text-content-muted mb-8">يبحث الذكاء الاصطناعي في ملفاتك ويصيغ الأسئلة</p>
         <div className="w-12 h-12 mx-auto border-2 border-border border-t-primary rounded-full animate-spin" />
       </div>
     );
   }
 
-  // ═══════════════════════════════════════════
-  // Running
-  // ═══════════════════════════════════════════
   if (stage === 'running') {
     const answered = answers.filter(a => a !== -1).length;
 
     return (
       <div className="max-w-3xl mx-auto space-y-4" dir="rtl">
-
-        {/* Header */}
         <div className="bg-surface-card border border-border rounded-lg p-4 flex items-center justify-between gap-3">
           <div>
-            <div className="font-semibold text-content text-sm">{subject}</div>
+            <div className="font-semibold text-content text-sm">{isCustomSubject ? customSubject : subject}</div>
             {topic && <div className="text-xs text-content-muted mt-0.5">{topic}</div>}
           </div>
           <div className="text-xs text-content-muted tabular-nums">
@@ -355,7 +334,6 @@ export default function Quiz({ profile, setActiveWork }) {
           </div>
         </div>
 
-        {/* Progress */}
         <div className="h-1.5 bg-surface-card rounded-full overflow-hidden">
           <div
             className="h-full bg-primary rounded-full transition-all duration-300"
@@ -363,13 +341,9 @@ export default function Quiz({ profile, setActiveWork }) {
           />
         </div>
 
-        {/* Questions */}
         <div className="space-y-3">
           {questions.map((q, qi) => (
-            <div
-              key={qi}
-              className="bg-surface-card border border-border rounded-lg p-5"
-            >
+            <div key={qi} className="bg-surface-card border border-border rounded-lg p-5">
               <div className="font-semibold text-content text-sm mb-4 leading-relaxed">
                 <span className="text-primary mr-1">{qi + 1}.</span> {q.q}
               </div>
@@ -407,7 +381,6 @@ export default function Quiz({ profile, setActiveWork }) {
           ))}
         </div>
 
-        {/* Actions */}
         <div className="flex gap-2 sticky bottom-3 bg-surface py-3">
           <button
             onClick={handleReset}
@@ -426,9 +399,6 @@ export default function Quiz({ profile, setActiveWork }) {
     );
   }
 
-  // ═══════════════════════════════════════════
-  // Results
-  // ═══════════════════════════════════════════
   if (stage === 'results') {
     const colorClass = percentage >= 80 ? 'text-success'
       : percentage >= 60 ? 'text-warn'
@@ -441,8 +411,6 @@ export default function Quiz({ profile, setActiveWork }) {
 
     return (
       <div className="max-w-3xl mx-auto space-y-4" dir="rtl">
-
-        {/* Score Card */}
         <div className={`border-2 rounded-lg p-8 text-center ${bgClass}`}>
           <div className="text-5xl mb-3">{emoji}</div>
           <div className={`text-4xl font-bold ${colorClass} mb-2 tabular-nums`}>
@@ -456,7 +424,6 @@ export default function Quiz({ profile, setActiveWork }) {
           </div>
         </div>
 
-        {/* Wrong answers */}
         <h3 className="text-sm font-bold text-content">
           📋 الأسئلة الخاطئة ({total - score})
         </h3>
@@ -474,10 +441,7 @@ export default function Quiz({ profile, setActiveWork }) {
               if (isCorrect) return null;
 
               return (
-                <div
-                  key={qi}
-                  className="bg-surface-card border-2 border-danger/30 rounded-lg p-5"
-                >
+                <div key={qi} className="bg-surface-card border-2 border-danger/30 rounded-lg p-5">
                   <div className="font-semibold text-content text-sm mb-4 flex items-start gap-2">
                     <span className="text-danger flex-shrink-0">❌</span>
                     <span>سؤال {qi + 1}: {q.q}</span>
@@ -493,10 +457,7 @@ export default function Quiz({ profile, setActiveWork }) {
                       else if (isUserWrong) cls = 'bg-danger/10 border-danger/40 text-danger';
 
                       return (
-                        <div
-                          key={oi}
-                          className={`flex items-center gap-2 p-2.5 rounded-md border text-xs ${cls}`}
-                        >
+                        <div key={oi} className={`flex items-center gap-2 p-2.5 rounded-md border text-xs ${cls}`}>
                           <span className="font-bold">{String.fromCharCode(65 + oi)}.</span>
                           <span className="flex-1">{opt}</span>
                           {isCorrectOpt && <span>✅</span>}
@@ -517,13 +478,12 @@ export default function Quiz({ profile, setActiveWork }) {
           </div>
         )}
 
-        {/* Actions */}
         <div className="flex gap-2 pt-2">
           <button
             onClick={async () => {
               try {
                 await exportQuizPDF({
-                  subject, topic, questions, answers, score, total, percentage, profile,
+                  subject: isCustomSubject ? customSubject : subject, topic, questions, answers, score, total, percentage, profile,
                 });
               } catch (err) {
                 alert('فشل التصدير: ' + err.message);

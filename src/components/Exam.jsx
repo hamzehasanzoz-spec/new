@@ -5,8 +5,6 @@ import { saveManyWrongAnswers } from '../lib/wrongAnswers';
 import { logActivity } from '../lib/streak';
 import { exportExamPDF } from '../lib/pdfExport';
 
-// حذفنا المصفوفة الثابتة
-
 const EXAM_PRESETS = [
   { label: 'قصير', sub: '30 سؤال - 45 د', numQuestions: 30, minutes: 45 },
   { label: 'متوسط', sub: '50 سؤال - 75 د', numQuestions: 50, minutes: 75 },
@@ -24,6 +22,7 @@ export default function Exam({ profile, session, setActiveWork }) {
   const [subjectsList, setSubjectsList] = useState([]);
   const [isCustomSubject, setIsCustomSubject] = useState(false);
   const [customSubject, setCustomSubject] = useState('');
+
   const [presetIndex, setPresetIndex] = useState(0);
   const [useFiles, setUseFiles] = useState(true);
   const [professors, setProfessors] = useState([]);
@@ -57,33 +56,38 @@ export default function Exam({ profile, session, setActiveWork }) {
   }, [stage, timeLeft > 0]);
 
   useEffect(() => {
-    const fetchSubjects = async () => {
+    const fetchData = async () => {
       if (!profile?.faculty_slug) return;
-      const { data } = await supabase
+      
+      // جلب المواد
+      const { data: subData } = await supabase
         .from('subjects')
         .select('*')
         .eq('faculty_slug', profile.faculty_slug)
-        .eq('year', parseInt(profile?.year || 1))
         .order('name');
-      
-      if (data) {
-        setSubjectsList(data);
-        if (data.length > 0) setSubject(data[0].name);
+      if (subData && subData.length > 0) {
+        setSubjectsList(subData);
+        setSubject(subData[0].name);
+      }
+
+      // جلب الدكاترة
+      const { data: profData } = await supabase
+        .from('professors')
+        .select('*, professor_styles(*)')
+        .eq('faculty_slug', profile.faculty_slug);
+      if (profData) {
+        setProfessors(profData.filter(p => p.professor_styles && p.professor_styles.length > 0));
       }
     };
-    fetchSubjects();
-
-    const fetchProfs = async () => {
-      if (!profile?.faculty_slug) return;
-      const { data } = await supabase.from('professors').select('*, professor_styles(*)').eq('faculty_slug', profile.faculty_slug);
-      if (data) setProfessors(data.filter(p => p.professor_styles && p.professor_styles.length > 0));
-    };
-    fetchProfs();
+    fetchData();
   }, [profile?.faculty_slug]);
 
   const generateBatch = async (count, exclude) => {
     const { data: { session: freshSession } } = await supabase.auth.getSession();
     if (!freshSession?.access_token) throw new Error('انتهت الجلسة');
+
+    const activeSubject = isCustomSubject ? customSubject : subject;
+    if (!activeSubject) throw new Error('الرجاء اختيار أو كتابة اسم المادة');
 
     const res = await fetch('/api/generate-quiz', {
       method: 'POST',
@@ -92,7 +96,7 @@ export default function Exam({ profile, session, setActiveWork }) {
         Authorization: `Bearer ${freshSession.access_token}`,
       },
       body: JSON.stringify({
-        subject: isCustomSubject ? customSubject : subject, // ⬅️ التعديل هنا
+        subject: activeSubject,
         topic: '',
         numQuestions: count,
         difficulty: 'متوسط',
@@ -273,9 +277,6 @@ export default function Exam({ profile, session, setActiveWork }) {
     return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   };
 
-  // ═══════════════════════════════════════════
-  // Setup
-  // ═══════════════════════════════════════════
   if (stage === 'setup') {
     return (
       <div className="max-w-2xl mx-auto space-y-5" dir="rtl">
@@ -308,7 +309,6 @@ export default function Exam({ profile, session, setActiveWork }) {
               <option value="custom">✏️ مادة أخرى (اكتبها يدوياً)...</option>
             </select>
 
-            {/* حقل الكتابة اليدوية للمادة */}
             {isCustomSubject && (
               <input
                 type="text"
@@ -356,7 +356,6 @@ export default function Exam({ profile, session, setActiveWork }) {
             </div>
           </Field>
 
-          {/* اختيار الدكتور */}
           {professors.length > 0 && (
             <Field label="شخصية الدكتور (اختياري)">
               <select
@@ -412,9 +411,6 @@ export default function Exam({ profile, session, setActiveWork }) {
     );
   }
 
-  // ═══════════════════════════════════════════
-  // Loading
-  // ═══════════════════════════════════════════
   if (stage === 'loading') {
     return (
       <div className="max-w-md mx-auto text-center py-16" dir="rtl">
@@ -430,9 +426,6 @@ export default function Exam({ profile, session, setActiveWork }) {
     );
   }
 
-  // ═══════════════════════════════════════════
-  // Paused
-  // ═══════════════════════════════════════════
   if (stage === 'paused') {
     return (
       <div className="max-w-md mx-auto text-center py-16" dir="rtl">
@@ -451,9 +444,6 @@ export default function Exam({ profile, session, setActiveWork }) {
     );
   }
 
-  // ═══════════════════════════════════════════
-  // Running
-  // ═══════════════════════════════════════════
   if (stage === 'running') {
     const q = questions[currentQ];
     const answered = answers.filter(a => a !== -1).length;
@@ -470,8 +460,6 @@ export default function Exam({ profile, session, setActiveWork }) {
 
     return (
       <div className="max-w-6xl mx-auto space-y-4" dir="rtl">
-
-        {/* Top Bar */}
         <div className="bg-surface-card border border-border rounded-lg p-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className={`font-mono text-xl font-bold px-4 py-2 rounded-md tabular-nums ${timeColorClass}`}>
@@ -491,7 +479,6 @@ export default function Exam({ profile, session, setActiveWork }) {
           </div>
         </div>
 
-        {/* Progress Bar */}
         <div className="h-1.5 bg-surface-card rounded-full overflow-hidden">
           <div
             className={`h-full rounded-full transition-all duration-1000 ${
@@ -501,7 +488,6 @@ export default function Exam({ profile, session, setActiveWork }) {
           />
         </div>
 
-        {/* Loading Batch Info */}
         {!allReady && (
           <div className="bg-primary/5 border border-primary/20 rounded-md p-3 flex items-center gap-3 text-xs text-content-muted">
             <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin flex-shrink-0" />
@@ -513,12 +499,8 @@ export default function Exam({ profile, session, setActiveWork }) {
           </div>
         )}
 
-        {/* Main Grid */}
         <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-[2fr_1fr]'}`}>
-
-          {/* Question Panel */}
           <div className="bg-surface-card border border-border rounded-lg p-6">
-
             <div className="flex items-start justify-between gap-3 mb-5">
               <div className="text-sm font-bold text-primary">
                 السؤال {currentQ + 1} من {questions.length}
@@ -571,7 +553,6 @@ export default function Exam({ profile, session, setActiveWork }) {
               })}
             </div>
 
-            {/* Navigation */}
             <div className="flex justify-between gap-2 mt-6">
               <button
                 onClick={prev}
@@ -607,7 +588,6 @@ export default function Exam({ profile, session, setActiveWork }) {
             </div>
           </div>
 
-          {/* Question Map */}
           <div className={`bg-surface-card border border-border rounded-lg p-4 ${isMobile ? '' : 'self-start sticky top-4'}`}>
             <div className="text-xs font-bold text-content mb-3">
               🗺️ خريطة الأسئلة ({questions.length}/{targetCount})
@@ -678,9 +658,6 @@ export default function Exam({ profile, session, setActiveWork }) {
     );
   }
 
-  // ═══════════════════════════════════════════
-  // Results
-  // ═══════════════════════════════════════════
   if (stage === 'results' && result) {
     const { score, total, percentage, timeUsed } = result;
     const colorClass = percentage >= 80 ? 'text-success'
@@ -699,7 +676,6 @@ export default function Exam({ profile, session, setActiveWork }) {
 
     return (
       <div className="max-w-3xl mx-auto space-y-4" dir="rtl">
-
         <div className={`border-2 rounded-lg p-10 text-center ${bgClass}`}>
           <div className="text-5xl mb-4">{emoji}</div>
           <div className={`text-4xl font-bold ${colorClass} mb-3 tabular-nums`}>
