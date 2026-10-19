@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { saveManyWrongAnswers } from '../lib/wrongAnswers';
 import { logActivity } from '../lib/streak';

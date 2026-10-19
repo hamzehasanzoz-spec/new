@@ -281,7 +281,12 @@ export default function AdminDashboard() {
               <select value={newProf.faculty_slug} onChange={e => setNewProf({...newProf, faculty_slug: e.target.value})} className="w-full bg-surface-soft border border-border rounded-md px-3 py-2 text-sm">
                 <option value="medicine">الطب البشري</option><option value="dentistry">طب الأسنان</option><option value="pharmacy">الصيدلة</option>
               </select>
-              <input required placeholder="المادة" value={newProf.subject} onChange={e => setNewProf({...newProf, subject: e.target.value})} className="w-full bg-surface-soft border border-border rounded-md px-3 py-2 text-sm" />
+              <select required value={newProf.subject} onChange={e => setNewProf({...newProf, subject: e.target.value})} className="w-full bg-surface-soft border border-border rounded-md px-3 py-2 text-sm text-content">
+                <option value="">اختر المادة...</option>
+                {allSubjects.filter(s => s.faculty_slug === newProf.faculty_slug).map(s => (
+                  <option key={s.id} value={s.name}>{s.name} (السنة {s.year})</option>
+                ))}
+              </select>
               <button type="submit" className="bg-primary text-white w-full py-2 rounded-md font-bold text-sm">إضافة</button>
             </form>
           </div>
