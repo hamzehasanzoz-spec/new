@@ -16,7 +16,7 @@ export default function AdminDashboard() {
   const [allDocs, setAllDocs] = useState([]);
   const [professors, setProfessors] = useState([]);
 
-  // حالة تبويب المواد (الجديدة)
+  // حالة تبويب المواد
   const [selectedFacultyTab, setSelectedFacultyTab] = useState('medicine');
 
   // حالات المعاينة
@@ -24,9 +24,15 @@ export default function AdminDashboard() {
   const [previewText, setPreviewText] = useState('');
   const [loadingPreview, setLoadingPreview] = useState(false);
 
-  // حالات الدكاترة
+  // حالات الإضافة
   const [newProf, setNewProf] = useState({ name: '', faculty_slug: 'medicine', subject: '' });
   const [newStyle, setNewStyle] = useState({ professor_id: '', explanation_style: '', question_style: '', focus_areas: '' });
+
+  // ⭐ حالات التعديل (Modals) الجديدة ⭐
+  const [editingUser, setEditingUser] = useState(null);
+  const [editingSubject, setEditingSubject] = useState(null);
+  const [editingProfessor, setEditingProfessor] = useState(null);
+  const [editFormData, setEditFormData] = useState({});
 
   useEffect(() => {
     fetchData();
@@ -80,6 +86,86 @@ export default function AdminDashboard() {
       setLoading(false);
     }
   };
+
+  // ═══════════════════════════════════════
+  // دوال التعديل والحذف (الجديدة)
+  // ═══════════════════════════════════════
+
+  const handleUpdateUser = async (e) => {
+    e.preventDefault();
+    try {
+      const { error } = await supabase.from('profiles').update({ 
+        role: editFormData.role, 
+        year: editFormData.year 
+      }).eq('id', editingUser.id);
+      if (error) throw error;
+      alert('تم تحديث بيانات الطالب بنجاح!');
+      setEditingUser(null);
+      fetchData();
+    } catch (err) { alert(err.message); }
+  };
+
+  const handleDeleteUser = async (id) => {
+    if (!confirm('هل أنت متأكد من حذف هذا الطالب نهائياً؟')) return;
+    try {
+      const { error } = await supabase.from('profiles').delete().eq('id', id);
+      if (error) throw error;
+      alert('تم حذف الطالب!');
+      fetchData();
+    } catch (err) { alert(err.message); }
+  };
+
+  const handleUpdateSubject = async (e) => {
+    e.preventDefault();
+    try {
+      const { error } = await supabase.from('subjects').update({ 
+        name: editFormData.name, 
+        year: parseInt(editFormData.year) 
+      }).eq('id', editingSubject.id);
+      if (error) throw error;
+      alert('تم تحديث المادة بنجاح!');
+      setEditingSubject(null);
+      fetchData();
+    } catch (err) { alert(err.message); }
+  };
+
+  const handleDeleteSubject = async (id) => {
+    if (!confirm('هل أنت متأكد من حذف هذه المادة؟')) return;
+    try {
+      const { error } = await supabase.from('subjects').delete().eq('id', id);
+      if (error) throw error;
+      alert('تم حذف المادة!');
+      fetchData();
+    } catch (err) { alert(err.message); }
+  };
+
+  const handleUpdateProfessor = async (e) => {
+    e.preventDefault();
+    try {
+      const { error } = await supabase.from('professors').update({ 
+        name: editFormData.name, 
+        subject: editFormData.subject 
+      }).eq('id', editingProfessor.id);
+      if (error) throw error;
+      alert('تم تحديث بيانات الدكتور بنجاح!');
+      setEditingProfessor(null);
+      fetchData();
+    } catch (err) { alert(err.message); }
+  };
+
+  const handleDeleteProfessor = async (id) => {
+    if (!confirm('هل أنت متأكد من حذف هذا الدكتور وأسلوبه؟')) return;
+    try {
+      const { error } = await supabase.from('professors').delete().eq('id', id);
+      if (error) throw error;
+      alert('تم حذف الدكتور!');
+      fetchData();
+    } catch (err) { alert(err.message); }
+  };
+
+  // ═══════════════════════════════════════
+  // الدوال القديمة (المراجعة والإضافة)
+  // ═══════════════════════════════════════
 
   const handleReview = async (id, newStatus) => {
     try {
@@ -178,7 +264,7 @@ export default function AdminDashboard() {
         <div className="bg-surface-card border border-border rounded-lg overflow-hidden">
           <table className="w-full text-right text-sm">
             <thead className="bg-surface-soft text-content-muted border-b border-border">
-              <tr><th className="p-4">الاسم</th><th className="p-4">الإيميل</th><th className="p-4">الكلية</th><th className="p-4">الصلاحية</th><th className="p-4">إجراء</th></tr>
+              <tr><th className="p-4">الاسم</th><th className="p-4">الإيميل</th><th className="p-4">الكلية</th><th className="p-4">السنة</th><th className="p-4">الصلاحية</th><th className="p-4">إجراء</th></tr>
             </thead>
             <tbody>
               {allUsers.map(u => (
@@ -186,8 +272,12 @@ export default function AdminDashboard() {
                   <td className="p-4 font-medium">{u.full_name || 'غير مكتمل'}</td>
                   <td className="p-4" dir="ltr">{u.email}</td>
                   <td className="p-4">{u.faculty_name || 'غير محدد'}</td>
+                  <td className="p-4">السنة {u.year || '-'}</td>
                   <td className="p-4"><span className={`px-2 py-1 rounded text-xs ${u.role === 'admin' ? 'bg-primary/20 text-primary' : 'bg-surface-soft text-content'}`}>{u.role}</span></td>
-                  <td className="p-4"><button className="text-primary hover:underline text-xs">تعديل</button></td>
+                  <td className="p-4 flex gap-2">
+                    <button onClick={() => { setEditingUser(u); setEditFormData({ role: u.role, year: u.year || '' }); }} className="text-primary hover:underline text-xs">تعديل</button>
+                    <button onClick={() => handleDeleteUser(u.id)} className="text-danger hover:underline text-xs">حذف</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -195,10 +285,9 @@ export default function AdminDashboard() {
         </div>
       )}
 
-            {/* 3. المواد */}
+      {/* 3. المواد */}
       {activeTab === 'subjects' && (
         <div className="space-y-4">
-          {/* التبويبات الفرعية للكليات */}
           <div className="flex gap-2 flex-wrap bg-surface-soft p-2 rounded-lg border border-border">
             {[
               { id: 'medicine', label: 'الطب البشري' },
@@ -216,7 +305,6 @@ export default function AdminDashboard() {
             ))}
           </div>
 
-          {/* جدول المواد المعروضة */}
           <div className="bg-surface-card border border-border rounded-lg overflow-hidden">
             <table className="w-full text-right text-sm">
               <thead className="bg-surface-soft text-content-muted border-b border-border">
@@ -234,8 +322,8 @@ export default function AdminDashboard() {
                     <td className="p-4 font-medium text-content">{s.name}</td>
                     <td className="p-4 text-content-muted">السنة {s.year}</td>
                     <td className="p-4 flex gap-2">
-                      <button className="bg-surface-soft border border-border text-content px-3 py-1 rounded text-xs hover:border-content-subtle">رؤية الملفات</button>
-                      <button onClick={() => alert('ميزة التعديل ستتوفر قريباً!')} className="text-primary hover:underline text-xs">تعديل</button>
+                      <button onClick={() => { setEditingSubject(s); setEditFormData({ name: s.name, year: s.year }); }} className="text-primary hover:underline text-xs">تعديل</button>
+                      <button onClick={() => handleDeleteSubject(s.id)} className="text-danger hover:underline text-xs">حذف</button>
                     </td>
                   </tr>
                 ))}
@@ -313,7 +401,10 @@ export default function AdminDashboard() {
                        <div className="font-bold text-content">{p.name}</div>
                        <div className="text-xs text-content-muted">{p.subject} - {p.faculty_slug}</div>
                      </div>
-                     <button className="text-primary hover:underline text-xs">تعديل</button>
+                     <div className="flex gap-2">
+                       <button onClick={() => { setEditingProfessor(p); setEditFormData({ name: p.name, subject: p.subject }); }} className="text-primary hover:underline text-xs">تعديل</button>
+                       <button onClick={() => handleDeleteProfessor(p.id)} className="text-danger hover:underline text-xs">حذف</button>
+                     </div>
                   </div>
                 ))}
              </div>
@@ -342,7 +433,91 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* نافذة المعاينة */}
+      {/* ═══════════════════════════════════════ */}
+      {/* نوافذ التعديل المنبثقة (Modals) */}
+      {/* ═══════════════════════════════════════ */}
+
+      {/* نافذة تعديل الطالب */}
+      {editingUser && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+          <div className="bg-surface-card border border-border rounded-lg w-full max-w-sm p-6">
+            <h3 className="font-bold text-lg mb-4">تعديل الطالب: {editingUser.full_name}</h3>
+            <form onSubmit={handleUpdateUser} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold mb-1">الصلاحية</label>
+                <select value={editFormData.role} onChange={e => setEditFormData({...editFormData, role: e.target.value})} className="w-full bg-surface-soft border border-border rounded-md px-3 py-2 text-sm">
+                  <option value="student">طالب (Student)</option>
+                  <option value="admin">أدمن (Admin)</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold mb-1">السنة الدراسية (لنقله للسنة التالية)</label>
+                <select value={editFormData.year || ''} onChange={e => setEditFormData({...editFormData, year: e.target.value})} className="w-full bg-surface-soft border border-border rounded-md px-3 py-2 text-sm">
+                  <option value="">غير محدد</option>
+                  <option value="1">السنة الأولى</option>
+                  <option value="2">السنة الثانية</option>
+                  <option value="3">السنة الثالثة</option>
+                  <option value="4">السنة الرابعة</option>
+                  <option value="5">السنة الخامسة</option>
+                  <option value="6">السنة السادسة</option>
+                </select>
+              </div>
+              <div className="flex gap-2 pt-2">
+                <button type="submit" className="flex-1 bg-success text-white py-2 rounded-md font-bold text-sm">حفظ</button>
+                <button type="button" onClick={() => setEditingUser(null)} className="flex-1 bg-surface-soft text-content py-2 rounded-md font-bold text-sm">إلغاء</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* نافذة تعديل المادة */}
+      {editingSubject && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+          <div className="bg-surface-card border border-border rounded-lg w-full max-w-sm p-6">
+            <h3 className="font-bold text-lg mb-4">تعديل المادة</h3>
+            <form onSubmit={handleUpdateSubject} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold mb-1">اسم المادة</label>
+                <input type="text" value={editFormData.name} onChange={e => setEditFormData({...editFormData, name: e.target.value})} className="w-full bg-surface-soft border border-border rounded-md px-3 py-2 text-sm" required />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold mb-1">السنة</label>
+                <input type="number" value={editFormData.year} onChange={e => setEditFormData({...editFormData, year: e.target.value})} className="w-full bg-surface-soft border border-border rounded-md px-3 py-2 text-sm" required />
+              </div>
+              <div className="flex gap-2 pt-2">
+                <button type="submit" className="flex-1 bg-success text-white py-2 rounded-md font-bold text-sm">حفظ</button>
+                <button type="button" onClick={() => setEditingSubject(null)} className="flex-1 bg-surface-soft text-content py-2 rounded-md font-bold text-sm">إلغاء</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* نافذة تعديل الدكتور */}
+      {editingProfessor && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+          <div className="bg-surface-card border border-border rounded-lg w-full max-w-sm p-6">
+            <h3 className="font-bold text-lg mb-4">تعديل الدكتور</h3>
+            <form onSubmit={handleUpdateProfessor} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold mb-1">اسم الدكتور</label>
+                <input type="text" value={editFormData.name} onChange={e => setEditFormData({...editFormData, name: e.target.value})} className="w-full bg-surface-soft border border-border rounded-md px-3 py-2 text-sm" required />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold mb-1">المادة</label>
+                <input type="text" value={editFormData.subject} onChange={e => setEditFormData({...editFormData, subject: e.target.value})} className="w-full bg-surface-soft border border-border rounded-md px-3 py-2 text-sm" required />
+              </div>
+              <div className="flex gap-2 pt-2">
+                <button type="submit" className="flex-1 bg-success text-white py-2 rounded-md font-bold text-sm">حفظ</button>
+                <button type="button" onClick={() => setEditingProfessor(null)} className="flex-1 bg-surface-soft text-content py-2 rounded-md font-bold text-sm">إلغاء</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* نافذة المعاينة (القديمة) */}
       {previewDoc && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
           <div className="bg-surface-card border border-border rounded-lg w-full max-w-3xl max-h-[80vh] flex flex-col">
