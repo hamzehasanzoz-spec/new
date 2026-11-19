@@ -23,18 +23,29 @@ const generateNode = async (state) => {
   console.log("✍️ [LangGraph] Generating...");
   const contextText = state.retrievedChunks.map(c => c.content).join("\n\n");
   
+  // التوجيه الذكي: هل لدينا ملفات أم لا؟
+  let systemPrompt = '';
+  if (state.retrievedChunks.length > 0) {
+    // إذا وجدنا ملفات، نطبق التعليمات الصارمة
+    systemPrompt = `أنت مساعد طبي. أجب على السؤال بناءً على النصوص المرفقة فقط.
+    النصوص: ${contextText}
+    إذا لم تجد الإجابة في النصوص، قل: "المعلومة غير موجودة في الملفات".`;
+  } else {
+    // إذا لم نجد ملفات، أجب من المعرفة الطبية العامة
+    systemPrompt = `أنت مساعد طبي ذكي لطلاب الطب. أجب على السؤال التالي من خلال معرفتك الطبية العامة، بأسلوب أكاديمي ومفصل.`;
+  }
+  
   const res = await fetch(`${state.baseUrl}/api/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${state.accessToken}` },
     body: JSON.stringify({ 
       messages: [
-        { role: 'system', content: 'أجب على السؤال بناءً على النصوص المرفقة فقط. إذا لم تجد الإجابة، قل: "المعلومة غير موجودة".' },
-        { role: 'user', content: `السؤال: ${state.question}\n\nالنصوص:\n${contextText}` }
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: state.question }
       ] 
     })
   });
   
-  // نقرأ الرد كاملاً هنا لأننا داخل سيرفر
   const text = await res.text();
   return { finalAnswer: text };
 };
