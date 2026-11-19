@@ -1,8 +1,6 @@
 import { StateGraph, Annotation, START, END } from "@langchain/langgraph";
 
-// ═══════════════════════════════════════════════════════════════
-// 1. تعريف الحالة (State)
-// ═══════════════════════════════════════════════════════════════
+// 1. تعريف الحالة
 export const AgentState = Annotation.Root({
   question: Annotation({ reducer: (_, update) => update, default: () => "" }),
   originalQuestion: Annotation({ reducer: (_, update) => update, default: () => "" }),
@@ -10,161 +8,109 @@ export const AgentState = Annotation.Root({
   finalAnswer: Annotation({ reducer: (_, update) => update, default: () => "" }),
   retryCount: Annotation({ reducer: (x, y) => y, default: () => 0 }),
   grade: Annotation({ reducer: (_, update) => update, default: () => "" }),
-  accessToken: Annotation({ reducer: (_, update) => update, default: () => "" }),
-  baseUrl: Annotation({ reducer: (_, update) => update, default: () => "" }),
 });
 
-// دالة مساعدة لاستدعاء النموذج وقراءة الرد كنص عادي
-async function callModel(prompt, systemPrompt, state) {
-  const res = await fetch(`${state.baseUrl}/api/chat`, {
+// دالة مساعدة لاستدعاء Groq مباشرة (لتجنب مشاكل fetch الداخلية)
+async function askGroq(prompt, systemPrompt) {
+  const groqKeys = process.env.GROQ_API_KEYS ? process.env.GROQ_API_KEYS.split(',') : [];
+  if (groqKeys.length === 0) throw new Error("GROQ_API_KEYS missing");
+
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${state.accessToken}` },
-    body: JSON.stringify({ 
+    headers: {
+      Authorization: `Bearer ${groqKeys[0].trim()}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'llama-3.1-8b-instant', // نموذج سريع جداً
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: prompt }
-      ] 
-    })
+      ],
+      temperature: 0.1,
+    }),
   });
-  
-  const rawStream = await res.text();
-  let finalText = '';
-  const lines = rawStream.split('\n');
-  for (const line of lines) {
-    if (line.startsWith('data: ')) {
-      const dataStr = line.slice(6).trim();
-      if (dataStr === '[DONE]') continue;
-      try {
-        const parsed = JSON.parse(dataStr);
-        const delta = parsed.choices?.[0]?.delta;
-        if (delta && delta.content) finalText += delta.content;
-      } catch (e) {}
-    }
-  }
-  return finalText.trim();
-}
 
-// ═══════════════════════════════════════════════════════════════
-// 2. العقد (Nodes)
-// ═══════════════════════════════════════════════════════════════
+  if (!res.ok) throw new Error(`Groq HTTP ${res.status}`);
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content || '';
+}
 
 // العقدة 1: البحث
 const searchNode = async (state) => {
-  console.log("🔍 [LangGraph] Searching for:", state.question);
-  const res = await fetch(`${state.baseUrl}/api/search`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${state.accessToken}` },
-    body: JSON.stringify({ query: state.question, matchCount: 5, threshold: 0.1 })
-  });
-  const data = await res.json();
-  return { retrievedChunks: data.matches || [] };
+  console.log("🔍 Searching for:", state.question);
+  // سنستخدم بحث مبسط هنا لتجنب مشاكل الاتصال
+  try {
+    const supabaseUrl = process.env.VITE_SUPABASE_URL;
+    const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
+    // بحث نصي بسيط (يمكنك تطويره لاحقاً لاستخدام pgvector)
+    const res = await fetch(`${supabaseUrl}/rest/v1/document_chunks?select=content&content=ilike.%25${state.question}%25&limit=5`, {
+      headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` }
+    });
+    const data = await res.json();
+    return { retrievedChunks: data.map(d => ({ content: d.content })) };
+  } catch (e) {
+    return { retrievedChunks: [] };
+  }
 };
 
-// العقدة 2: التقييم (Grader)
+// العقدة 2: التقييم
 const gradeNode = async (state) => {
-  console.log("⚖️ [LangGraph] Grading chunks...");
-  if (!state.retrievedChunks || state.retrievedChunks.length === 0) {
-    return { grade: "no" }; 
-  }
-
+  if (!state.retrievedChunks || state.retrievedChunks.length === 0) return { grade: "no" }; 
+  
   const contextText = state.retrievedChunks.map(c => c.content).join("\n\n").slice(0, 2000);
-  const systemPrompt = `أنت خبير تقييم طبي. أجب بكلمة واحدة فقط: "yes" أو "no".`;
-  const prompt = `هل النصوص التالية تحتوي على إجابة لسؤال: "${state.question}"؟\n\nالنصوص:\n${contextText}`;
-
-  const gradeText = await callModel(prompt, systemPrompt, state);
-  const isGood = gradeText.toLowerCase().includes("yes");
+  const prompt = `هل النصوص التالية تجيب على السؤال: "${state.question}"؟\nالنصوص:\n${contextText}\nأجب بـ "yes" أو "no" فقط.`;
   
-  console.log("👉 Grade result:", isGood ? "YES" : "NO");
-  return { grade: isGood ? "yes" : "no" };
+  const result = await askGroq(prompt, "أنت خبير تقييم.");
+  return { grade: result.toLowerCase().includes("yes") ? "yes" : "no" };
 };
 
-// العقدة 3: إعادة صياغة السؤال (Rewrite)
+// العقدة 3: إعادة الصياغة
 const rewriteNode = async (state) => {
-  console.log("🔄 [LangGraph] Rewriting question...");
-  const systemPrompt = `أنت خبير في تحسين محركات البحث الطبية. أعد صياغة السؤال بكلمات مفتاحية طبية دقيقة. أجب بالسؤال الجديد فقط.`;
-  const prompt = `السؤال: "${state.question}"`;
-  
-  const newQuestion = await callModel(prompt, systemPrompt, state);
-  
-  return { 
-    question: newQuestion.trim(), 
-    retryCount: state.retryCount + 1 
-  };
+  const prompt = `أعد صياغة السؤال التالي ليكون أفضل للبحث:\n"${state.question}"`;
+  const newQuestion = await askGroq(prompt, "أجب بالسؤال الجديد فقط.");
+  return { question: newQuestion, retryCount: state.retryCount + 1 };
 };
 
-// العقدة 4: التوليد النهائي (Generate)
+// العقدة 4: التوليد
 const generateNode = async (state) => {
-  console.log("✍️ [LangGraph] Generating final answer...");
-  
-  let systemPrompt = '';
-  if (state.retrievedChunks && state.retrievedChunks.length > 0) {
-    const contextText = state.retrievedChunks.map(c => c.content).join("\n\n");
-    systemPrompt = `أنت مساعد طبي. أجب على السؤال بناءً على النصوص المرفقة فقط.\nالنصوص:\n${contextText}\n\nإذا لم تجد الإجابة في النصوص، قل: "المعلومة غير موجودة في الملفات".`;
-  } else {
-    systemPrompt = `أنت مساعد طبي ذكي. أجب على السؤال من خلال معرفتك الطبية العامة بأسلوب أكاديمي.`;
-  }
-
-  const finalAnswer = await callModel(state.originalQuestion, systemPrompt, state);
-  return { finalAnswer: finalAnswer || "عذراً، حدث خطأ في التوليد." };
+  const contextText = state.retrievedChunks.map(c => c.content).join("\n\n");
+  let systemPrompt = contextText 
+    ? `أجب على السؤال بناءً على النصوص التالية فقط:\n${contextText}\nإذا لم تجد الإجابة، قل: "المعلومة غير موجودة".`
+    : `أجب على السؤال من خلال معرفتك الطبية العامة.`;
+    
+  const finalAnswer = await askGroq(state.originalQuestion, systemPrompt);
+  return { finalAnswer: finalAnswer };
 };
 
-// ═══════════════════════════════════════════════════════════════
-// 3. بناء الرسم البياني (Graph)
-// ═══════════════════════════════════════════════════════════════
+// بناء الرسم البياني
 const workflow = new StateGraph(AgentState)
   .addNode("search", searchNode)
   .addNode("grade", gradeNode)
   .addNode("rewrite", rewriteNode)
   .addNode("generate", generateNode)
-
   .addEdge(START, "search")
   .addEdge("search", "grade")
-  
-  // الحافة الشرطية: هل نعيد الصياغة أم نكمل للتوليد؟
   .addConditionalEdges("grade", (state) => {
-    // إذا كانت النتيجة جيدة، أو استنفدنا المحاولات (2 محاولات كحد أقصى)، نولد الإجابة
-    if (state.grade === "yes" || state.retryCount >= 1) {
-      return "generate"; 
-    }
-    // إذا كانت النتيجة سيئة، نعيد الصياغة والبحث
-    return "rewrite"; 
+    return (state.grade === "yes" || state.retryCount >= 1) ? "generate" : "rewrite";
   })
-  
   .addEdge("rewrite", "search")
   .addEdge("generate", END);
 
-// ═══════════════════════════════════════════════════════════════
-// 4. الـ Handler
-// ═══════════════════════════════════════════════════════════════
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { query, accessToken } = req.body;
-  if (!query || !accessToken) return res.status(400).json({ error: 'Missing query or token' });
-
-  // نستخدم المتغير الخاص بمشروعك، أو نعتمد على رأس الطلب كخيار احتياطي
-const baseUrl = process.env.VITE_SITE_URL || `https://${req.headers.host}`;
-
   try {
+    const { query } = req.body;
+    if (!query) return res.status(400).json({ error: 'Missing query' });
+
     const app = workflow.compile();
+    const result = await app.invoke({ question: query, originalQuestion: query, retryCount: 0 });
 
-    const initialState = {
-      question: query,
-      originalQuestion: query,
-      accessToken: accessToken,
-      baseUrl: baseUrl,
-      retryCount: 0
-    };
-
-    const result = await app.invoke(initialState);
-
-    return res.status(200).json({
-      success: true,
-      finalAnswer: result.finalAnswer,
-      retries: result.retryCount
-    });
+    return res.status(200).json({ success: true, finalAnswer: result.finalAnswer });
   } catch (err) {
-    console.error("LangGraph Error:", err);
-    return res.status(500).json({ error: err.message });
+    console.error("LangGraph Crash:", err);
+    // إرجاع الخطأ كـ JSON لكي لا تنهار الواجهة
+    return res.status(500).json({ error: err.message || 'Unknown error' });
   }
 }
