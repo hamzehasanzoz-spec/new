@@ -174,7 +174,7 @@ export default function ChatCoach({ profile, session }) {
     }
   };
 
-    const sendMessage = async () => {
+   const sendMessage = async () => {
     if (!input.trim() || loading) return;
 
     const userMessage = input.trim();
@@ -200,8 +200,8 @@ export default function ChatCoach({ profile, session }) {
     const withUser = [...messages, userMsg];
     setMessages([...withUser, { role: 'assistant', content: '' }]);
     setLoading(true);
-    setRagStatus('');
-    setLastProvider('');
+    setRagStatus('🧠 جاري التفكير عبر LangGraph...');
+    setLastProvider('LangGraph');
 
     try {
       await saveMessage(currentConvId, 'user', userMessage);
@@ -210,184 +210,40 @@ export default function ChatCoach({ profile, session }) {
       console.error('فشل حفظ رسالة المستخدم:', err);
     }
 
-    let reader = null;
     try {
-      // ═════════════════════════════════════════════
-      // 1. محطة البحث الهجين (Hybrid Search)
-      // ═════════════════════════════════════════════
-      setRagStatus('📚 جاري البحث في ملفاتك...');
-      let relevantChunks = await searchUserDocuments(userMessage);
-      let graphText = '';
+      // 1. جلب الـ Token
+      const { data: { session: freshSession } } = await supabase.auth.getSession();
+      if (!freshSession?.access_token) throw new Error('انتهت الجلسة');
 
-      // ═════════════════════════════════════════════
-      // 2. محطة الرسم البياني المعرفي (GraphRAG)
-      // ═════════════════════════════════════════════
-      try {
-        setRagStatus('🕸️ جاري البحث في شبكة المعرفة...');
-        const graphSearchRes = await fetch('/api/graph-search', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ keyword: userMessage, limit: 3 }),
-        });
-        if (graphSearchRes.ok) {
-          const graphData = await graphSearchRes.json();
-          if (graphData.found && graphData.graph_context?.length > 0) {
-            graphText = graphData.graph_context
-              .map(item => `• الكيان: ${item.entity?.name || ''} | العلاقة: ${item.relation} | المرتبط: ${item.connected_entity?.name || ''}`)
-              .join('\n');
-          }
-        }
-      } catch (gErr) {
-        console.warn('Graph search integration warning:', gErr.message);
-      }
-
-      // ═════════════════════════════════════════════
-      // 3. محطة إعادة الترتيب (Reranking)
-      // ═════════════════════════════════════════════
-      if (relevantChunks.length > 0) {
-        setRagStatus('⚖️ جاري إعادة ترتيب النتائج (Reranking)...');
-        try {
-          const rerankRes = await fetch('/api/rerank', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ query: userMessage, documents: relevantChunks, topN: 5 })
-          });
-          if (rerankRes.ok) {
-            const rerankData = await rerankRes.json();
-            if (rerankData.success && rerankData.ranked_documents) {
-              relevantChunks = rerankData.ranked_documents; // استخدام أفضل 5 أجزاء فقط
-            }
-          }
-        } catch (rErr) {
-          console.warn('Rerank failed, using default:', rErr.message);
-        }
-      }
-
-      // دمج سياق الرسم البياني مع النتائج
-      if (graphText) {
-        relevantChunks.unshift({
-          filename: 'شبكة المعرفة المركزية (Neo4j)',
-          similarity: 1.0,
-          content: `علاقات طبية موثقة:\n${graphText}`
-        });
-      }
-
-      // ═════════════════════════════════════════════
-      // 4. بناء شخصية الدكتور (Professor Persona)
-      // ═════════════════════════════════════════════
-      let professorStyle = null;
-      if (selectedProf && selectedProf.professor_styles?.length > 0) {
-        professorStyle = {
-          ...selectedProf.professor_styles[0],
-          professor_name: selectedProf.name
-        };
-      }
-
-      // ═════════════════════════════════════════════
-      // 5. بناء الـ System Prompt (Grounded Prompt)
-      // ═════════════════════════════════════════════
-      let systemPrompt = buildSystemPrompt(profile, professorStyle);
-
-      if (relevantChunks.length > 0) {
-        setRagStatus(`📚 تم العثور على ${relevantChunks.length} مرجع ذو صلة`);
-        systemPrompt += '\n\n## المراجع المسترجعة (استخدمها كمصدر أساسي):';
-        systemPrompt += '\nاعتمد على هذه المقاطع أولاً. إذا لم تجد الإجابة فيها، اعتذر بصراحة ولا تخترع معلومات.';
-
-        relevantChunks.forEach((chunk, i) => {
-          systemPrompt += `\n\n### مقطع ${i + 1} — من "${chunk.filename}":\n${chunk.content}`;
-        });
-      } else {
-        setRagStatus('⚠️ لم يتم العثور على مراجع في ملفاتك، سأجيب من المعرفة العامة.');
-      }
-
-      const recent = withUser.slice(-10);
-      const payload = [
-        { role: 'system', content: systemPrompt },
-        ...recent.map(m => ({ role: m.role, content: m.content })),
-      ];
-
-      // ═════════════════════════════════════════════
-      // 6. محطة التوليد (الرد النهائي)
-      // ═════════════════════════════════════════════
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 60000);
-
-      const res = await fetch('/api/chat', {
+      // 2. استدعاء LangGraph API
+      const res = await fetch('/api/langgraph', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: payload }),
-        signal: controller.signal,
+        body: JSON.stringify({ 
+          query: userMessage, 
+          accessToken: freshSession.access_token
+        }),
       });
 
-      clearTimeout(timeoutId);
-
-      const providerHeader = res.headers.get('X-Provider') || '';
-      const modelHeader = res.headers.get('X-Model') || '';
-      if (providerHeader) {
-        setLastProvider(`${providerHeader}${modelHeader ? ` • ${modelHeader.split('/').pop()}` : ''}`);
-      }
-
       if (!res.ok) {
-        let errMsg = `HTTP ${res.status}`;
-        try {
-          const errJson = await res.json();
-          if (errJson.error) errMsg = errJson.error;
-        } catch {}
-        throw new Error(errMsg);
+        const errData = await res.json();
+        throw new Error(errData.error || 'فشل الاتصال بالوكيل الذكي');
       }
 
-      reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
-      let assistantText = '';
-      let gotContent = false;
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
-
-        for (const line of lines) {
-          const trimmed = line.trim();
-          if (!trimmed.startsWith('data:')) continue;
-          const data = trimmed.slice(5).trim();
-          if (data === '[DONE]' || data.startsWith(':')) continue;
-
-          try {
-            const parsed = JSON.parse(data);
-            const delta = parsed.choices?.[0]?.delta;
-            if (delta?.content) {
-              gotContent = true;
-              assistantText += delta.content;
-              updateLastAssistant(assistantText);
-            }
-          } catch {}
-        }
-      }
-
-      if (!gotContent) {
-        updateLastAssistant('⚠️ لم يصل رد من النموذج.');
+      const data = await res.json();
+      
+      // 3. عرض الإجابة
+      if (data.success) {
+        updateLastAssistant(data.finalAnswer);
+        await saveMessage(currentConvId, 'assistant', data.finalAnswer);
       } else {
-        try {
-          await saveMessage(currentConvId, 'assistant', assistantText);
-        } catch (err) {
-          console.error('فشل حفظ رد المساعد:', err);
-        }
+        throw new Error(data.error || 'حدث خطأ غير معروف');
       }
+
     } catch (err) {
       console.error('Chat error:', err);
-      let msg;
-      if (err.name === 'AbortError') {
-        msg = '⏱️ استغرق الرد وقتًا طويلاً.';
-      } else {
-        msg = '⚠️ حدث خطأ:\n' + err.message;
-      }
-      updateLastAssistant(msg);
+      updateLastAssistant('⚠️ حدث خطأ:\n' + err.message);
     } finally {
-      try { reader?.releaseLock(); } catch {}
       setLoading(false);
       setRagStatus('');
     }
