@@ -123,7 +123,7 @@ const workflow = new StateGraph(AgentState)
   // الحافة الشرطية: هل نعيد الصياغة أم نكمل للتوليد؟
   .addConditionalEdges("grade", (state) => {
     // إذا كانت النتيجة جيدة، أو استنفدنا المحاولات (2 محاولات كحد أقصى)، نولد الإجابة
-    if (state.grade === "yes" || state.retryCount >= 2) {
+    if (state.grade === "yes" || state.retryCount >= 1) {
       return "generate"; 
     }
     // إذا كانت النتيجة سيئة، نعيد الصياغة والبحث
@@ -142,7 +142,8 @@ export default async function handler(req, res) {
   const { query, accessToken } = req.body;
   if (!query || !accessToken) return res.status(400).json({ error: 'Missing query or token' });
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || `https://${req.headers.host}`;
+  // نستخدم المتغير الخاص بمشروعك، أو نعتمد على رأس الطلب كخيار احتياطي
+const baseUrl = process.env.VITE_SITE_URL || `https://${req.headers.host}`;
 
   try {
     const app = workflow.compile();
