@@ -174,7 +174,7 @@ export default function ChatCoach({ profile, session }) {
     }
   };
 
-  const sendMessage = async () => {
+    const sendMessage = async () => {
     if (!input.trim() || loading) return;
 
     const userMessage = input.trim();
@@ -212,11 +212,18 @@ export default function ChatCoach({ profile, session }) {
 
     let reader = null;
     try {
+      // ═════════════════════════════════════════════
+      // 1. محطة البحث الهجين (Hybrid Search)
+      // ═════════════════════════════════════════════
       setRagStatus('📚 جاري البحث في ملفاتك...');
       let relevantChunks = await searchUserDocuments(userMessage);
+      let graphText = '';
 
-      // ⭐ دمج البحث المباشر في قاعدة المعرفة (Neo4j Graph Search)
+      // ═════════════════════════════════════════════
+      // 2. محطة الرسم البياني المعرفي (GraphRAG)
+      // ═════════════════════════════════════════════
       try {
+        setRagStatus('🕸️ جاري البحث في شبكة المعرفة...');
         const graphSearchRes = await fetch('/api/graph-search', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -225,22 +232,49 @@ export default function ChatCoach({ profile, session }) {
         if (graphSearchRes.ok) {
           const graphData = await graphSearchRes.json();
           if (graphData.found && graphData.graph_context?.length > 0) {
-            const graphText = graphData.graph_context
+            graphText = graphData.graph_context
               .map(item => `• الكيان: ${item.entity?.name || ''} | العلاقة: ${item.relation} | المرتبط: ${item.connected_entity?.name || ''}`)
               .join('\n');
-            
-            relevantChunks.unshift({
-              filename: 'شبكة المعرفة المركزية (Neo4j Graph)',
-              similarity: 1.0,
-              content: `علاقات طبية موثقة مستخرجة من المنهج:\n${graphText}`
-            });
           }
         }
       } catch (gErr) {
         console.warn('Graph search integration warning:', gErr.message);
       }
 
-      // ⭐ هنا نجهز شخصية الدكتور المختار ⭐
+      // ═════════════════════════════════════════════
+      // 3. محطة إعادة الترتيب (Reranking)
+      // ═════════════════════════════════════════════
+      if (relevantChunks.length > 0) {
+        setRagStatus('⚖️ جاري إعادة ترتيب النتائج (Reranking)...');
+        try {
+          const rerankRes = await fetch('/api/rerank', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query: userMessage, documents: relevantChunks, topN: 5 })
+          });
+          if (rerankRes.ok) {
+            const rerankData = await rerankRes.json();
+            if (rerankData.success && rerankData.ranked_documents) {
+              relevantChunks = rerankData.ranked_documents; // استخدام أفضل 5 أجزاء فقط
+            }
+          }
+        } catch (rErr) {
+          console.warn('Rerank failed, using default:', rErr.message);
+        }
+      }
+
+      // دمج سياق الرسم البياني مع النتائج
+      if (graphText) {
+        relevantChunks.unshift({
+          filename: 'شبكة المعرفة المركزية (Neo4j)',
+          similarity: 1.0,
+          content: `علاقات طبية موثقة:\n${graphText}`
+        });
+      }
+
+      // ═════════════════════════════════════════════
+      // 4. بناء شخصية الدكتور (Professor Persona)
+      // ═════════════════════════════════════════════
       let professorStyle = null;
       if (selectedProf && selectedProf.professor_styles?.length > 0) {
         professorStyle = {
@@ -249,21 +283,21 @@ export default function ChatCoach({ profile, session }) {
         };
       }
 
-      // ⭐ نمرر شخصية الدكتور لدالة بناء الـ Prompt ⭐
+      // ═════════════════════════════════════════════
+      // 5. بناء الـ System Prompt (Grounded Prompt)
+      // ═════════════════════════════════════════════
       let systemPrompt = buildSystemPrompt(profile, professorStyle);
 
       if (relevantChunks.length > 0) {
-        setRagStatus(`📚 وجدت ${relevantChunks.length} جزء ذو صلة`);
-        systemPrompt += '\n\n## مقاطع من ملفات الطالب المرفوعة (استخدمها كمصدر أساسي):';
-        systemPrompt += '\nالمقاطع التالية مأخوذة من ملفات رفعها الطالب. اعتمد عليها أولًا، واذكر اسم الملف المصدر.';
+        setRagStatus(`📚 تم العثور على ${relevantChunks.length} مرجع ذو صلة`);
+        systemPrompt += '\n\n## المراجع المسترجعة (استخدمها كمصدر أساسي):';
+        systemPrompt += '\nاعتمد على هذه المقاطع أولاً. إذا لم تجد الإجابة فيها، اعتذر بصراحة ولا تخترع معلومات.';
 
         relevantChunks.forEach((chunk, i) => {
-          systemPrompt += `\n\n### مقطع ${i + 1} — من ملف "${chunk.filename}" (تشابه: ${(chunk.similarity * 100).toFixed(0)}%):\n${chunk.content}`;
+          systemPrompt += `\n\n### مقطع ${i + 1} — من "${chunk.filename}":\n${chunk.content}`;
         });
-
-        systemPrompt += '\n\n**مهم:** إذا كانت المقاطع أعلاه تحتوي على الإجابة، استخدمها كأساس واذكر اسم الملف.';
       } else {
-        setRagStatus('');
+        setRagStatus('⚠️ لم يتم العثور على مراجع في ملفاتك، سأجيب من المعرفة العامة.');
       }
 
       const recent = withUser.slice(-10);
@@ -272,6 +306,9 @@ export default function ChatCoach({ profile, session }) {
         ...recent.map(m => ({ role: m.role, content: m.content })),
       ];
 
+      // ═════════════════════════════════════════════
+      // 6. محطة التوليد (الرد النهائي)
+      // ═════════════════════════════════════════════
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 60000);
 
