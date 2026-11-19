@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>كوتش AI — الدليل الشامل لهندسة الوكلاء باستخدام LangGraph</title>
+<style>
+  :root {
+    --bg: #0A0A0A;
+    --bg-soft: #141414;
+    --bg-card: #1A1A1A;
+    --border: #262626;
+    --text: #FAFAFA;
+    --text-muted: #A1A1AA;
+    --text-subtle: #71717A;
+    --accent: #10B981; /* لون أخضر زمردي لتمييز LangGraph */
+    --accent-light: #34D399;
+    --purple: #8B5CF6;
+    --blue: #3B82F6;
+    --warn: #F59E0B;
+    --danger: #EF4444;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.8;
+    font-size: 15px;
+  }
+  .container { max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
+  header {
+    padding: 80px 24px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(16, 185, 129, 0.08) 0%, transparent 100%);
+  }
+  header h1 {
+    font-size: 2.5em;
+    font-weight: 800;
+    margin-bottom: 16px;
+    background: linear-gradient(180deg, #FAFAFA 0%, #34D399 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  header p { color: var(--text-muted); font-size: 1.15em; max-width: 800px; margin: 0 auto; }
+  header .meta {
+    margin-top: 24px;
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    font-size: 0.85em;
+    color: var(--text-subtle);
+    flex-wrap: wrap;
+  }
+  section { margin-bottom: 60px; }
+  h2 {
+    font-size: 1.6em;
+    font-weight: 700;
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  h2 .num {
+    color: var(--accent);
+    font-size: 0.6em;
+    font-weight: 700;
+    background: rgba(16, 185, 129, 0.15);
+    padding: 4px 12px;
+    border-radius: 6px;
+  }
+  h3 { font-size: 1.2em; font-weight: 600; margin: 28px 0 12px; color: var(--text); }
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+  .grid { display: grid; gap: 16px; }
+  .grid-2 { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--bg-card);
+    border-radius: 12px; overflow: hidden; border: 1px solid var(--border); margin: 16px 0;
+  }
+  th, td { padding: 16px; text-align: right; border-bottom: 1px solid var(--border); font-size: 0.9em; vertical-align: top; }
+  th { background: var(--bg-soft); color: var(--text-muted); font-size: 0.8em; font-weight: 600; text-transform: uppercase; }
+  tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--bg-soft); }
+  .badge { display: inline-block; padding: 4px 10px; border-radius: 5px; font-size: 0.75em; font-weight: 700; }
+  .badge-green { background: #052E16; color: #86EFAC; }
+  .badge-purple { background: #2E1065; color: #D8B4FE; }
+  .badge-blue { background: #172554; color: #93C5FD; }
+  .callout { border-right: 4px solid var(--accent); background: var(--bg-soft); padding: 18px 22px; border-radius: 8px; margin: 18px 0; font-size: 0.95em; }
+  .callout-warn { border-right-color: var(--warn); }
+  .callout-danger { border-right-color: var(--danger); }
+  .callout strong { color: var(--text); display: block; margin-bottom: 8px; font-size: 1.05em; }
+  ul, ol { padding-right: 24px; }
+  li { margin-bottom: 10px; color: var(--text-muted); font-size: 0.95em; }
+  li strong { color: var(--text); }
+  .highlight { color: var(--accent-light); font-weight: bold; }
+  .code { background: var(--bg-soft); padding: 3px 8px; border-radius: 4px; font-family: monospace; font-size: 0.85em; color: #34D399; direction: ltr; display: inline-block; }
+  .code-block { background-color: #020617; color: #a5b4fc; padding: 16px; border-radius: 8px; font-family: monospace; direction: ltr; text-align: left; font-size: 0.85rem; margin: 16px 0; overflow-x: auto; border: 1px solid #1e293b; line-height: 1.5; }
+  footer { text-align: center; padding: 50px; color: var(--text-subtle); font-size: 0.85em; border-top: 1px solid var(--border); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>الدليل الشامل لهندسة الوكلاء (LangGraph)</h1>
+  <p>كيف ننقل "كوتش AI" من مجرد تطبيق دردشة إلى نظام تعليمي متعدد الوكلاء (Multi-Agent System)</p>
+  <div class="meta">
+    <span>📅 التحديث القادم (المرحلة 9)</span>
+    <span>🎯 الهدف: القضاء على التشتت والهلوسة</span>
+    <span>🛠️ التقنيات: LangGraph.js, LangChain, Node.js</span>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- 1. المفهوم -->
+  <section>
+    <h2><span class="num">01</span> ما هو LangGraph ولماذا نحتاجه؟</h2>
+    <div class="callout">
+      <strong>المشكلة الحالية (RAG الخطي):</strong> في الكود الحالي، سؤال الطالب يمر بخط مستقيم: (سؤال -> بحث -> إجابة). هذا يسبب الهلوسة إذا كان البحث سيئاً، ولا يسمح للـ AI بتصحيح مساره.
+      <br><br>
+      <strong>الحل (LangGraph):</strong> هو إطار عمل لبناء تطبيقات AI على شكل <span class="highlight">رسوم بيانية (Graphs)</span>. تخيل أن الـ AI لديه "خريطة طريق" يمكنه التنقل فيها، والرجوع للخلف إذا اكتشف خطأً، واستخدام وكلاء متخصصين لكل مهمة.
+    </div>
+  </section>
+
+  <!-- 2. المكونات الأساسية -->
+  <section>
+    <h2><span class="num">02</span> المكونات الأساسية لـ LangGraph</h2>
+    <table>
+      <thead><tr><th>المكون</th><th>الشرح</th><th>مثال في كوتش AI</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>State (الحالة)</strong></td>
+          <td>الذاكرة التي تنتقل بين الخطوات. يجب أن تكون محددة بـ <code>TypedDict</code>.</td>
+          <td>نص السؤال، ملفات الطالب، الكلية، السنة، نتائج البحث، الإجابة النهائية.</td>
+        </tr>
+        <tr>
+          <td><strong>Nodes (العقد)</strong></td>
+          <td>الخطوات أو الوكلاء المتخصصون الذين يقومون بعمل ما (دوال JavaScript).</td>
+          <td>وكيل البحث في الملفات، وكيل توليد الاختبار، وكيل التقييم، وكيل الرد.</td>
+        </tr>
+        <tr>
+          <td><strong>Edges (الحواف)</strong></td>
+          <td>الأسهم التي تحدد الانتقال من عقدة لأخرى. يمكن أن تكون <strong>شرطية (Conditional)</strong>.</td>
+          <td>إذا كان السؤال عن "دواء" -> اذهب لوكيل الأدوية. إذا كان "فسيولوجيا" -> اذهب لوكيل المناهج.</td>
+        </tr>
+        <tr>
+          <td><strong>Checkpointer (نقاط الحفظ)</strong></td>
+          <td>حفظ حالة المحادثة في قاعدة البيانات (Supabase) لاستئنافها لاحقاً.</td>
+          <td>الطالب أغلق المتصفح وعاد بعد ساعتين. يجد الاختبار كما تركه بالضبط.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 3. الفوائد الملموسة في كوتش AI -->
+  <section>
+    <h2><span class="num">03</span> كيف سيغير LangGraph من أداء كوتش AI؟</h2>
+    
+    <div class="grid grid-2">
+      <div class="card">
+        <div class="badge badge-green" style="margin-bottom:10px;">التحسين الأول</div>
+        <h3 style="margin-top:0;">🔄 RAG وكيلي (Agentic RAG)</h3>
+        <p style="font-size:0.9em; color:var(--text-muted);">
+          بدلاً من البحث مرة واحدة، سنبني حلقة تصحيح. 
+          <br>1. وكيل البحث يجلب 20 جزءاً.
+          <br>2. <strong>وكيل التقييم</strong> يقرأها ويقول: "هل هذه الأجزاء تجيب على السؤال؟".
+          <br>3. إذا قال "لا"، يقوم <strong>وكيل إعادة الصياغة</strong> بتغيير السؤال والبحث مرة أخرى.
+          <br><span class="highlight">النتيجة:</span> إجابات دقيقة 100% ولا هلوسة.
+        </p>
+      </div>
+      <div class="card">
+        <div class="badge badge-purple" style="margin-bottom:10px;">التحسين الثاني</div>
+        <h3 style="margin-top:0;">👷 نمط المشرف والعمال</h3>
+        <p style="font-size:0.9em; color:var(--text-muted);">
+          بدلاً من نموذج واحد ضخم يشتت، سنبني فريقاً:
+          <br>• <strong>المشرف (Supervisor):</strong> يقرأ السؤال ويقرر من سيجيب.
+          <br>• <strong>وكيل الفارماكولوجي:</strong> خبير بالأدوية والجرعات.
+          <br>• <strong>وكيل الباثولوجي:</strong> خبير بالأمراض.
+          <br>• <strong>وكيل الاختبارات:</strong> خبير بتوليد الأسئلة.
+          <br><span class="highlight">النتيجة:</span> تخصص أعلى لكل وكيل، وبالتالي دقة أعلى.
+        </p>
+      </div>
+      <div class="card">
+        <div class="badge badge-blue" style="margin-bottom:10px;">التحسين الثالث</div>
+        <h3 style="margin-top:0;">🧠 الذاكرة وإدارة الحالة</h3>
+        <p style="font-size:0.9em; color:var(--text-muted);">
+          سيحفظ LangGraph حالة كل طالب. يعرف ماذا أجاب في السؤال الأول، وما هي نقاط ضعفه. هذا يسمح للـ AI بتخصيص الأسئلة التالية بناءً على أداء الطالب في الأسئلة السابقة.
+        </p>
+      </div>
+      <div class="card">
+        <div class="badge badge-green" style="margin-bottom:10px;">التحسين الرابع</div>
+        <h3 style="margin-top:0;">🚦 التوجيه الذكي</h3>
+        <p style="font-size:0.9em; color:var(--text-muted);">
+          ليس كل سؤال يحتاج بحثاً. إذا قال الطالب "مرحباً"، سيجيبه الوكيل مباشرة دون إهدار تكلفة البحث في الملفات.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. خارطة الطريق التنفيذية -->
+  <section>
+    <h2><span class="num">04</span> خارطة الطريق التنفيذية (كيف تبرمج هذا في Node.js؟)</h2>
+    
+    <div class="callout callout-warn">
+      <strong>المتطلبات المسبقة:</strong> يجب أن تكون المنصة تعمل حالياً (الشات والبحث). LangGraph هو "الترقية" وليس "البديل". سنستخدم مكتبة <code>@langchain/langgraph</code> في بيئة Node.js (Vercel).
+    </div>
+
+    <h3>المرحلة 1: بناء الحالة (State) والعقد (Nodes) الأساسية</h3>
+    <div class="card">
+      <p style="margin-bottom:12px;">نحدد شكل البيانات التي ستمر بين الوكلاء (AgentState).</p>
+      <div class="code-block">
+import { StateGraph, Annotation } from "@langchain/langgraph";
+
+// 1. تعريف الحالة
+const AgentState = Annotation.Root({
+  question: Annotation&lt;string&gt;,
+  context: Annotation&lt;string[]&gt;,
+  finalAnswer: Annotation&lt;string&gt;,
+  retryCount: Annotation&lt;number&gt;({ reducer: (x, y) => y, default: () => 0 }),
+});
+
+// 2. بناء العقد (النماذج)
+const workflow = new StateGraph(AgentState)
+  .addNode("router", routerNode)
+  .addNode("search", searchNode)
+  .addNode("generate", generateNode);
+      </div>
+    </div>
+
+    <h3>المرحلة 2: بناء المشرف (Supervisor Router)</h3>
+    <div class="card">
+      <p style="margin-bottom:12px;">عقدة تقرأ السؤال وتقرر أين تذهب.</p>
+      <div class="code-block">
+async function routerNode(state) {
+  // استخدام Groq لتصنيف السؤال
+  const category = await classifyIntent(state.question);
+  
+  if (category === "greeting") return "generate"; // لا يحتاج بحث
+  if (category === "medical") return "search";    // يحتاج بحث
+  return "search";
+}
+
+// إضافة الحواف الشرطية
+workflow.addConditionalEdges("router", (state) => {
+  // العودة إلى العقدة المناسبة
+});
+      </div>
+    </div>
+
+    <h3>المرحلة 3: تطبيق RAG الوكيلي (Agentic RAG)</h3>
+    <div class="card">
+      <p style="margin-bottom:12px;">إضافة عقدة التقييم (Grader) لتصحيح مسار البحث.</p>
+      <div class="code-block">
+async function graderNode(state) {
+  const isRelevant = await checkRelevance(state.context, state.question);
+  if (isRelevant) return "generate";
+  
+  if (state.retryCount > 2) return "generate"; // لا تدخل في حلقة لا نهائية
+  
+  return "rewrite_query"; // إعادة صياغة السؤال والبحث
+}
+      </div>
+    </div>
+    
+    <h3>المرحلة 4: الذاكرة الدائمة (Checkpointing)</h3>
+    <div class="card">
+      <p style="margin-bottom:12px;">ربط LangGraph بـ Supabase لحفظ حالة الطالب.</p>
+      <div class="code-block">
+import { PostgresSaver } from "@langchain/langgraph-checkpoint-postgres";
+
+const checkpointer = await PostgresSaver.fromConnString(process.env.SUPABASE_DB_URL);
+const app = workflow.compile({ checkpointer });
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. المهارات المطلوبة -->
+  <section>
+    <h2><span class="num">05</span> المهارات التي ستكتسبها من هذه المرحلة</h2>
+    <div class="grid grid-2">
+      <div class="card">
+        <h3 style="margin-top:0; color:var(--accent-light);">🧠 مفاهيم هندسية متقدمة</h3>
+        <ul>
+          <li><strong>Stateful Applications:</strong> بناء تطبيقات تحتفظ بالذاكرة وتعرف سياقها.</li>
+          <li><strong>Agentic Workflows:</strong> تصميم حلقات اتخاذ قرار للـ AI (Self-Correction).</li>
+          <li><strong>Graph Theory:</strong> فهم كيفية ربط العقد وتحديد مسارات التنفيذ.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0; color:var(--accent-light);">💻 أدوات ومكتبات</h3>
+        <ul>
+          <li><strong>LangGraph.js:</strong> المكتبة الأساسية (متوافقة مع Node.js/Vercel).</li>
+          <li><strong>LangChain.js:</strong> لربط الأدوات والنماذج.</li>
+          <li><strong>Zod:</strong> للتحقق من صحة البيانات في العقد (Nodes).</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <p>💙 كوتش AI — دليل LangGraph الشامل — المسودة الأولى (V1.0)</p>
+  <p style="margin-top: 8px;">هذا الملف يمثل خارطة الطريق لبناء الجيل الثاني من محرك كوتش AI.</p>
+</footer>
+
+</body>
+</html>

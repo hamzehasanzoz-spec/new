@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>كوتش AI — الدليل التنفيذي الشامل للانتقال إلى LangGraph</title>
+<style>
+  :root {
+    --bg: #0A0A0A;
+    --bg-soft: #141414;
+    --bg-card: #1A1A1A;
+    --border: #262626;
+    --text: #FAFAFA;
+    --text-muted: #A1A1AA;
+    --text-subtle: #71717A;
+    --accent: #10B981;
+    --accent-light: #34D399;
+    --purple: #8B5CF6;
+    --blue: #3B82F6;
+    --warn: #F59E0B;
+    --danger: #EF4444;
+    --gold: #FBBF24;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.8;
+    font-size: 15px;
+  }
+  .container { max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
+  header {
+    padding: 80px 24px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(16, 185, 129, 0.08) 0%, transparent 100%);
+  }
+  header h1 {
+    font-size: 2.5em;
+    font-weight: 800;
+    margin-bottom: 16px;
+    background: linear-gradient(180deg, #FAFAFA 0%, #34D399 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  header p { color: var(--text-muted); font-size: 1.15em; max-width: 800px; margin: 0 auto; }
+  header .meta {
+    margin-top: 24px;
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    font-size: 0.85em;
+    color: var(--text-subtle);
+    flex-wrap: wrap;
+  }
+  section { margin-bottom: 60px; }
+  h2 {
+    font-size: 1.6em;
+    font-weight: 700;
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  h2 .num {
+    color: var(--accent);
+    font-size: 0.6em;
+    font-weight: 700;
+    background: rgba(16, 185, 129, 0.15);
+    padding: 4px 12px;
+    border-radius: 6px;
+  }
+  h3 { font-size: 1.2em; font-weight: 600; margin: 28px 0 12px; color: var(--text); }
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+  .grid { display: grid; gap: 16px; }
+  .grid-2 { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
+  .grid-3 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--bg-card);
+    border-radius: 12px; overflow: hidden; border: 1px solid var(--border); margin: 16px 0;
+  }
+  th, td { padding: 16px; text-align: right; border-bottom: 1px solid var(--border); font-size: 0.9em; vertical-align: top; }
+  th { background: var(--bg-soft); color: var(--text-muted); font-size: 0.8em; font-weight: 600; text-transform: uppercase; }
+  tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--bg-soft); }
+  .badge { display: inline-block; padding: 4px 10px; border-radius: 5px; font-size: 0.75em; font-weight: 700; }
+  .badge-green { background: #052E16; color: #86EFAC; }
+  .badge-purple { background: #2E1065; color: #D8B4FE; }
+  .badge-blue { background: #172554; color: #93C5FD; }
+  .badge-gold { background: #451A03; color: #FCD34D; }
+  .callout { border-right: 4px solid var(--accent); background: var(--bg-soft); padding: 18px 22px; border-radius: 8px; margin: 18px 0; font-size: 0.95em; }
+  .callout-warn { border-right-color: var(--warn); }
+  .callout-danger { border-right-color: var(--danger); }
+  .callout strong { color: var(--text); display: block; margin-bottom: 8px; font-size: 1.05em; }
+  ul, ol { padding-right: 24px; }
+  li { margin-bottom: 10px; color: var(--text-muted); font-size: 0.95em; }
+  li strong { color: var(--text); }
+  .highlight { color: var(--accent-light); font-weight: bold; }
+  .code { background: var(--bg-soft); padding: 3px 8px; border-radius: 4px; font-family: monospace; font-size: 0.85em; color: #34D399; direction: ltr; display: inline-block; }
+  .code-block { background-color: #020617; color: #a5b4fc; padding: 16px; border-radius: 8px; font-family: monospace; direction: ltr; text-align: left; font-size: 0.85rem; margin: 16px 0; overflow-x: auto; border: 1px solid #1e293b; line-height: 1.5; }
+  footer { text-align: center; padding: 50px; color: var(--text-subtle); font-size: 0.85em; border-top: 1px solid var(--border); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>الدليل التنفيذي الشامل للانتقال إلى LangGraph</h1>
+  <p>كيف ننقل "كوتش AI" من RAG خطي إلى نظام تعليمي متعدد الوكلاء (Multi-Agent) قابل للتطور والتصحيح الذاتي</p>
+  <div class="meta">
+    <span>📅 بعد إتمام المراحل الست السابقة</span>
+    <span>🎯 الهدف: Agentic RAG + ذاكرة + تدخل بشري</span>
+    <span>🛠️ التقنيات: LangGraph.js, Node.js, Supabase/Postgres, SSE</span>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- 1. المقدمة -->
+  <section>
+    <h2><span class="num">01</span> لماذا LangGraph الآن؟</h2>
+    <div class="callout">
+      <strong>لقد أكملت المراحل الست بنجاح:</strong> Query Routing، Hybrid Search، Structural Chunking، GraphRAG، Reranking، وGrounded Prompt. هذا يعني أن كل مكون من مكونات الاسترجاع والتوليد أصبح جاهزاً. لكن ما ينقصك هو <span class="highlight">"المدير"</span> الذي ينسق بين هذه المكونات، ويقرر متى يستخدم كل واحد منها، ويصحح المسار إذا فشل.
+      <br><br>
+      <strong>LangGraph</strong> هو هذا المدير. هو إطار عمل لبناء تطبيقات AI على شكل <span class="highlight">رسوم بيانية (Graphs)</span>، حيث تكون العقد (Nodes) هي خطوات المعالجة، والحواف (Edges) هي مسارات التنفيذ التي يمكن أن تكون شرطية أو دورية. هذا يسمح للـ AI بالتفكير خطوة بخطوة، والرجوع للخلف، وتجربة مسارات بديلة.
+    </div>
+  </section>
+
+  <!-- 2. المكونات الأساسية -->
+  <section>
+    <h2><span class="num">02</span> المكونات الأساسية لـ LangGraph</h2>
+    <table>
+      <thead><tr><th>المكون</th><th>الشرح</th><th>مثال في كوتش AI</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>State (الحالة)</strong></td>
+          <td>الذاكرة التي تنتقل بين الخطوات. يتم تعريفها باستخدام <code>Annotation.Root</code> مع إمكانية إضافة <code>reducer</code> لتجميع القيم (مثل سجل المحادثة).</td>
+          <td>نص السؤال، الأجزاء المسترجعة، الإجابة النهائية، عدد محاولات إعادة الصياغة، الكلية، السنة الدراسية.</td>
+        </tr>
+        <tr>
+          <td><strong>Nodes (العقد)</strong></td>
+          <td>دوال JavaScript تستقبل الحالة وتعيد تحديثاً جزئياً لها. كل عقدة تمثل خطوة أو وكيلاً متخصصاً.</td>
+          <td>عقدة البحث، عقدة التقييم (Grader)، عقدة إعادة الصياغة، عقدة توليد الإجابة.</td>
+        </tr>
+        <tr>
+          <td><strong>Edges (الحواف)</strong></td>
+          <td>تحدد الانتقال بين العقد. يمكن أن تكون <strong>عادية</strong> (دائماً من A إلى B) أو <strong>شرطية</strong> (تعتمد على الحالة).</td>
+          <td>إذا كان التقييم "جيد" → اذهب للتوليد. إذا كان "سيئ" → اذهب لإعادة الصياغة.</td>
+        </tr>
+        <tr>
+          <td><strong>Checkpointer (نقاط الحفظ)</strong></td>
+          <td>يحفظ حالة الرسم البياني بعد كل خطوة في قاعدة بيانات (Postgres/Supabase). يسمح باستئناف المحادثة لاحقاً.</td>
+          <td>الطالب يغلق المتصفح ويعود بعد ساعتين ليكمل نفس المحادثة من حيث توقف.</td>
+        </tr>
+        <tr>
+          <td><strong>Human-in-the-Loop (HITL)</strong></td>
+          <td>إمكانية إيقاف التنفيذ عند نقطة معينة (Breakpoint) وطلب تدخل بشري (موافقة، تعديل، إدخال).</td>
+          <td>قبل حذف ملف طالب أو تعديل درجة، يتوقف النظام ويطلب موافقة الأدمن.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 3. كيف يندمج LangGraph مع المراحل الست السابقة -->
+  <section>
+    <h2><span class="num">03</span> كيف يندمج LangGraph مع المراحل الست السابقة</h2>
+    <p style="color:var(--text-muted); margin-bottom:16px;">لن نبدأ من الصفر. كل تقنية من المراحل الست ستصبح <strong>عقدة (Node)</strong> أو <strong>حافة شرطية (Conditional Edge)</strong> داخل رسم LangGraph البياني.</p>
+
+    <table>
+      <thead><tr><th>التقنية السابقة</th><th>دورها في LangGraph</th><th>العقدة / الحافة</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Query Routing</strong></td>
+          <td>تصبح عقدة البداية (Router) التي تقرأ السؤال وتقرر أي مسار تتبع (بحث في الأدوية، بحث في المناهج، أو إجابة مباشرة).</td>
+          <td><span class="badge badge-green">Router Node</span></td>
+        </tr>
+        <tr>
+          <td><strong>Hybrid Search + BM25</strong></td>
+          <td>تصبح عقدة البحث (Retriever) التي تجلب 20-50 جزءاً من قاعدة البيانات.</td>
+          <td><span class="badge badge-green">Search Node</span></td>
+        </tr>
+        <tr>
+          <td><strong>Reranking</strong></td>
+          <td>تصبح عقدة إعادة الترتيب التي تأخذ الأجزاء من البحث وتعيد ترتيبها وتختار أفضل 5.</td>
+          <td><span class="badge badge-green">Rerank Node</span></td>
+        </tr>
+        <tr>
+          <td><strong>Grounded Prompt</strong></td>
+          <td>يصبح عقدة التوليد (Generator) التي تصوغ الإجابة النهائية من الأجزاء المختارة، مع تعليمات صارمة بعدم الهلوسة.</td>
+          <td><span class="badge badge-green">Generate Node</span></td>
+        </tr>
+        <tr>
+          <td><strong>GraphRAG (Neo4j)</strong></td>
+          <td>يمكن استدعاؤه كأداة إضافية داخل عقدة البحث لاسترجاع العلاقات بين الأدوية والأمراض.</td>
+          <td><span class="badge badge-purple">Graph Tool</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-warn">
+      <strong>الإضافة الجديدة (Agentic RAG):</strong> سنضيف عقدة <strong>التقييم (Grader)</strong> بين البحث والتوليد. هذه العقدة تقرأ الأجزاء وتقرر: "هل هذه الأجزاء تجيب على السؤال؟" إذا كان الجواب "لا"، ننتقل إلى عقدة <strong>إعادة الصياغة (Rewrite)</strong> ونعيد البحث. هذا هو جوهر التصحيح الذاتي (Self-Correction)[reference:0].
+    </div>
+  </section>
+
+  <!-- 4. المراحل التنفيذية -->
+  <section>
+    <h2><span class="num">04</span> المراحل التنفيذية للانتقال إلى LangGraph</h2>
+
+    <h3>المرحلة 0: التأسيس والاعتماديات</h3>
+    <div class="card">
+      <p style="margin-bottom:12px;">قبل كتابة أي كود، نحتاج إلى تثبيت المكتبات الأساسية وإعداد قاعدة البيانات لحفظ الحالات (Checkpointing).</p>
+      <div class="code-block">
+# تثبيت LangGraph والاعتماديات
+npm install @langchain/langgraph @langchain/core @langchain/langgraph-checkpoint-postgres
+
+# (اختياري) تثبيت مكتبة المشرف الجاهزة
+npm install @langchain/langgraph-supervisor
+      </div>
+      <p style="margin-bottom:8px;"><strong>إعداد قاعدة البيانات (Checkpointer):</strong> سنستخدم Postgres (Supabase). نحتاج إلى إنشاء الجداول اللازمة. الحزمة <code>@langchain/langgraph-checkpoint-postgres</code> توفر الدالة <code>setup()</code> لإنشاء الجداول تلقائياً[reference:1].</p>
+      <div class="code-block">
+import { PostgresSaver } from "@langchain/langgraph-checkpoint-postgres";
+
+const DB_URI = process.env.SUPABASE_DB_URL; // رابط قاعدة البيانات
+const checkpointer = PostgresSaver.fromConnString(DB_URI);
+await checkpointer.setup(); // يجب استدعاؤها مرة واحدة عند أول استخدام
+      </div>
+      <p style="font-size:0.85em; color:var(--text-subtle);">ملاحظة: في بيئة Vercel، يجب وضع <code>SUPABASE_DB_URL</code> في متغيرات البيئة (Environment Variables).</p>
+    </div>
+
+    <h3>المرحلة 1: بناء الحالة (State) الأساسية</h3>
+    <div class="card">
+      <p style="margin-bottom:12px;">نحدد شكل البيانات التي ستنتقل بين العقد. نستخدم <code>Annotation.Root</code> مع <code>reducer</code> للرسائل (لتجميع سجل المحادثة) وبعض الحقول المخصصة[reference:2].</p>
+      <div class="code-block">
+import { Annotation } from "@langchain/langgraph";
+import { BaseMessage } from "@langchain/core/messages";
+
+const AgentState = Annotation.Root({
+  // سجل المحادثة (يتم تجميعه تلقائياً)
+  messages: Annotation<BaseMessage[]>({
+    reducer: (current, update) => current.concat(update),
+    default: () => [],
+  }),
+  // السؤال الحالي
+  question: Annotation<string>,
+  // الأجزاء المسترجعة من البحث
+  retrievedChunks: Annotation<string[]>,
+  // الأجزاء بعد إعادة الترتيب
+  rerankedChunks: Annotation<string[]>,
+  // الإجابة النهائية
+  finalAnswer: Annotation<string>,
+  // عدد محاولات إعادة الصياغة (لتجنب الحلقات اللانهائية)
+  retryCount: Annotation<number>({
+    reducer: (_, update) => update,
+    default: () => 0,
+  }),
+  // قرار التقييم (جيد / سيئ)
+  grade: Annotation<string>,
+});
+      </div>
+    </div>
+
+    <h3>المرحلة 2: بناء العقد الأساسية (Search, Rerank, Generate)</h3>
+    <div class="card">
+      <p style="margin-bottom:12px;">كل عقدة هي دالة تستقبل الحالة وتعيد تحديثاً جزئياً. نبدأ بالعقد التي تمثل المراحل الست السابقة.</p>
+      <div class="code-block">
+// عقدة البحث (تستخدم Hybrid Search + GraphRAG)
+async function searchNode(state) {
+  const { question } = state;
+  // استدعاء دالة البحث التي بنيتها سابقاً (تجلب 20 جزءاً)
+  const chunks = await hybridSearch(question); 
+  return { retrievedChunks: chunks };
+}
+
+// عقدة إعادة الترتيب (Reranking)
+async function rerankNode(state) {
+  const { question, retrievedChunks } = state;
+  // استدعاء نموذج Reranker (مثل Cohere أو BGE)
+  const topChunks = await rerank(question, retrievedChunks, 5);
+  return { rerankedChunks: topChunks };
+}
+
+// عقدة التوليد (Grounded Prompt)
+async function generateNode(state) {
+  const { question, rerankedChunks, messages } = state;
+  const context = rerankedChunks.join("\n\n");
+  
+  const systemPrompt = `أنت مساعد طبي. أجب فقط من المقاطع التالية:
+${context}
+إذا لم تجد الإجابة، قل: "المعلومة غير موجودة في الملفات المرفقة".`;
+
+  const response = await llm.invoke([
+    { role: "system", content: systemPrompt },
+    ...messages,
+    { role: "user", content: question }
+  ]);
+
+  return { 
+    finalAnswer: response.content,
+    messages: [response] 
+  };
+}
+      </div>
+    </div>
+
+    <h3>المرحلة 3: إضافة التقييم الذاتي (Agentic RAG)</h3>
+    <div class="card">
+      <p style="margin-bottom:12px;">هذه هي الخطوة التي تحول RAG العادي إلى RAG وكيلي. نضيف عقدة <strong>Grader</strong> تقيّم جودة الأجزاء، وعقدة <strong>Rewrite</strong> تعيد صياغة السؤال إذا كانت الجودة سيئة[reference:3].</p>
+      <div class="code-block">
+// عقدة التقييم (Grader)
+async function gradeNode(state) {
+  const { question, rerankedChunks } = state;
+  const context = rerankedChunks.join("\n");
+  
+  const gradePrompt = `هل الأجزاء التالية تجيب على السؤال: "${question}"؟
+  الأجزاء: ${context}
+  أجب بـ "نعم" أو "لا" فقط.`;
+  
+  const grade = await llm.invoke(gradePrompt);
+  return { grade: grade.content.trim() };
+}
+
+// عقدة إعادة الصياغة (Rewrite)
+async function rewriteNode(state) {
+  const { question, retryCount } = state;
+  
+  const rewritePrompt = `أعد صياغة السؤال التالي بطريقة تجعله أوضح وأكثر تحديداً للبحث:
+  السؤال: ${question}`;
+  
+  const newQuestion = await llm.invoke(rewritePrompt);
+  
+  return { 
+    question: newQuestion.content.trim(),
+    retryCount: retryCount + 1 
+  };
+}
+      </div>
+      <div class="callout callout-warn">
+        <strong>مهم:</strong> يجب أن يكون هناك حد أقصى لعدد مرات إعادة الصياغة (مثلاً 2) لتجنب الحلقات اللانهائية. يمكن تنفيذ ذلك باستخدام حافة شرطية تتحقق من <code>retryCount</code>.
+      </div>
+    </div>
+
+    <h3>المرحلة 4: بناء الرسم البياني (StateGraph) وربط العقد</h3>
+    <div class="card">
+      <p style="margin-bottom:12px;">الآن نربط كل العقد معاً باستخدام <code>StateGraph</code> والحواف الشرطية.</p>
+      <div class="code-block">
+import { StateGraph, START, END } from "@langchain/langgraph";
+
+const workflow = new StateGraph(AgentState)
+  // إضافة العقد
+  .addNode("search", searchNode)
+  .addNode("rerank", rerankNode)
+  .addNode("grade", gradeNode)
+  .addNode("rewrite", rewriteNode)
+  .addNode("generate", generateNode)
+  
+  // المسار الافتراضي: من البداية إلى البحث
+  .addEdge(START, "search")
+  .addEdge("search", "rerank")
+  .addEdge("rerank", "grade")
+  
+  // حافة شرطية بعد التقييم: إذا كانت الجودة جيدة، اذهب للتوليد
+  .addConditionalEdges("grade", (state) => {
+    if (state.grade === "نعم" || state.retryCount >= 2) {
+      return "generate"; // جودة جيدة أو استنفدنا المحاولات
+    }
+    return "rewrite"; // جودة سيئة، أعد الصياغة
+  })
+  .addEdge("rewrite", "search") // بعد إعادة الصياغة، ابحث مرة أخرى
+  .addEdge("generate", END); // التوليد هو النهاية
+
+// تصريف الرسم البياني مع Checkpointer
+const graph = workflow.compile({ checkpointer });
+      </div>
+      <p style="font-size:0.85em; color:var(--text-subtle);">لاحظ الحلقة: <code>rewrite → search → rerank → grade</code>. هذه الحلقة هي ما يسمح للـ AI بتصحيح مساره[reference:5].</p>
+    </div>
+
+    <h3>المرحلة 5: إضافة الذاكرة الدائمة (Checkpointing)</h3>
+    <div class="card">
+      <p style="margin-bottom:12px;">عند تصريف الرسم البياني باستخدام <code>{ checkpointer }</code>، سيتم حفظ الحالة بعد كل عقدة. لاستئناف محادثة، نمرر نفس <code>thread_id</code>[reference:6].</p>
+      <div class="code-block">
+// تشغيل الرسم البياني
+const threadConfig = { configurable: { thread_id: "user-123-conv-456" } };
+
+const result = await graph.invoke(
+  { messages: [], question: "ما هي أدوية النسائية؟" },
+  threadConfig
+);
+
+// لاحقاً: استئناف نفس المحادثة
+const continued = await graph.invoke(
+  { messages: result.messages, question: "أعطني تفاصيل أكثر" },
+  threadConfig
+);
+      </div>
+      <p style="font-size:0.85em; color:var(--text-subtle);">يمكنك أيضاً استخدام <code>graph.getStateHistory(threadConfig)</code> لعرض كل الحالات السابقة (Time Travel) واستكشاف مسارات بديلة[reference:7].</p>
+    </div>
+
+    <h3>المرحلة 6: إضافة التدخل البشري (Human-in-the-Loop)</h3>
+    <div class="card">
+      <p style="margin-bottom:12px;">يمكننا إيقاف الرسم البياني عند عقدة معينة (مثلاً قبل حذف ملف أو تعديل بيانات) وطلب موافقة بشرية. نستخدم <code>interruptBefore</code> عند التصريف، أو دالة <code>interrupt()</code> داخل العقدة[reference:8][reference:9].</p>
+      <div class="code-block">
+// عند التصريف: إيقاف قبل عقدة "deleteFile"
+const graph = workflow.compile({
+  checkpointer,
+  interruptBefore: ["deleteFile"] // اسم العقدة الحساسة
+});
+
+// في واجهة المستخدم: عرض طلب الموافقة
+// لاستئناف التنفيذ بعد الموافقة:
+import { Command } from "@langchain/langgraph";
+await graph.invoke(
+  new Command({ resume: { approved: true } }),
+  threadConfig
+);
+      </div>
+    </div>
+
+    <h3>المرحلة 7: البث المباشر (Streaming) للتجربة التفاعلية</h3>
+    <div class="card">
+      <p style="margin-bottom:12px;">لتجربة مستخدم سلسة، يمكننا بث الأحداث (Tokens) والتحديثات (State) إلى الواجهة الأمامية باستخدام <code>graph.stream()</code>[reference:10].</p>
+      <div class="code-block">
+// بث التحديثات (State) بعد كل عقدة
+for await (const event of await graph.stream(input, {
+  ...threadConfig,
+  streamMode: "updates",
+})) {
+  console.log("تحديث:", event); // إرسال إلى الواجهة عبر SSE
+}
+
+// بث الرموز (Tokens) من LLM
+for await (const event of await graph.streamEvents(input, {
+  ...threadConfig,
+  version: "v3",
+})) {
+  if (event.event === "on_chat_model_stream") {
+    console.log(event.data.chunk.content); // بث الحروف
+  }
+}
+      </div>
+    </div>
+
+    <h3>المرحلة 8: التوسع إلى وكلاء متعددين (Supervisor Pattern)</h3>
+    <div class="card">
+      <p style="margin-bottom:12px;">بعد إتقان الرسم البياني البسيط، يمكننا التوسع إلى نظام متعدد الوكلاء. مكتبة <code>@langchain/langgraph-supervisor</code> تسهل بناء مشرف يوجه الأسئلة إلى وكلاء متخصصين (وكيل الأدوية، وكيل الأمراض، وكيل الاختبارات)[reference:11].</p>
+      <div class="code-block">
+import { createSupervisor } from "@langchain/langgraph-supervisor";
+
+const supervisor = createSupervisor({
+  agents: [pharmacologyAgent, pathologyAgent, quizAgent],
+  llm: supervisorLlm, // نموذج سريع للتصنيف
+});
+
+const graph = supervisor.compile({ checkpointer });
+      </div>
+      <p style="font-size:0.85em; color:var(--text-subtle);">هذا النمط يقلل التشتت ويزيد الدقة، لأن كل وكيل يتعامل فقط مع الأدوات والمعرفة الخاصة بتخصصه[reference:12].</p>
+    </div>
+  </section>
+
+  <!-- 5. جدول المقارنة قبل/بعد -->
+  <section>
+    <h2><span class="num">05</span> ماذا يتغير بعد الانتقال إلى LangGraph؟</h2>
+    <table>
+      <thead><tr><th>الجانب</th><th>قبل (RAG خطي)</th><th>بعد (LangGraph Agentic RAG)</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>التصحيح الذاتي</strong></td>
+          <td>لا يوجد. إذا فشل البحث، يهلوس الـ AI.</td>
+          <td>حلقة تقييم وإعادة صياغة حتى الوصول إلى إجابة دقيقة.</td>
+        </tr>
+        <tr>
+          <td><strong>الذاكرة</strong></td>
+          <td>تُفقد المحادثة عند إغلاق المتصفح.</td>
+          <td>تُحفظ الحالة في Postgres وتُستأنف لاحقاً.</td>
+        </tr>
+        <tr>
+          <td><strong>التخصص</strong></td>
+          <td>نموذج واحد لكل الأسئلة.</td>
+          <td>وكلاء متخصصون (أدوية، أمراض، اختبارات) يقللون التشتت.</td>
+        </tr>
+        <tr>
+          <td><strong>التدخل البشري</strong></td>
+          <td>غير ممكن.</td>
+          <td>إيقاف التنفيذ عند نقاط حساسة وطلب موافقة.</td>
+        </tr>
+        <tr>
+          <td><strong>المراقبة</strong></td>
+          <td>لا نعرف أين فشل البحث.</td>
+          <td>كل عقدة تسجل حالتها. Time Travel لاستكشاف المسارات.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 6. نصائح للتطوير المستقبلي -->
+  <section>
+    <h2><span class="num">06</span> نصائح للتطوير بعد إتمام LangGraph</h2>
+    <div class="grid grid-2">
+      <div class="card">
+        <h3 style="margin-top:0; color:var(--accent-light);">🚀 الرسم البياني الفرعي (Subgraphs)</h3>
+        <p style="font-size:0.9em; color:var(--text-muted);">يمكنك تغليف كل وكيل متخصص في رسم بياني فرعي (Subgraph) واستخدامه كعقدة في الرسم البياني الأب. هذا يعزز التماسك ويسمح بإعادة الاستخدام[reference:13].</p>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0; color:var(--accent-light);">🕰️ السفر عبر الزمن (Time Travel)</h3>
+        <p style="font-size:0.9em; color:var(--text-muted);">استخدم <code>graph.getStateHistory()</code> لعرض كل نقاط الحفظ، وتعديل الحالة يدوياً (<code>updateState</code>)، ثم استئناف التنفيذ من نقطة سابقة. هذا مفيد لتصحيح أخطاء الـ AI[reference:14].</p>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0; color:var(--accent-light);">📊 المراقبة (Observability)</h3>
+        <p style="font-size:0.9em; color:var(--text-muted);">دمج LangSmith أو OpenTelemetry لتتبع كل عقدة، عدد الرموز، والتكلفة. هذا ضروري للإنتاج[reference:15].</p>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0; color:var(--accent-light);">⚡ تحسين الأداء</h3>
+        <p style="font-size:0.9em; color:var(--text-muted);">استخدم نماذج أصغر للمهام البسيطة (مثل التقييم وإعادة الصياغة) لتقليل التكلفة. Groq مثالي للسرعة، بينما يمكن استخدام نماذج أكبر للتوليد النهائي.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. الخلاصة -->
+  <section>
+    <h2><span class="num">07</span> الخلاصة</h2>
+    <div class="callout callout-success">
+      <strong>الانتقال إلى LangGraph ليس مجرد إضافة تقنية.</strong> إنه تحول من "نظام يجيب" إلى "نظام يفكر ويصحح نفسه". بعد إتمام المراحل الست، أصبحت المكونات جاهزة. الآن، مع LangGraph، ستتمكن من ربطها في تدفق ذكي، وإضافة الذاكرة، والتدخل البشري، والتوسع إلى وكلاء متعددين.
+      <br><br>
+      <strong>ابدأ بالمرحلة 0 (التأسيس) والمرحلة 1 (الحالة).</strong> ثم ابنِ عقدة البحث والتوليد. أضف التقييم لاحقاً. لا تحاول بناء كل شيء في يوم واحد. كل عقدة تضيف قيمة فورية.
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <p>💙 كوتش AI — الدليل التنفيذي الشامل للانتقال إلى LangGraph</p>
+  <p style="margin-top: 8px;">هذا الملف هو خارطة الطريق لبناء الجيل الثاني من محرك كوتش AI.</p>
+</footer>
+
+</body>
+</html>

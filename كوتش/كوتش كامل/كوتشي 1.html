@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>خطة انطلاق كوتش AI — v2</title>
+<style>
+  :root {
+    --bg: #0A0A0A;
+    --bg-soft: #141414;
+    --bg-card: #1A1A1A;
+    --border: #262626;
+    --text: #FAFAFA;
+    --text-muted: #A1A1AA;
+    --text-subtle: #71717A;
+    --accent: #3B82F6;
+    --success: #22C55E;
+    --warn: #F59E0B;
+    --danger: #EF4444;
+    --purple: #8B5CF6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    font-size: 15px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .container { max-width: 1000px; margin: 0 auto; padding: 40px 24px; }
+
+  header {
+    padding: 60px 24px 40px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+  }
+  header h1 {
+    font-size: 2.2em;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 10px;
+    background: linear-gradient(180deg, #FAFAFA 0%, #71717A 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  header p { color: var(--text-muted); font-size: 1em; }
+  header .meta {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    font-size: 0.82em;
+    color: var(--text-subtle);
+    flex-wrap: wrap;
+  }
+
+  section { margin-bottom: 50px; scroll-margin-top: 20px; }
+
+  h2 {
+    font-size: 1.5em;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  h2 .num {
+    color: var(--accent);
+    font-size: 0.6em;
+    font-weight: 700;
+    letter-spacing: 0;
+    background: rgba(59, 130, 246, 0.15);
+    padding: 4px 10px;
+    border-radius: 6px;
+  }
+  h3 {
+    font-size: 1.05em;
+    font-weight: 600;
+    margin: 24px 0 12px;
+    color: var(--text);
+  }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 12px;
+  }
+
+  /* Task list */
+  .tasks-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--bg-card);
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    margin: 16px 0;
+  }
+  .tasks-table th, .tasks-table td {
+    padding: 12px 14px;
+    text-align: right;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.88em;
+  }
+  .tasks-table th {
+    background: var(--bg-soft);
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.75em;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .tasks-table tr:last-child td { border-bottom: none; }
+  .tasks-table tbody tr:hover { background: var(--bg-soft); }
+
+  .task-id {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8em;
+    color: var(--accent);
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .task-title { color: var(--text); font-weight: 500; }
+  .task-desc { color: var(--text-muted); font-size: 0.95em; line-height: 1.5; }
+
+  .badge {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 5px;
+    font-size: 0.68em;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+  .badge-todo { background: #18181B; color: #A1A1AA; border: 1px solid #27272A; }
+  .badge-progress { background: #451A03; color: #FCD34D; }
+  .badge-done { background: #052E16; color: #86EFAC; }
+  .badge-critical { background: #450A0A; color: #FCA5A5; }
+
+  .callout {
+    border-right: 3px solid var(--accent);
+    background: var(--bg-soft);
+    padding: 14px 18px;
+    border-radius: 8px;
+    margin: 14px 0;
+    font-size: 0.9em;
+  }
+  .callout-warn { border-right-color: var(--warn); }
+  .callout-danger { border-right-color: var(--danger); }
+  .callout-success { border-right-color: var(--success); }
+  .callout-purple { border-right-color: var(--purple); }
+  .callout strong { color: var(--text); display: block; margin-bottom: 6px; font-size: 0.95em; }
+
+  code {
+    background: var(--bg-soft);
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82em;
+    color: #93C5FD;
+    direction: ltr;
+    display: inline-block;
+  }
+
+  pre {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    padding: 14px;
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78em;
+    direction: ltr;
+    text-align: left;
+    overflow-x: auto;
+    line-height: 1.6;
+    color: #E4E4E7;
+    margin: 12px 0;
+  }
+
+  .phase-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  .phase-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .phase-title {
+    font-size: 1.1em;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .phase-num {
+    background: var(--accent);
+    color: #fff;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85em;
+    font-weight: 800;
+  }
+  .phase-time {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75em;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin: 16px 0;
+  }
+  .summary-stat {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+  }
+  .summary-stat-value {
+    font-size: 1.6em;
+    font-weight: 800;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -1px;
+  }
+  .summary-stat-label {
+    font-size: 0.7em;
+    color: var(--text-subtle);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 4px;
+    font-weight: 600;
+  }
+
+  ul, ol { padding-right: 20px; }
+  li { margin-bottom: 5px; color: var(--text-muted); font-size: 0.9em; }
+  li strong { color: var(--text); }
+
+  footer {
+    text-align: center;
+    padding: 50px 24px 30px;
+    color: var(--text-subtle);
+    font-size: 0.82em;
+    border-top: 1px solid var(--border);
+    margin-top: 50px;
+  }
+
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  @media (max-width: 640px) {
+    .container { padding: 20px 14px; }
+    header h1 { font-size: 1.6em; }
+    h2 { font-size: 1.2em; }
+    .tasks-table th, .tasks-table td { padding: 10px 8px; font-size: 0.82em; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>خطة انطلاق كوتش AI</h1>
+  <p>خطة المهام المرقّمة — من مشروع طالب إلى منصة جامعية</p>
+  <div class="meta">
+    <span>📅 13 أكتوبر 2026</span>
+    <span>🎯 84 مهمة</span>
+    <span>⏰ ساعة/يوم</span>
+    <span>💰 ميزانية 0$</span>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- Overview -->
+  <section>
+    <h2><span class="num">نظرة</span> عامة</h2>
+
+    <div class="summary-grid">
+      <div class="summary-stat">
+        <div class="summary-stat-value">6</div>
+        <div class="summary-stat-label">مراحل</div>
+      </div>
+      <div class="summary-stat">
+        <div class="summary-stat-value">84</div>
+        <div class="summary-stat-label">مهمة</div>
+      </div>
+      <div class="summary-stat">
+        <div class="summary-stat-value">3</div>
+        <div class="summary-stat-label">كليات</div>
+      </div>
+      <div class="summary-stat">
+        <div class="summary-stat-value">5000</div>
+        <div class="summary-stat-label">طالب مستهدف</div>
+      </div>
+    </div>
+
+    <div class="callout">
+      <strong>🎯 كيف تعمل الخطة</strong>
+      كل مهمة مرقّمة (مثل <code>7.1</code>) — ننفذها بالترتيب، مهمة مهمة. بعد كل مهمة: رفع + اختبار. لا تنتقل للتالية قبل التأكد.
+    </div>
+  </section>
+
+  <!-- Phase 1: Design System -->
+  <section>
+    <h2><span class="num">المرحلة 1</span> نظام التصميم الاحترافي</h2>
+
+    <div class="phase-card">
+      <div class="phase-header">
+        <div class="phase-title">
+          <span class="phase-num">1</span>
+          <span>التصميم الكامل + Tailwind</span>
+        </div>
+        <span class="phase-time">⏰ 4 أسابيع</span>
+      </div>
+
+      <div class="callout callout-purple">
+        <strong>📚 ملاحظة</strong>
+        لن تتعلم Tailwind بشكل مكثف. سأشرح المفاهيم الأساسية فقط (5 دقائق)، ثم أعطيك الكود جاهزاً. ستفهم تدريجياً.
+      </div>
+
+      <table class="tasks-table">
+        <thead>
+          <tr>
+            <th style="width: 60px;">#</th>
+            <th style="width: 200px;">المهمة</th>
+            <th>التفاصيل</th>
+            <th style="width: 90px;">الحالة</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="task-id">7.1</td>
+            <td class="task-title">تثبيت TailwindCSS</td>
+            <td class="task-desc">تثبيت Tailwind + الإعدادات الأساسية + ملف Tailwind config</td>
+            <td><span class="badge badge-todo">لم يبدأ</span></td>
+          </tr>
+          <tr>
+            <td class="task-id">7.2</td>
+            <td class="task-title">Design Tokens</td>
+            <td class="task-desc">تعريف الألوان، الخطوط، المسافات، الحدود في Tailwind config</td>
+            <td><span class="badge badge-todo">لم يبدأ</span></td>
+          </tr>
+          <tr>
+            <td class="task-id">7.3</td>
+            <td class="task-title">مكونات أساسية (UI Primitives)</td>
+            <td class="task-desc">Button, Input, Card, Modal, Dropdown, Toast — مكونات قابلة لإعادة الاستخدام</td>
+            <td><span class="badge badge-todo">لم يبدأ</span></td>
+          </tr>
+          <tr>
+            <td class="task-id">7.4</td>
+            <td class="task-title">تحويل Login Page</td>
+            <td class="task-desc">صفحة تسجيل الدخول بتصميم جديد احترافي</td>
+            <td><span class="badge badge-todo">لم يبدأ</span></td>
+          </tr>
+          <tr>
+            <td class="task-id">7.5</td>
+            <td class="task-title">تحويل Navbar (Desktop)</td>
+            <td class="task-desc">شريط تنقل جديد نظيف + Dropdowns</td>
+            <td><span class="badge badge-todo">لم يبدأ</span></td>
+          </tr>
+          <tr>
+            <td class="task-id">7.6</td>
+            <td class="task-title">تحويل Sidebar (Desktop)</td>
+            <td class="task-desc">قائمة جانبية جديدة مع Animations</td>
+            <td><span class="badge badge-todo">لم يبدأ</span></td>
+          </tr>
+          <tr>
+            <td class="task-id">7.7</td>
+            <td class="task-title">تحويل Bottom Bar (Mobile)</td>
+            <td class="task-desc">شريط سفلي احترافي مع Animations</td>
+            <td><span class="badge badge-todo">لم يبدأ</span></td>
+          </tr>
+          <tr>
+            <td class="task-id">7.8</td>
+            <td class="task-title">تحويل Dashboard</td>
+            <td class="task-desc">بطاقات إحصائية جديدة + Charts</td>
+            <td><span class="badge badge-todo">لم يبدأ</span></td>
+          </tr>
+          <tr>
+            <td class="task-id">7.9</td>
+            <td class="task-title">تحويل Chat</td>
+            <td class="task-desc">واجهة دردشة حديثة (مثل ChatGPT)</td>
+            <td><span class="badge badge-todo">لم يبدأ</span></td>
+          </tr>
+          <tr>
+            <td class="task-id">7.10</td>
+            <td class="task-title">تحويل Quiz + Exam</td>
+            <td class="task-desc">واجهات الاختبارات بتصميم جديد</td>
+            <td><span class="badge badge-todo">لم يبدأ</span></td>
+          </tr>
+          <tr>
+            <td class="task-id">7.11</td>
+            <td class="task-title">تحويل باقي المكونات</td>
+            <td class="task-desc">Profile, MyFiles, Weekly, QuizBank, MyConversations</td>
+            <td><span class="badge badge-todo">لم يبدأ</span></td>
+          </tr>
+          <tr>
+            <td class="task-id">7.12</td>
+            <td class="task-title">Landing Page جديدة</td>
+            <td class="task-desc">صفحة هبوط احترافية (قبل تسجيل الدخول)</td>
+            <td><span class="badge badge-todo">لم يبدأ</span></td>
+          </tr>
+          <tr>
+            <td class="task-id">7.13</td>
+            <td class="task-title">Animations + Transitions</td>
+            <td class="task-desc">Framer Motion — حركات ناعمة في كل مكان</td>
+            <td><span class="badge badge-todo">لم يبدأ</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Phase 2: Multi-Faculty -->
+  <section>
+    <h2><span class="num">المرحلة 2</span> بنية متعددة الكليات</h2>
+
+    <div class="phase-card">
+      <div class="phase-header">
+        <div class="phase-title">
+          <span class="phase-num">2</span>
+          <span>Schema جديد + اختيار الكلية</span>
+        </div>
+        <span class="phase-time">⏰ 4 أسابيع</span>
+      </div>
+
+      <table class="tasks-table">
+        <thead>
+          <tr>
+            <th style="width: 60px;">#</th>
+            <th style="width: 200px;">المهمة</th>
+            <th>التفاصيل</th>
+            <th style="width: 90px;">الحالة</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="task-id">8.1</td>
+            <td class="task-title">جدول faculties</td>
+            <td class="task-desc">إنشاء جدول الكليات + البيانات الأولية (طب، أسنان، صيدلة)</td>
+            <td><span class="badge badge-todo">لم يبدأ</span></td>
+          </tr>
+          <tr>
+            <td class="task-id">8.2</td>
+            <td class="task-title">جدول specialties</td>
+            <td class="task-desc">التخصصات داخل كل كلية</td>
+            <td><span class="badge badge-todo">لم يبدأ</span></td>
+          </tr>
+          <tr>
+            <td class="task-id">8.3</td>
+            <td class="task-title">جدول subjects</td>
+            <td class="task-desc">المواد الدراسية لكل سنة</td>
+            <td><span class="badge badge-todo">لم يبدأ</span></td>
+          </tr>
+          <tr>
+            <td class="task-id">8.4</td>
+            <td class="task-title">جدول topics</td>
+            <td class="task-desc">المواضيع الفرعية داخل كل مادة</td>
+            <td><span class="badge badge-todo">لم يبدأ</span></td>
+          </tr>
+          <tr>
+            <td class="task-id">8.5</td>
+            <td class="task-title">تحديث profiles</td>
+            <td class="task-desc">إضافة faculty_id, specialty_id, year للطالب</td>
+            <td><span class="badge badge-todo">لم يبدأ</span></td>
+          </tr>
+          <tr>
+            <td class="task-id">8.6</td>
+            <td class="task-title">تحديث documents</td>
+            <td class="task-desc">إضافة faculty_id, subject_id, topic_id للملفات</td>
+            <td><span class="badge badge-todo">لم يبدأ</span></td>
+          </tr>
+          <tr>
+            <td class="task-id">8.7</td>
+            <td class="task-title">صفحة اختيار الكلية</td>
+            <td class="task-desc">Onboarding جديد: اختر كلية + تخصص + سنة</td>
+            <td><span class="badge badge-todo">لم يبدأ</span></td>
+          </tr>
+          <tr>
+            <td class="task-id">8.8</td>
+            <td class="task-title">تحديث RLS Policies</td>
+            <td class="task-desc">عزل المحتوى — كل طالب يرى محتوى كليته فقط</td>
+            <td><span class="badge badge-todo">لم يبدأ</span></td>
+          </tr>
+          <tr>
+            <td class="task-id">8.9</td>
+            <td class="task-title">Navbar ديناميكي</td>
+            <td class="task-desc">يظهر تبويبات حسب الكلية المختارة</td>
+            <td><span class="badge badge-todo">لم يبدأ</span></td>
+          </tr>
+          <tr>
+            <td class="task-id">8.10</td>
+            <td class="task-title">اختبار العزل</td>
+            <td class="task-desc">التأكد أن طالب الأسنان لا يرى محتوى الطب والعكس</td>
+            <td><span class="badge badge-todo">لم يبدأ</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Phase 3: Content System -->
+  <section>
+    <h2><span class="num">المرحلة 3</span> نظام المحتوى الذكي</h2>
+
+    <div class="phase-card">
+      <div class="phase-header">
+        <div class="phase-title">
+          <span class="phase-num">3</span>
+          <span>المشاركة + Deduplication + المراجعة</span>
+        </div>
+        <span class="phase-time">⏰ 3 أسابيع</span>
+      </div>
+
+      <table class="tasks-table">
+        <thead>
+          <tr>
+            <th style="width: 60px;">#</th>
+            <th style="width: 200px;">المهمة</th>
+            <th>التفاصيل</th>
+            <th style="width: 90px;">الحالة</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="task-id">9.1</td>
+            <td class="task-title">Toggle المشاركة</td>
+            <td class="task-desc">خيار "مشاركة" أو "خاص" عند رفع أي ملف</td>
+            <td><span class="badge badge-todo">لم يبدأ</span></td>
+          </tr>
+          <tr>
+            <td class="task-id">9.2</td>
+            <td class="task-title">دالة Deduplication</td>
+            <td class="task-desc">SQL function للبحث عن الملفات المشابهة قبل الحفظ</td>
+            <td><span class="badge badge-todo">لم يبدأ</span></td>
+          </tr>
+          <tr>
+            <td class="task-id">9.3</td>
+            <td class="task-title">واجهة التحذير</td>
+            <td class="task-desc">عند رفع ملف مشابه: "يوجد ملف مشابه، هل تريد المتابعة؟"</td>
+            <td><span class="badge badge-todo">لم يبدأ</span></td>
+          </tr>
+          <tr>
+            <td class="task-id">9.4</td>
+            <td class="task-title">حالة approval_status</td>
+            <td class="task-desc">حالة كل ملف: pending/approved/rejected</td>
+            <td><span class="badge badge-todo">لم يبدأ</span></td>
+          </tr>
+          <tr>
+            <td class="task-id">9.5</td>
+            <td class="task-title">لوحة Admin</td>
+            <td class="task-desc">صفحة خاصة للمشرفين لمراجعة المحتوى</td>
+            <td><span class="badge badge-todo">لم يبدأ</span></td>
+          </tr>
+          <tr>
+            <td class="task-id">9.6</td>
+            <td class="task-title">أزرار الموافقة/الرفض</td>
+            <td class="task-desc">مع أسباب الرفض القابلة للاختيار</td>
+            <td><span class="badge badge-todo">لم يبدأ</span></td>
+          </tr>
+          <tr>
+            <td class="task-id">9.7</td>
+            <td class="task-title">جدول المشرفين</td>
+            <td class="task-desc">role: student / moderator / admin</td>
+            <td><span class="badge badge-todo">لم يبدأ</span></td>
+          </tr>
+          <tr>
+            <td class="task-id">9.8</td>
+            <td class="task-title">إشعارات</td>
+            <td class="task-desc">إشعار للطالب عند القبول/الرفض</td>
+            <td><span class="badge badge-todo">لم يبدأ</span></td>
+          </tr>
+          <tr>
+            <td class="task-id">9.9</td>
+            <td class="task-title">نظام النقاط</td>
+            <td class="task-desc">+10 نقاط للملف المقبول + شارات</td>
+            <td><span class="badge badge-todo">لم يبدأ</span></td>
+          </tr>
+          <tr>
+            <td class="task-id">9.10</td>
+            <td class="task-title">مكتبة المحتوى العام</td>
+            <td class="task-desc">صفحة تعرض كل الملفات المعتمدة لكل مادة</td>
+            <td><span class="badge badge-todo">لم يبدأ</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Phase 4: Dentistry -->
+  <section>
+    <h2><span class="num">المرحلة 4</span> محتوى طب الأسنان</h2>
+
+    <div class="phase-card">
+      <div class="phase-header">
+        <div class="phase-title">
+          <span class="phase-num">4</span>
+          <span>إطلاق كلية الأسنان</span>
+        </div>
+        <span class="phase-time">⏰ 3 أسابيع</span>
+      </div>
+
+      <table class="tasks-table">
+        <thead>
+          <tr>
+            <th style="width: 60px;">#</th>
+            <th style="width: 200px;">المهمة</th>
+            <th>التفاصيل</th>
+            <th style="width: 90px;">الحالة</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="task-id">10.1</td>
+            <td class="task-title">هيكل كلية الأسنان</td>
+            <td class="task-desc">5 سنوات + المواد الأساسية</td>
+            <td><span class="badge badge-todo">لم يبدأ</span></td>
+          </tr>
+          <tr>
+            <td class="task-id">10.2</td>
+            <td class="task-title">بنك أسئلة أساسي</td>
+            <td class="task-desc">100 سؤال أولي (يولّدها AI)</td>
+            <td><span class="badge badge-todo">لم يبدأ</span></td>
+          </tr>
+          <tr>
+            <td class="task-id">10.3</td>
+            <td class="task-title">مصادر ومراجع</td>
+            <td class="task-desc">روابط كتب + ملخصات أساسية</td>
+            <td><span class="badge badge-todo">لم يبدأ</span></td>
+          </tr>
+          <tr>
+            <td class="task-id">10.4</td>
+            <td class="task-title">Exam Presets</td>
+            <td class="task-desc">إعدادات محاكاة خاصة بالأسنان</td>
+            <td><span class="badge badge-todo">لم يبدأ</span></td>
+          </tr>
+          <tr>
+            <td class="task-id">10.5</td>
+            <td class="task-title">اختبار مع أصدقاء</td>
+            <td class="task-desc">إشراك 3-5 طلاب أسنان لتجربة المنصة</td>
+            <td><span class="badge badge-todo">لم يبدأ</span></td>
+          </tr>
+          <tr>
+            <td class="task-id">10.6</td>
+            <td class="task-title">إطلاق Beta للأسنان</td>
+            <td class="task-desc">فتح التسجيل لطلاب الأسنان</td>
+            <td><span class="badge badge-todo">لم يبدأ</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Phase 5: Pharmacy -->
+  <section>
+    <h2><span class="num">المرحلة 5</span> محتوى الصيدلة</h2>
+
+    <div class="phase-card">
+      <div class="phase-header">
+        <div class="phase-title">
+          <span class="phase-num">5</span>
+          <span>إطلاق كلية الصيدلة</span>
+        </div>
+        <span class="phase-time">⏰ 2-3 أسابيع</span>
+      </div>
+
+      <table class="tasks-table">
+        <thead>
+          <tr>
+            <th style="width: 60px;">#</th>
+            <th style="width: 200px;">المهمة</th>
+            <th>التفاصيل</th>
+            <th style="width: 90px;">الحالة</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="task-id">11.1</td>
+            <td class="task-title">هيكل كلية الصيدلة</td>
+            <td class="task-desc">5 سنوات + المواد</td>
+            <td><span class="badge badge-todo">لم يبدأ</span></td>
+          </tr>
+          <tr>
+            <td class="task-id">11.2</td>
+            <td class="task-title">بنك أسئلة أولي</td>
+            <td class="task-desc">80 سؤال أساسي</td>
+            <td><span class="badge badge-todo">لم يبدأ</span></td>
+          </tr>
+          <tr>
+            <td class="task-id">11.3</td>
+            <td class="task-title">مصادر صيدلانية</td>
+            <td class="task-desc">Pharmaceutical books + references</td>
+            <td><span class="badge badge-todo">لم يبدأ</span></td>
+          </tr>
+          <tr>
+            <td class="task-id">11.4</td>
+            <td class="task-title">إطلاق Beta للصيدلة</td>
+            <td class="task-desc">فتح التسجيل</td>
+            <td><span class="badge badge-todo">لم يبدأ</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Phase 6: Monetization -->
+  <section>
+    <h2><span class="num">المرحلة 6</span> النموذج التجاري</h2>
+
+    <div class="phase-card">
+      <div class="phase-header">
+        <div class="phase-title">
+          <span class="phase-num">6</span>
+          <span>الدفع + التوسع المالي</span>
+        </div>
+        <span class="phase-time">⏰ 6-8 أسابيع</span>
+      </div>
+
+      <div class="callout callout-warn">
+        <strong>⚠️ مؤجّلة</strong>
+        هذه المرحلة تبدأ بعد الوصول إلى 1000 طالب نشط. لا تفكر بها الآن.
+      </div>
+
+      <table class="tasks-table">
+        <thead>
+          <tr>
+            <th style="width: 60px;">#</th>
+            <th style="width: 200px;">المهمة</th>
+            <th>التفاصيل</th>
+            <th style="width: 90px;">الحالة</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="task-id">12.1</td>
+            <td class="task-title">تكامل Stripe</td>
+            <td class="task-desc">أو حل دفع محلي (شام كاش، وغيرها)</td>
+            <td><span class="badge badge-todo">مؤجل</span></td>
+          </tr>
+          <tr>
+            <td class="task-id">12.2</td>
+            <td class="task-title">3 خطط اشتراك</td>
+            <td class="task-desc">مجاني / طالب / متقدم</td>
+            <td><span class="badge badge-todo">مؤجل</span></td>
+          </tr>
+          <tr>
+            <td class="task-id">12.3</td>
+            <td class="task-title">Analytics Dashboard</td>
+            <td class="task-desc">متابعة الاستخدام والدخل</td>
+            <td><span class="badge badge-todo">مؤجل</span></td>
+          </tr>
+          <tr>
+            <td class="task-id">12.4</td>
+            <td class="task-title">إطلاق رسمي</td>
+            <td class="task-desc">تسويق واسع + إعلانات</td>
+            <td><span class="badge badge-todo">مؤجل</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- First Week -->
+  <section>
+    <h2><span class="num">الأسبوع</span> الأول</h2>
+
+    <div class="callout callout-success">
+      <strong>🎯 ابدأ من هنا</strong>
+      لا تنتقل للمرحلة 7.2 قبل إتمام 7.1 بنجاح.
+    </div>
+
+    <h3>المهام المطلوبة الآن (7.1 فقط)</h3>
+    <table class="tasks-table">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">الخطوة</th>
+          <th>ماذا سأرسل لك</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="task-id">7.1.a</td>
+          <td class="task-title">تثبيت Tailwind</td>
+          <td class="task-desc">أوامر npm + إعدادات</td>
+        </tr>
+        <tr>
+          <td class="task-id">7.1.b</td>
+          <td class="task-title">ملف Tailwind config</td>
+          <td class="task-desc">إعدادات مخصصة (ألوان، خطوط)</td>
+        </tr>
+        <tr>
+          <td class="task-id">7.1.c</td>
+          <td class="task-title">تحديث index.css</td>
+          <td class="task-desc">إضافة @tailwind directives</td>
+        </tr>
+        <tr>
+          <td class="task-id">7.1.d</td>
+          <td class="task-title">اختبار أولي</td>
+          <td class="task-desc">تعديل بسيط في Login للتأكد</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+</div>
+
+<footer>
+  <p>💙 كوتش AI — خطة الانطلاق v2</p>
+  <p style="margin-top:6px;">13 أكتوبر 2026 — 84 مهمة موزعة على 6 مراحل</p>
+</footer>
+
+</body>
+</html>

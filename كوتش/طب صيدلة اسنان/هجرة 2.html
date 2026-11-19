@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>كوتش AI — التوثيق الاستراتيجي الشامل v3.1</title>
+<style>
+  :root {
+    --bg: #0A0A0A;
+    --bg-soft: #141414;
+    --bg-card: #1A1A1A;
+    --border: #262626;
+    --text: #FAFAFA;
+    --text-muted: #A1A1AA;
+    --text-subtle: #71717A;
+    --accent: #3B82F6;
+    --success: #22C55E;
+    --warn: #F59E0B;
+    --danger: #EF4444;
+    --purple: #8B5CF6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    font-size: 15px;
+  }
+  .container { max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
+  header {
+    padding: 60px 24px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(59, 130, 246, 0.05) 0%, transparent 100%);
+  }
+  header h1 {
+    font-size: 2.4em;
+    font-weight: 800;
+    margin-bottom: 12px;
+    background: linear-gradient(180deg, #FAFAFA 0%, #71717A 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  header p { color: var(--text-muted); font-size: 1.1em; }
+  header .meta {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    font-size: 0.85em;
+    color: var(--text-subtle);
+    flex-wrap: wrap;
+  }
+  section { margin-bottom: 50px; }
+  h2 {
+    font-size: 1.5em;
+    font-weight: 700;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  h2 .num {
+    color: var(--accent);
+    font-size: 0.6em;
+    font-weight: 700;
+    background: rgba(59, 130, 246, 0.15);
+    padding: 4px 10px;
+    border-radius: 6px;
+  }
+  h3 { font-size: 1.1em; font-weight: 600; margin: 24px 0 12px; color: var(--text); }
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 12px;
+  }
+  .grid { display: grid; gap: 14px; }
+  .grid-2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  .grid-3 { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--bg-card);
+    border-radius: 12px; overflow: hidden; border: 1px solid var(--border); margin: 12px 0;
+  }
+  th, td { padding: 12px 14px; text-align: right; border-bottom: 1px solid var(--border); font-size: 0.88em; }
+  th { background: var(--bg-soft); color: var(--text-muted); font-size: 0.75em; font-weight: 600; }
+  tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--bg-soft); }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 5px; font-size: 0.7em; font-weight: 700; }
+  .badge-done { background: #052E16; color: #86EFAC; }
+  .badge-progress { background: #451A03; color: #FCD34D; }
+  .badge-todo { background: #18181B; color: #A1A1AA; border: 1px solid #27272A; }
+  .badge-critical { background: #450A0A; color: #FCA5A5; }
+  .callout { border-right: 3px solid var(--accent); background: var(--bg-soft); padding: 14px 18px; border-radius: 8px; margin: 14px 0; font-size: 0.9em; }
+  .callout-warn { border-right-color: var(--warn); }
+  .callout-success { border-right-color: var(--success); }
+  .callout-danger { border-right-color: var(--danger); }
+  .callout strong { color: var(--text); display: block; margin-bottom: 6px; }
+  .code { background: var(--bg-soft); padding: 2px 7px; border-radius: 4px; font-family: monospace; font-size: 0.82em; color: #93C5FD; direction: ltr; display: inline-block; }
+  ul, ol { padding-right: 20px; }
+  li { margin-bottom: 5px; color: var(--text-muted); font-size: 0.9em; }
+  footer { text-align: center; padding: 40px; color: var(--text-subtle); font-size: 0.82em; border-top: 1px solid var(--border); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>كوتش AI — التوثيق الاستراتيجي الشامل</h1>
+  <p>سجل الإنجازات، الإصلاحات الجذرية، وخطة الطريق للمرحلة القادمة</p>
+  <div class="meta">
+    <span>آخر تحديث: 18 أكتوبر 2026</span>
+    <span>الإصدار: v3.1 (تأسيس نواة المنصة)</span>
+    <span>الوضع الحالي: إغلاق تجريبي (Admin Only)</span>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- 1. الإنجازات والإصلاحات -->
+  <section>
+    <h2><span class="num">01</span> ما تم إنجازه وتصحيحه في هذه الجلسة</h2>
+    
+    <div class="callout callout-success">
+      <strong>تم بناء النظام الأساسي وتخطي كافة العقبات التقنية:</strong>
+      تم إصلاح الأخطاء البرمجية، حماية المنصة، بناء لوحة الإدارة، وربط الدكاترة.
+    </div>
+
+    <table>
+      <thead><tr><th>المهمة</th><th>التفاصيل التقنية</th><th>الحالة</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>إصلاح خطأ محاكاة الامتحان (500)</td>
+          <td>تحديث <code>generate-quiz.js</code> لإجبار Groq على إرجاع JSON وإزالة OpenRouter المنتهي.</td>
+          <td><span class="badge badge-done">مكتمل</span></td>
+        </tr>
+        <tr>
+          <td>حماية المنصة (Admin Gate)</td>
+          <td>تعديل <code>App.jsx</code> بحيث لا يدخل المنصة إلا من يملك <code>role='admin'</code>، وإظهار ComingSoon للباقي.</td>
+          <td><span class="badge badge-done">مكتمل</span></td>
+        </tr>
+        <tr>
+          <td>تعديل الـ Waitlist والـ Auth</td>
+          <td>ربط صفحة الـ Waitlist بإنشاء حساب Auth في Supabase تلقائياً، وتوجيه الطالب للاستبيان مباشرة.</td>
+          <td><span class="badge badge-done">مكتمل</span></td>
+        </tr>
+        <tr>
+          <td>الاستبيان الديناميكي</td>
+          <td>تعديل <code>Questionnaire.jsx</code> ليجلب مواد (الطب، الأسنان، الصيدلة) بناءً على اختيار الكلية والسنة.</td>
+          <td><span class="badge badge-done">مكتمل</span></td>
+        </tr>
+        <tr>
+          <td>لوحة تحكم الإدارة (Admin)</td>
+          <td>إنشاء لوحة تحكم تعرض إحصائيات، قائمة الانتظار، تدقيق الملفات، وإدارة الدكاترة.</td>
+          <td><span class="badge badge-done">مكتمل</span></td>
+        </tr>
+        <tr>
+          <td>تدقيق الملفات (Review System)</td>
+          <td>تمكين الأدمن من معاينة نصوص الملفات، قبولها، أو رفضها، مع تحديث حالتها في قاعدة البيانات.</td>
+          <td><span class="badge badge-done">مكتمل</span></td>
+        </tr>
+        <tr>
+          <td>إدارة الدكاترة (Professors)</td>
+          <td>إنشاء جداول <code>professors</code> و <code>professor_styles</code>، وتمكين الأدمن من إضافة شخصيات الدكاترة.</td>
+          <td><span class="badge badge-done">مكتمل</span></td>
+        </tr>
+        <tr>
+          <td>تحسين الخط والأيقونات</td>
+          <td>استبدال الإيموجي بأيقونات Lucide، وتكبير الخط في <code>index.css</code> لراحة العين.</td>
+          <td><span class="badge badge-done">مكتمل</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 2. قاعدة البيانات -->
+  <section>
+    <h2><span class="num">02</span> تحديثات قاعدة البيانات (Supabase)</h2>
+    <div class="grid grid-2">
+      <div class="card">
+        <h3 style="margin-top:0">جداول تمت إضافتها حديثاً</h3>
+        <ul>
+          <li><code>professors</code>: لتخزين أسماء الدكاترة، المواد، والكليات.</li>
+          <li><code>professor_styles</code>: لتخزين أسلوب الشرح، نمط الأسئلة، ونقاط التركيز.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">أعمدة تمت إضافتها</h3>
+        <ul>
+          <li><code>profiles</code>: <code>email</code>, <code>faculty_slug</code>, <code>faculty_name</code>, <code>year</code>, <code>role</code>.</li>
+          <li><code>documents</code>: <code>status</code> (pending, approved, rejected).</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. خارطة الطريق الكاملة (المرحلة القادمة) -->
+  <section>
+    <h2><span class="num">03</span> خارطة الطريق (المراحل القادمة بالتفصيل)</h2>
+
+    <h3>المرحلة 8: تطوير لوحة الإدارة (Admin Control Center)</h3>
+    <table>
+      <thead><tr><th>الميزة المطلوبة</th><th>التفاصيل</th><th>الحالة</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>قائمة الطلاب (Students)</td>
+          <td>جدول يعرض كل الطلاب المسجلين، كلياتهم، وتاريخ تسجيلهم، مع زر (تعديل) لتغيير صلاحياتهم.</td>
+          <td><span class="badge badge-todo">لم يبدأ</span></td>
+        </tr>
+        <tr>
+          <td>قائمة المواد (Subjects)</td>
+          <td>عرض المواد المسجلة في النظام (الطب، الأسنان، الصيدلة) مع إمكانية إضافة/تعديل.</td>
+          <td><span class="badge badge-todo">لم يبدأ</span></td>
+        </tr>
+        <tr>
+          <td>قائمة الملفات (All Files)</td>
+          <td>عرض كل الملفات (المعتمدة والمرفوضة)، وليس فقط "قيد الانتظار".</td>
+          <td><span class="badge badge-todo">لم يبدأ</span></td>
+        </tr>
+        <tr>
+          <td>قائمة الدكاترة (Professors)</td>
+          <td>عرض جدول بكل الدكاترة المضافين وأساليبهم، مع زر (تعديل) و (حذف).</td>
+          <td><span class="badge badge-todo">لم يبدأ</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>المرحلة 9: التخصيص البصري والهوية لكل كلية (Faculty-Specific UI)</h3>
+    <div class="callout">
+      <strong>الهدف:</strong> أن يشعر الطالب أن المنصة صُممت خصيصاً له. تغيير الألوان، الشخصية، والشكل العام بناءً على الكلية (الطب، الأسنان، الصيدلة).
+    </div>
+    <table>
+      <thead><tr><th>المهمة</th><th>التفاصيل</th><th>الحالة</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>الألوان الديناميكية (Dynamic Theme)</td>
+          <td>الأزرق للطب البشري، الأخضر/التركواز لطب الأسنان، البنفسجي/البرتقالي للصيدلة (عبر CSS Variables).</td>
+          <td><span class="badge badge-todo">لم يبدأ</span></td>
+        </tr>
+        <tr>
+          <td>شخصية الـ AI (AI Persona)</td>
+          <td>تعديل System Prompt ليكون: "أنت طبيب بشري خبير"، "أنت طبيب أسنان"، "أنت صيدلاني".</td>
+          <td><span class="badge badge-todo">لم يبدأ</span></td>
+        </tr>
+        <tr>
+          <td>الواجهة الرئيسية (Dashboard)</td>
+          <td>تغيير الأيقونات، الخلفيات، والترحيب في لوحة التحكم لتناسب كل تخصص (مثلاً: أيقونة سن للاسنان).</td>
+          <td><span class="badge badge-todo">لم يبدأ</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>المرحلة 10: تقمص شخصية الدكتور (Professor AI)</h3>
+    <ul>
+      <li>ربط الـ AI Chat بشخصية الدكتور المحدد (أسلوب الشرح، التركيز).</li>
+      <li>توليد أسئلة الاختبارات بناءً على نمط الدكتور (مثلاً: د. أحمد يحب أسئلة التشخيص التفريقي).</li>
+      <li>تعديل <code>buildSystemPrompt.js</code> و <code>generate-quiz.js</code> لقراءة أسلوب الدكتور من قاعدة البيانات.</li>
+    </ul>
+
+    <h3>المرحلة 11: نظام المزودين الذكي (Smart Fallback)</h3>
+    <ul>
+      <li>تعديل خوارزمية الـ AI بحيث تستهلك مفاتيح Groq بالتسلسل (وليس عشوائياً).</li>
+      <li>إذا انتهى مفتاح، ينتقل للثاني، وإذا انتهت كلها، ينتقل إلى OpenRouter بسلاسة بدون أن يشعر الطالب.</li>
+    </ul>
+  </section>
+
+  <!-- 4. الميزات المؤجلة -->
+  <section>
+    <h2><span class="num">04</span> الميزات المؤجلة (Deferred Tasks)</h2>
+    <div class="card">
+      <ul>
+        <li><strong>معاينة وتحميل ملفات PDF الأصلية:</strong> حالياً الأدمن يرى النص فقط. لاحقاً سنرفع ملف الـ PDF إلى Supabase Storage لكي يتمكن الأدمن من تحميله وفحصه بالكامل (بالصور والتنسيق).</li>
+        <li><strong>تحسين التصميم (UI/UX Polish):</strong> ضبط المسافات، الألوان المتدرجة، وإضافة حركات ناعمة (Framer Motion) في كل الصفحات.</li>
+      </ul>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <p>كوتش AI — صُنع لطلاب الجامعات السورية</p>
+  <p style="margin-top: 6px;">التوثيق الشامل v3.1 — 18 أكتوبر 2026</p>
+</footer>
+
+</body>
+</html>

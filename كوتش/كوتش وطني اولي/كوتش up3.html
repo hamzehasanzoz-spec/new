@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>كوتش AI — توثيق المشروع v0.4</title>
+<style>
+  :root {
+    --primary: #2A5C82;
+    --accent: #10B981;
+    --danger: #EF4444;
+    --warn: #F59E0B;
+    --bg: #F8FAFC;
+    --card: #FFFFFF;
+    --border: #E2E8F0;
+    --text: #1E293B;
+    --muted: #64748B;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Tahoma, system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
+  header { background: linear-gradient(135deg, #2A5C82 0%, #3B7BA8 100%); color: #fff; padding: 60px 24px; text-align: center; border-radius: 0 0 24px 24px; margin-bottom: 40px; }
+  header h1 { font-size: 2.4em; margin-bottom: 10px; }
+  header p { opacity: 0.9; font-size: 1.1em; }
+  header .meta { margin-top: 20px; font-size: 0.9em; opacity: 0.75; }
+  header .meta span { margin: 0 12px; }
+  section { margin-bottom: 50px; }
+  h2 { color: var(--primary); font-size: 1.6em; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 3px solid var(--primary); display: inline-block; }
+  h3 { color: var(--primary); font-size: 1.2em; margin: 24px 0 12px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 22px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+  .card-title { font-weight: bold; font-size: 1.1em; color: var(--primary); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+  .card-desc { color: var(--muted); font-size: 0.95em; }
+  .grid { display: grid; gap: 16px; }
+  .grid-2 { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+  .grid-3 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.78em; font-weight: bold; }
+  .badge-done { background: #D1FAE5; color: #065F46; }
+  .badge-progress { background: #FEF3C7; color: #92400E; }
+  .badge-todo { background: #FEE2E2; color: #991B1B; }
+  table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+  th, td { padding: 14px 16px; text-align: right; border-bottom: 1px solid var(--border); font-size: 0.94em; }
+  th { background: #F1F5F9; color: var(--primary); font-weight: bold; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover { background: #F8FAFC; }
+  code { background: #F1F5F9; padding: 3px 8px; border-radius: 6px; font-family: 'Consolas', monospace; font-size: 0.88em; direction: ltr; display: inline-block; }
+  .stack-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .stack-item { background: #EFF6FF; color: var(--primary); padding: 6px 14px; border-radius: 8px; font-size: 0.88em; font-weight: 600; }
+  footer { text-align: center; color: var(--muted); padding: 40px 24px; font-size: 0.9em; border-top: 1px solid var(--border); margin-top: 40px; }
+  .callout { background: #EFF6FF; border-right: 4px solid var(--primary); padding: 16px 20px; border-radius: 8px; margin: 16px 0; font-size: 0.95em; }
+  .callout-success { background: #F0FDF4; border-right-color: var(--accent); }
+  .callout-warn { background: #FFFBEB; border-right-color: var(--warn); }
+  .callout-danger { background: #FEF2F2; border-right-color: var(--danger); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🩺 كوتش AI</h1>
+  <p>توثيق المشروع وخارطة الطريق — منصة الامتحان الوطني للطب في سوريا</p>
+  <div class="meta">
+    <span>📅 آخر تحديث: 10 أكتوبر 2026</span>
+    <span>🟢 الحالة: v0.4 (RAG + AI محسّن)</span>
+    <span>🔗 <a href="https://new-theta-five-73.vercel.app" style="color:#fff;opacity:0.8;">new-theta-five-73.vercel.app</a></span>
+  </div>
+</header>
+
+<div class="container">
+
+  <section>
+    <h2>📌 نظرة عامة</h2>
+    <div class="card">
+      <p style="font-size:1.05em; margin-bottom:12px;">
+        <strong>كوتش AI</strong> — مساعد ذكي لطلاب الطب في سوريا للتحضير للامتحان الوطني (NMLE).
+        يجمع بين استبيان شخصي، دردشة AI مع Streaming، رفع ملفات، RAG (البحث في الملفات)، وحفظ المحادثات.
+      </p>
+      <div class="stack-list">
+        <span class="stack-item">React 18</span>
+        <span class="stack-item">Vite 5</span>
+        <span class="stack-item">Supabase (Auth + DB + pgvector)</span>
+        <span class="stack-item">OpenRouter (Nemotron 120B)</span>
+        <span class="stack-item">Voyage AI (Embeddings)</span>
+        <span class="stack-item">Vercel Serverless</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>✅ الميزات العاملة</h2>
+    <div class="grid grid-3">
+      <div class="card"><div class="card-title">🔐 المصادقة</div><div class="card-desc">تسجيل دخول/إنشاء حساب.</div><div style="margin-top:10px;"><span class="badge badge-done">✅</span></div></div>
+      <div class="card"><div class="card-title">📝 استبيان 6 مراحل</div><div class="card-desc">يُخصص التجربة.</div><div style="margin-top:10px;"><span class="badge badge-done">✅</span></div></div>
+      <div class="card"><div class="card-title">🏠 لوحة تحكم</div><div class="card-desc">عرض بيانات الطالب.</div><div style="margin-top:10px;"><span class="badge badge-done">✅</span></div></div>
+      <div class="card"><div class="card-title">👤 بروفايل</div><div class="card-desc">تعديل البيانات + كلمة المرور.</div><div style="margin-top:10px;"><span class="badge badge-done">✅</span></div></div>
+      <div class="card"><div class="card-title">💬 دردشة AI</div><div class="card-desc">Streaming + نماذج ذكية.</div><div style="margin-top:10px;"><span class="badge badge-done">✅</span></div></div>
+      <div class="card"><div class="card-title">💾 حفظ المحادثات</div><div class="card-desc">قائمة جانبية + استرجاع.</div><div style="margin-top:10px;"><span class="badge badge-done">✅</span></div></div>
+      <div class="card"><div class="card-title">📚 رفع الملفات</div><div class="card-desc">PDF / TXT → استخراج + embeddings.</div><div style="margin-top:10px;"><span class="badge badge-done">✅</span></div></div>
+      <div class="card"><div class="card-title">🔍 RAG كامل</div><div class="card-desc">البحث في الملفات + الحقن في الرد.</div><div style="margin-top:10px;"><span class="badge badge-done">✅</span></div></div>
+      <div class="card"><div class="card-title">🎯 Prompt محسّن</div><div class="card-desc">بدون ترحيب، دقة أعلى، سرعة.</div><div style="margin-top:10px;"><span class="badge badge-done">✅</span></div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>🛣️ خارطة الطريق</h2>
+
+    <h3>🎯 المرحلة 1: الذكاء الاصطناعي</h3>
+    <table>
+      <thead><tr><th>#</th><th>المهمة</th><th>الحالة</th></tr></thead>
+      <tbody>
+        <tr><td>1.1</td><td>System Prompt مخصص</td><td><span class="badge badge-done">مكتمل</span></td></tr>
+        <tr><td>1.2</td><td>نماذج مجانية</td><td><span class="badge badge-done">مكتمل</span></td></tr>
+        <tr><td>1.3</td><td>Streaming</td><td><span class="badge badge-done">مكتمل</span></td></tr>
+        <tr><td>1.4</td><td>تحسين جودة الردود (Prompt صارم)</td><td><span class="badge badge-done">مكتمل</span></td></tr>
+        <tr><td>1.5</td><td>فرع نموذج مدفوع</td><td><span class="badge badge-todo">لم يبدأ</span></td></tr>
+        <tr><td>1.6.a</td><td>pgvector + جداول RAG</td><td><span class="badge badge-done">مكتمل</span></td></tr>
+        <tr><td>1.6.b</td><td>واجهة رفع الملفات</td><td><span class="badge badge-done">مكتمل</span></td></tr>
+        <tr><td>1.6.c</td><td>استخراج نص PDF</td><td><span class="badge badge-done">مكتمل</span></td></tr>
+        <tr><td>1.6.d</td><td>Embeddings عبر Voyage</td><td><span class="badge badge-done">مكتمل</span></td></tr>
+        <tr><td>1.6.e</td><td>البحث + الحقن في الدردشة</td><td><span class="badge badge-done">مكتمل</span></td></tr>
+        <tr><td><strong>1.6.f</strong></td><td><strong>عرض المصادر في الردود</strong></td><td><span class="badge badge-progress">التالي</span></td></tr>
+      </tbody>
+    </table>
+
+    <h3>👤 المرحلة 2: البروفايل</h3>
+    <table>
+      <thead><tr><th>#</th><th>المهمة</th><th>الحالة</th></tr></thead>
+      <tbody>
+        <tr><td>2.1</td><td>صفحة بروفايل</td><td><span class="badge badge-done">مكتمل</span></td></tr>
+        <tr><td>2.2</td><td>Avatar + إعدادات متقدمة</td><td><span class="badge badge-todo">لم يبدأ</span></td></tr>
+      </tbody>
+    </table>
+
+    <h3>📊 المرحلة 3: التتبع</h3>
+    <table>
+      <thead><tr><th>#</th><th>المهمة</th><th>الحالة</th></tr></thead>
+      <tbody>
+        <tr><td>3.1</td><td>Weekly Check-in</td><td><span class="badge badge-todo">لم يبدأ</span></td></tr>
+        <tr><td>3.2</td><td>لوحة تحكم متقدمة</td><td><span class="badge badge-todo">لم يبدأ</span></td></tr>
+        <tr><td>3.3</td><td>Streak Counter</td><td><span class="badge badge-todo">لم يبدأ</span></td></tr>
+      </tbody>
+    </table>
+
+    <h3>💾 المرحلة 4: حفظ البيانات</h3>
+    <table>
+      <thead><tr><th>#</th><th>المهمة</th><th>الحالة</th></tr></thead>
+      <tbody>
+        <tr><td>4.1</td><td>سجل المحادثات</td><td><span class="badge badge-done">مكتمل</span></td></tr>
+        <tr><td>4.2</td><td>صفحة "محادثاتي" محسّنة</td><td><span class="badge badge-todo">لم يبدأ</span></td></tr>
+        <tr><td>4.3</td><td>تصدير PDF/MD</td><td><span class="badge badge-todo">لم يبدأ</span></td></tr>
+      </tbody>
+    </table>
+
+    <h3>🧠 المرحلة 5: الاختبارات الذكية</h3>
+    <table>
+      <thead><tr><th>#</th><th>المهمة</th><th>الحالة</th></tr></thead>
+      <tbody>
+        <tr><td>5.1</td><td>توليد MCQ بالذكاء</td><td><span class="badge badge-todo">لم يبدأ</span></td></tr>
+        <tr><td>5.2</td><td>اختبار تفاعلي</td><td><span class="badge badge-todo">لم يبدأ</span></td></tr>
+        <tr><td>5.3</td><td>محاكاة امتحان</td><td><span class="badge badge-todo">لم يبدأ</span></td></tr>
+        <tr><td>5.4</td><td>بنك أسئلة شخصي</td><td><span class="badge badge-todo">لم يبدأ</span></td></tr>
+      </tbody>
+    </table>
+
+    <h3>🎨 المرحلة 6: UI/UX</h3>
+    <table>
+      <thead><tr><th>#</th><th>المهمة</th><th>الحالة</th></tr></thead>
+      <tbody>
+        <tr><td>6.1</td><td>الألوان + Dark Mode</td><td><span class="badge badge-todo">لم يبدأ</span></td></tr>
+        <tr><td>6.2</td><td>Sidebar ثابت</td><td><span class="badge badge-todo">لم يبدأ</span></td></tr>
+        <tr><td>6.3</td><td>شعار SVG</td><td><span class="badge badge-todo">لم يبدأ</span></td></tr>
+        <tr><td>6.4</td><td>خطوط Cairo/Tajawal</td><td><span class="badge badge-todo">لم يبدأ</span></td></tr>
+        <tr><td>6.5</td><td>استجابة الجوال</td><td><span class="badge badge-todo">لم يبدأ</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>🔐 متغيرات البيئة</h2>
+    <table>
+      <thead><tr><th>الاسم</th><th>الغرض</th><th>Environment</th></tr></thead>
+      <tbody>
+        <tr><td><code>VITE_SUPABASE_URL</code></td><td>رابط Supabase</td><td>All</td></tr>
+        <tr><td><code>VITE_SUPABASE_ANON_KEY</code></td><td>Legacy anon key (eyJ...)</td><td>All</td></tr>
+        <tr><td><code>OPENROUTER_KEY</code></td><td>مفتاح OpenRouter</td><td>All</td></tr>
+        <tr><td><code>VOYAGE_API_KEY</code></td><td>مفتاح Voyage AI</td><td>All</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>📜 سجل الإصدارات</h2>
+    <table>
+      <thead><tr><th>الإصدار</th><th>التاريخ</th><th>التغييرات</th></tr></thead>
+      <tbody>
+        <tr><td><strong>v0.1</strong></td><td>2026-10-09</td><td>الإصدار الأول: استبيان + دردشة + نشر</td></tr>
+        <tr><td><strong>v0.2</strong></td><td>2026-10-10</td><td>Streaming + Prompt مخصص + بروفايل + حفظ المحادثات + رفع ملفات</td></tr>
+        <tr><td><strong>v0.3</strong></td><td>2026-10-10</td><td>RAG كامل — البحث الدلالي + الإجابات من ملفات الطالب</td></tr>
+        <tr><td><strong>v0.4</strong></td><td>2026-10-10</td><td>Prompt صارم (بلا ترحيب) + Nemotron 120B + max_tokens 4000 + سرعة 4x</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>🐛 سجل الأخطاء المُصلَحة</h2>
+    <table>
+      <thead><tr><th>التاريخ</th><th>الخطأ</th><th>الحل</th></tr></thead>
+      <tbody>
+        <tr><td>10-09</td><td><code>vite: command not found</code></td><td>package-lock.json + Root Directory</td></tr>
+        <tr><td>10-09</td><td><code>Permission denied: vite</code></td><td>npx vite build + .gitignore</td></tr>
+        <tr><td>10-09</td><td><code>medical_background missing</code></td><td>تحديث schema</td></tr>
+        <tr><td>10-09</td><td><code>email rate limit</code></td><td>تعطيل تأكيد البريد</td></tr>
+        <tr><td>10-09</td><td>Gemini 2.0 unavailable</td><td>OpenRouter</td></tr>
+        <tr><td>10-09</td><td>App.jsx ملوّث بكود خادم</td><td>استرجاع النسخة الصحيحة</td></tr>
+        <tr><td>10-10</td><td>Reasoning Model بطيء</td><td>نماذج غير reasoning</td></tr>
+        <tr><td>10-10</td><td><code>req.headers.get</code></td><td>Node.js بدل Edge</td></tr>
+        <tr><td>10-10</td><td>Voyage Invalid API key</td><td>ضبط env vars</td></tr>
+        <tr><td>10-10</td><td>صفحة بيضاء (Supabase)</td><td>Legacy anon key + rebuild</td></tr>
+        <tr><td>10-10</td><td>RAG لا يجد نتائج</td><td>threshold 0.35 → 0.1</td></tr>
+        <tr><td>10-10</td><td>ردود ضعيفة/مقطوعة</td><td>Nemotron 120B + max_tokens 4000</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>🔗 روابط مهمة</h2>
+    <div class="grid grid-2">
+      <div class="card"><div class="card-title">🌐 الموقع</div><a href="https://new-theta-five-73.vercel.app" target="_blank">new-theta-five-73.vercel.app</a></div>
+      <div class="card"><div class="card-title">💻 GitHub</div><a href="https://github.com/hamzehasanzoz-spec/new" target="_blank">hamzehasanzoz-spec/new</a></div>
+      <div class="card"><div class="card-title">🎛️ Vercel</div><a href="https://vercel.com/dashboard" target="_blank">vercel.com/dashboard</a></div>
+      <div class="card"><div class="card-title">🗄️ Supabase</div><a href="https://supabase.com/dashboard" target="_blank">supabase.com/dashboard</a></div>
+      <div class="card"><div class="card-title">🤖 OpenRouter</div><a href="https://openrouter.ai" target="_blank">openrouter.ai</a></div>
+      <div class="card"><div class="card-title">📚 Voyage AI</div><a href="https://dash.voyageai.com" target="_blank">dash.voyageai.com</a></div>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <p>💙 كوتش AI — صُنع لطلاب الطب في سوريا</p>
+  <p style="margin-top:8px;">آخر تحديث: 10 أكتوبر 2026 — v0.4</p>
+</footer>
+
+</body>
+</html>

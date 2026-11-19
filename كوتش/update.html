@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>كوتش AI — مسار تطوير الردود وتقنيات البحث المتقدم (RAG)</title>
+<style>
+  :root {
+    --bg: #0A0A0A;
+    --bg-soft: #141414;
+    --bg-card: #1A1A1A;
+    --border: #262626;
+    --text: #FAFAFA;
+    --text-muted: #A1A1AA;
+    --text-subtle: #71717A;
+    --accent: #8B5CF6; /* لون بنفسجي لتمييز هذا المسار */
+    --success: #22C55E;
+    --warn: #F59E0B;
+    --purple: #8B5CF6;
+    --blue: #3B82F6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    font-size: 15px;
+  }
+  .container { max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
+  header {
+    padding: 60px 24px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(139, 92, 246, 0.05) 0%, transparent 100%);
+  }
+  header h1 {
+    font-size: 2.2em;
+    font-weight: 800;
+    margin-bottom: 12px;
+    background: linear-gradient(180deg, #FAFAFA 0%, #A78BFA 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  header p { color: var(--text-muted); font-size: 1.1em; }
+  header .meta {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    font-size: 0.85em;
+    color: var(--text-subtle);
+    flex-wrap: wrap;
+  }
+  section { margin-bottom: 50px; }
+  h2 {
+    font-size: 1.5em;
+    font-weight: 700;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  h2 .num {
+    color: var(--accent);
+    font-size: 0.6em;
+    font-weight: 700;
+    background: rgba(139, 92, 246, 0.15);
+    padding: 4px 10px;
+    border-radius: 6px;
+  }
+  h3 { font-size: 1.1em; font-weight: 600; margin: 24px 0 12px; color: var(--text); }
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+  .grid { display: grid; gap: 16px; }
+  .grid-2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--bg-card);
+    border-radius: 12px; overflow: hidden; border: 1px solid var(--border); margin: 16px 0;
+  }
+  th, td { padding: 14px 16px; text-align: right; border-bottom: 1px solid var(--border); font-size: 0.9em; }
+  th { background: var(--bg-soft); color: var(--text-muted); font-size: 0.75em; font-weight: 600; text-transform: uppercase; }
+  tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--bg-soft); }
+  .badge { display: inline-block; padding: 4px 10px; border-radius: 5px; font-size: 0.72em; font-weight: 700; }
+  .badge-purple { background: #2E1065; color: #D8B4FE; }
+  .badge-blue { background: #172554; color: #93C5FD; }
+  .badge-green { background: #052E16; color: #86EFAC; }
+  .callout { border-right: 3px solid var(--accent); background: var(--bg-soft); padding: 16px 20px; border-radius: 8px; margin: 16px 0; font-size: 0.95em; }
+  .callout-warn { border-right-color: var(--warn); }
+  .callout-success { border-right-color: var(--success); }
+  .callout strong { color: var(--text); display: block; margin-bottom: 6px; }
+  ul, ol { padding-right: 20px; }
+  li { margin-bottom: 8px; color: var(--text-muted); font-size: 0.95em; }
+  li strong { color: var(--text); }
+  .code { background: var(--bg-soft); padding: 2px 7px; border-radius: 4px; font-family: monospace; font-size: 0.82em; color: #D8B4FE; direction: ltr; display: inline-block; }
+  footer { text-align: center; padding: 40px; color: var(--text-subtle); font-size: 0.85em; border-top: 1px solid var(--border); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>مسار تطوير الردود وتقنيات البحث المتقدم</h1>
+  <p>بناء نظام RAG متعدد الطبقات (Modular RAG) لحل مشاكل الهلوسة ونقص المعلومات</p>
+  <div class="meta">
+    <span>🧠 المسار الثاني</span>
+    <span>🎯 الهدف: دقة 100% في الإجابات الطبية</span>
+    <span>🛠️ المهارات: هندسة الأوامر (Prompt Engineering), Neo4j, إدارة المتجهات</span>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- المقدمة -->
+  <section>
+    <h2><span class="num">01</span> نظرة عامة على المسار (The Pipeline)</h2>
+    <div class="callout callout-warn">
+      <strong>لماذا فشل الـ AI في سؤال "أدوية النسائية"؟</strong>
+      لأننا نستخدم RAG بسيط (مرحلة واحدة). الـ RAG البسيط يفشل في الأسئلة التي تتطلب (سياقاً واسعاً) أو (أسماء أدوية دقيقة). هذا المسار يبني "فريق عمل" من 6 تقنيات تعمل معاً لضمان استخراج الإجابة الصحيحة.
+    </div>
+    <p style="color:var(--text-muted); font-size:0.95em;">
+      تخيل أن المستخدم يسأل سؤالاً، فيمر السؤال بـ 6 محطات قبل أن يصل إلى النموذج (Groq) لصياغة الإجابة. كل محطة تقوم بتصفية أو إثراء المعلومة.
+    </p>
+  </section>
+
+  <!-- التقنيات الستة -->
+  <section>
+    <h2><span class="num">02</span> المحطات الستة (المهام التفصيلية)</h2>
+    
+    <table>
+      <thead>
+        <tr>
+          <th>التقنية</th>
+          <th>الوظيفة (كيف تحل المشكلة)</th>
+          <th>الخطوات والمهارات المطلوبة</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>1. التوجيه الذكي (Query Routing)</strong></td>
+          <td>
+            <strong>الشرطي:</strong> يقرأ سؤال الطالب ويحدد نوعه. هل هو سؤال عن "دواء"؟ إذن يوجهه لقاعدة بيانات الأدوية. هل هو سؤال عن "فسيولوجيا"؟ يوجهه لملفات المنهج.
+          </td>
+          <td>
+            <ul>
+              <li>بناء نموذج تصنيف بسيط (Intent Classifier).</li>
+              <li>استخدام Groq لتصنيف السؤال فور وصوله.</li>
+              <li>كتابة منطق (Logic) لتوجيه السؤال للمسار الصحيح.</li>
+            </ul>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>2. البحث الهجين (Hybrid Search + BM25)</strong></td>
+          <td>
+            <strong>الباحث:</strong> يبحث بطريقتين: (1) بحث حرفي عن كلمة "ميتفورمين" (BM25). (2) بحث ذكي عن معنى "أدوية السكري" (Vector Search).
+          </td>
+          <td>
+            <ul>
+              <li>تفعيل إضافة <code>pg_trgm</code> و <code>tsvector</code> في Supabase للبحث النصي.</li>
+              <li>دمج النتائج من البحث النصي مع البحث المتجهي (Vector).</li>
+            </ul>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>3. التقطيع الهيكلي (Structural Chunking)</strong></td>
+          <td>
+            <strong>المنظّم:</strong> يضمن أن كل جزء (Chunk) في قاعدة البيانات يحتوي على فكرة واحدة مكتملة (مثلاً: جدول دواء كامل، وليس نصف جدول).
+          </td>
+          <td>
+            <ul>
+              <li>تعديل كود <code>upload.js</code> ليقرأ العناوين (Headers) قبل التقطيع.</li>
+              <li>إضافة بيانات وصفية (Metadata) لكل جزء (نوع المحتوى: دواء / مرض / عرض).</li>
+            </ul>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>4. الرسم البياني المعرفي (GraphRAG)</strong></td>
+          <td>
+            <strong>الخبير العلائقي:</strong> يربط المعلومات ببعضها. (دواء A) يعالج (مرض B). إذا سأل الطالب عن (مرض B)، يجلب له (دواء A) حتى لو لم يُذكر اسم الدواء في نفس الصفحة.
+          </td>
+          <td>
+            <ul>
+              <li>تثبيت Neo4j (مجاني).</li>
+              <li>استخدام مكتبة <code>LLMGraphTransformer</code> لاستخراج الكيانات (Entities) والعلاقات (Relations) من النصوص.</li>
+              <li>ربط Neo4j بـ Supabase.</li>
+            </ul>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>5. إعادة الترتيب (Reranking)</strong></td>
+          <td>
+            <strong>المدقق:</strong> يأخذ 50 جزءاً من البحث الهجين والرسم البياني، ويعيد ترتيبها حسب الصلة الفعلية. يختار أفضل 5 أجزاء فقط.
+          </td>
+          <td>
+            <ul>
+              <li>استخدام نموذج Reranker مجاني (مثل <code>BAAI/bge-reranker</code> أو عبر Cohere).</li>
+              <li>دمج النموذج في دالة <code>chat.js</code> لترتيب النتائج قبل إرسالها للـ LLM.</li>
+            </ul>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>6. إجبار النموذج على "لا أعرف" (Grounded Prompt)</strong></td>
+          <td>
+            <strong>المتحدث الصادق:</strong> يمنع الـ AI من الهلوسة. إذا لم يجد الإجابة في الأجزاء المرفقة، يعتذر بصراحة بدلاً من استخدام معرفته العامة (الهرمونات).
+          </td>
+          <td>
+            <ul>
+              <li>تعديل الـ System Prompt في <code>chat.js</code>.</li>
+              <li>استخدام تقنية (Few-Shot Prompting) لتدريب النموذج على كيفية الاعتذار.</li>
+            </ul>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- المهارات المطلوبة -->
+  <section>
+    <h2><span class="num">03</span> المهارات المطلوبة لهذا المسار</h2>
+    <div class="grid grid-2">
+      <div class="card">
+        <h3 style="margin-top:0; color:var(--accent);">🧠 مهارات هندسة الذكاء الاصطناعي</h3>
+        <ul>
+          <li><strong>Prompt Engineering:</strong> كتابة أوامر صارمة وذكية للنموذج.</li>
+          <li><strong>فهم دورة حياة RAG:</strong> معرفة كيف يتحول النص إلى متجهات (Embeddings) وكيف يتم البحث عنها.</li>
+          <li><strong>Graph Databases:</strong> فهم أساسيات Cypher (لغة استعلام Neo4j).</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0; color:var(--accent);">💻 البرمجة والأدوات</h3>
+        <ul>
+          <li><strong>JavaScript / Node.js:</strong> لتعديل ملفات الـ API في Vercel.</li>
+          <li><strong>LangChain.js:</strong> مكتبة ممتازة لربط هذه التقنيات معاً في JavaScript.</li>
+          <li><strong>Python (اختياري):</strong> لتشغيل بعض نماذج الـ Reranker أو Graph Extraction.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- خطة التنفيذ -->
+  <section>
+    <h2><span class="num">04</span> خطة التنفيذ المقترحة (Step-by-Step)</h2>
+    <div class="card">
+      <ol>
+        <li><strong>الأسبوع الأول:</strong> تطبيق <code>Grounded Prompt</code> وتعديل <code>Hybrid Search</code> (البحث النصي BM25 مع المتجهي). <em>(أسرع نتائج ملموسة)</em>.</li>
+        <li><strong>الأسبوع الثاني:</strong> بناء <code>Query Routing</code> و <code>Reranking</code>. <em>(تحسين كبير في الدقة)</em>.</li>
+        <li><strong>الأسبوع الثالث:</strong> بناء <code>GraphRAG</code> (Neo4j) وربطه بالنظام. <em>(الميزة القاتلة للأسئلة المعقدة)</em>.</li>
+        <li><strong>الأسبوع الرابع:</strong> إعادة تقييم الأداء (Evaluation) واختبار النظام مع 10 طلاب مرة أخرى.</li>
+      </ol>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <p>كوتش AI — مسار تطوير الردود وتقنيات البحث</p>
+  <p style="margin-top: 6px;">ملف استراتيجي — أكتوبر 2026</p>
+</footer>
+
+</body>
+</html>

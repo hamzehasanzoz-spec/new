@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>كوتش AI — مسار تحليل وفرز وتنظيم البيانات (Data Pipeline)</title>
+<style>
+  :root {
+    --bg: #0A0A0A;
+    --bg-soft: #141414;
+    --bg-card: #1A1A1A;
+    --border: #262626;
+    --text: #FAFAFA;
+    --text-muted: #A1A1AA;
+    --text-subtle: #71717A;
+    --accent: #3B82F6;
+    --success: #22C55E;
+    --warn: #F59E0B;
+    --purple: #8B5CF6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    font-size: 15px;
+  }
+  .container { max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
+  header {
+    padding: 60px 24px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(59, 130, 246, 0.05) 0%, transparent 100%);
+  }
+  header h1 {
+    font-size: 2.2em;
+    font-weight: 800;
+    margin-bottom: 12px;
+    background: linear-gradient(180deg, #FAFAFA 0%, #60A5FA 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  header p { color: var(--text-muted); font-size: 1.1em; }
+  header .meta {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    font-size: 0.85em;
+    color: var(--text-subtle);
+    flex-wrap: wrap;
+  }
+  section { margin-bottom: 50px; }
+  h2 {
+    font-size: 1.5em;
+    font-weight: 700;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  h2 .num {
+    color: var(--accent);
+    font-size: 0.6em;
+    font-weight: 700;
+    background: rgba(59, 130, 246, 0.15);
+    padding: 4px 10px;
+    border-radius: 6px;
+  }
+  h3 { font-size: 1.1em; font-weight: 600; margin: 24px 0 12px; color: var(--text); }
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+  .grid { display: grid; gap: 16px; }
+  .grid-2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--bg-card);
+    border-radius: 12px; overflow: hidden; border: 1px solid var(--border); margin: 16px 0;
+  }
+  th, td { padding: 14px 16px; text-align: right; border-bottom: 1px solid var(--border); font-size: 0.9em; }
+  th { background: var(--bg-soft); color: var(--text-muted); font-size: 0.75em; font-weight: 600; text-transform: uppercase; }
+  tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--bg-soft); }
+  .badge { display: inline-block; padding: 4px 10px; border-radius: 5px; font-size: 0.72em; font-weight: 700; }
+  .badge-blue { background: #172554; color: #93C5FD; }
+  .badge-purple { background: #2E1065; color: #D8B4FE; }
+  .callout { border-right: 3px solid var(--accent); background: var(--bg-soft); padding: 16px 20px; border-radius: 8px; margin: 16px 0; font-size: 0.95em; }
+  .callout-warn { border-right-color: var(--warn); }
+  .callout-success { border-right-color: var(--success); }
+  .callout strong { color: var(--text); display: block; margin-bottom: 6px; }
+  ul, ol { padding-right: 20px; }
+  li { margin-bottom: 8px; color: var(--text-muted); font-size: 0.95em; }
+  li strong { color: var(--text); }
+  .code { background: var(--bg-soft); padding: 2px 7px; border-radius: 4px; font-family: monospace; font-size: 0.82em; color: #93C5FD; direction: ltr; display: inline-block; }
+  footer { text-align: center; padding: 40px; color: var(--text-subtle); font-size: 0.85em; border-top: 1px solid var(--border); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>مسار تحليل وفرز وتنظيم البيانات</h1>
+  <p>بناء البنية التحتية (Data Pipeline) لتحويل البيانات الطبية الخام إلى كنز معرفي للذكاء الاصطناعي</p>
+  <div class="meta">
+    <span>📊 المسار الأول</span>
+    <span>🎯 الهدف: تنظيف وبناء قواعد المعرفة (Knowledge Bases)</span>
+    <span>🛠️ المهارات: Python, OCR, Database Design</span>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- المقدمة -->
+  <section>
+    <h2><span class="num">01</span> نظرة عامة على المسار</h2>
+    <div class="callout callout-success">
+      <strong>القاعدة الذهبية (Garbage In, Garbage Out):</strong>
+      إذا أدخلنا بيانات طبية عشوائية وغير منظمة إلى النظام، ستكون الإجابات عشوائية. هذا المسار يهدف إلى تحويل ملفات الـ PDF، صور الأشعة، والبروتوكولات إلى نصوص وجداول منظمة (Structured Data) يفهمها الـ AI بدقة 100%.
+    </div>
+    <p style="color:var(--text-muted); font-size:0.95em;">
+      في هذا المسار، سنتعامل مع البيانات التي تمتلكها (المناهج الجامعية، بروتوكولات 5 مشافي). سنقوم بفرزها، استخراج النصوص منها (OCR)، تصنيفها، وتقطيعها بطريقة هيكلية (Structural Chunking) لتصبح جاهزة لمحرك البحث المتقدم.
+    </p>
+  </section>
+
+  <!-- المراحل -->
+  <section>
+    <h2><span class="num">02</span> مراحل العمل (Phases)</h2>
+    
+    <table>
+      <thead>
+        <tr>
+          <th>المرحلة</th>
+          <th>الخطوات التفصيلية</th>
+          <th>المهارات والموارد المطلوبة</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>المرحلة 1:</strong><br>جمع البيانات وتصنيفها (Data Ingestion)</td>
+          <td>
+            <ul>
+              <li>تجميع ملفات المناهج (طب، أسنان، صيدلة) لكل سنة.</li>
+              <li>تجميع بروتوكولات المشافي.</li>
+              <li>إنشاء مجلدات منظمة (مثلاً: <code>Medicine/Year_5/Gynecology.pdf</code>).</li>
+            </ul>
+          </td>
+          <td>
+            <span class="badge badge-blue">تنظيم الملفات</span><br>
+            لا يحتاج برمجة، فقط تنظيم يدوي دقيق.
+          </td>
+        </tr>
+        <tr>
+          <td><strong>المرحلة 2:</strong><br>استخراج النصوص (OCR)</td>
+          <td>
+            <ul>
+              <li>استخراج النصوص من ملفات PDF النصية.</li>
+              <li>استخدام OCR لتحويل الصور والملفات الممسوحة ضوئياً إلى نصوص.</li>
+              <li>تحويل جداول الجرعات من صور إلى جداول Excel/CSV.</li>
+            </ul>
+          </td>
+          <td>
+            <span class="badge badge-blue">Python</span>
+            <span class="badge badge-blue">Tesseract OCR</span>
+            <span class="badge badge-blue">Mistral OCR API</span>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>المرحلة 3:</strong><br>التقطيع الهيكلي (Structural Chunking)</td>
+          <td>
+            <ul>
+              <li>تقطيع النصوص بناءً على العناوين (H1, H2, H3) وليس عدد الحروف.</li>
+              <li>ربط كل جزء ببيانات وصفية (Metadata): الكلية، السنة، المادة، الفصل، المشفى.</li>
+              <li>عزل جداول الأدوية في قاعدة بيانات منفصلة.</li>
+            </ul>
+          </td>
+          <td>
+            <span class="badge badge-blue">Python (LangChain)</span>
+            <span class="badge badge-blue">تحديد بنية الـ PDF</span>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>المرحلة 4:</strong><br>هندسة قاعدة البيانات (Database)</td>
+          <td>
+            <ul>
+              <li>تحديث جداول Supabase لتستوعب البيانات الوصفية (Metadata).</li>
+              <li>إنشاء جدول <code>hospitals</code> وجدول <code>curriculum</code>.</li>
+              <li>تجهيز الحقول اللازمة للبحث الهجين (حقول النصوص + المتجهات).</li>
+            </ul>
+          </td>
+          <td>
+            <span class="badge badge-blue">PostgreSQL / Supabase</span>
+            <span class="badge badge-blue">SQL</span>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>المرحلة 5:</strong><br>التدقيق البشري (Human-in-the-Loop)</td>
+          <td>
+            <ul>
+              <li>مراجعة عينات عشوائية للتأكد من دقة النصوص المستخرجة.</li>
+              <li>التأكد من عدم اختلاط المواد (مثلاً مادة نسائية في مجلد أطفال).</li>
+            </ul>
+          </td>
+          <td>
+            <span class="badge badge-blue">فريق التدقيق (أنت أو طلاب مساعدون)</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- المهارات والأدوات -->
+  <section>
+    <h2><span class="num">03</span> المهارات والأدوات المطلوبة لهذا المسار</h2>
+    
+    <div class="grid grid-2">
+      <div class="card">
+        <h3 style="margin-top:0; color:var(--accent);">💻 مهارات تقنية (Technical Skills)</h3>
+        <ul>
+          <li><strong>Python الأساسي:</strong> للتعامل مع الملفات والمكتبات.</li>
+          <li><strong>مكتبات استخراج النصوص:</strong> <code>PyPDF2</code>, <code>pdfplumber</code>, <code>unstructured</code>.</li>
+          <li><strong>مكتبات التقطيع:</strong> <code>LangChain Text Splitters</code> (تحديداً الهيكلي منها).</li>
+          <li><strong>قواعد البيانات:</strong> فهم كيفية بناء الجداول وإضافة الفهارس (Indexes) في Supabase.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-top:0; color:var(--accent);">🛠️ أدوات وموارد مجانية (Resources)</h3>
+        <ul>
+          <li><strong>Mistral OCR:</strong> أداة مجانية ممتازة لاستخراج النصوص من الصور والجداول المعقدة.</li>
+          <li><strong>Tesseract OCR:</strong> أداة مفتوحة المصدر (لكنها أضعف في اللغة العربية مقارنة بـ Mistral).</li>
+          <li><strong>Google Colab:</strong> لتشغيل سكربتات Python التي تقوم بعمليات المعالجة الضخمة (لأن جهازك قد لا يتحمل).</li>
+          <li><strong>LangChain / LlamaIndex:</strong> مكتبات تسهل عملية التقطيع الهيكلي.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- المخرجات -->
+  <section>
+    <h2><span class="num">04</span> المخرجات المتوقعة (Deliverables)</h2>
+    <div class="card">
+      <ul>
+        <li><strong>مكتبة ملفات (Document Store):</strong> كل ملف PDF تم تحويله إلى نصوص نظيفة وجداول منظمة.</li>
+        <li><strong>قاعدة بيانات علائقية:</strong> جداول في Supabase تحتوي على (الكلية، السنة، المادة، المشفى، نوع المحتوى).</li>
+        <li><strong>أجزاء مقسمة (Chunks):</strong> تم تقطيعها هيكلياً (جزء لكل دواء، جزء لكل مرض) لتسهيل البحث عنها.</li>
+      </ul>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <p>كوتش AI — مسار البنية التحتية للبيانات</p>
+  <p style="margin-top: 6px;">ملف استراتيجي — أكتوبر 2026</p>
+</footer>
+
+</body>
+</html>

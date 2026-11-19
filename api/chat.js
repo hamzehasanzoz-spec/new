@@ -6,6 +6,13 @@ function parseKeys(envValue) {
   return envValue.split(',').map(k => k.trim()).filter(Boolean);
 }
 
+// ⭐ تعليمات منع الهلوسة
+const GROUNDING_INSTRUCTIONS = `
+تنبيه هام: أنت مساعد ذكاء اصطناعي طبي. يجب أن تعتمد فقط على المقتطفات السياقية المرفقة.
+إذا لم تجد الإجابة داخل المقتطفات، يجب أن تقول صراحةً: "أنا آسف، لا أعرف."
+لا تستخدم معرفتك العامة أو افتراضاتك الشخصية.
+`;
+
 export default async function handler(req) {
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
@@ -28,7 +35,7 @@ export default async function handler(req) {
     messages = body.messages;
   } else if (body?.prompt) {
     messages = [
-      { role: 'system', content: body.systemPrompt || '' },
+      { role: 'system', content: `${body.systemPrompt || ''}\n\n${GROUNDING_INSTRUCTIONS}` },
       { role: 'user', content: body.prompt },
     ];
   } else {

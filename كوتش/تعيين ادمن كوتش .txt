@@ -1,0 +1,6 @@
+UPDATE profiles SET role = 'admin' WHERE email = 'hamzehasanzoz@gmail.com';
+
+
+او UPDATE profiles 
+SET role = 'admin' 
+WHERE id = (SELECT id FROM auth.users WHERE email = 'بريدك_الإلكتروني_هنا');

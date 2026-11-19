@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>كوتش AI — خارطة الطريق الاستراتيجية v4.0</title>
+<style>
+  :root {
+    --bg: #0A0A0A;
+    --bg-soft: #141414;
+    --bg-card: #1A1A1A;
+    --border: #262626;
+    --text: #FAFAFA;
+    --text-muted: #A1A1AA;
+    --text-subtle: #71717A;
+    --accent: #3B82F6;
+    --success: #22C55E;
+    --warn: #F59E0B;
+    --danger: #EF4444;
+    --purple: #8B5CF6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    font-size: 15px;
+  }
+  .container { max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
+  header {
+    padding: 60px 24px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(59, 130, 246, 0.05) 0%, transparent 100%);
+  }
+  header h1 {
+    font-size: 2.4em;
+    font-weight: 800;
+    margin-bottom: 12px;
+    background: linear-gradient(180deg, #FAFAFA 0%, #71717A 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  header p { color: var(--text-muted); font-size: 1.1em; }
+  header .meta {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    font-size: 0.85em;
+    color: var(--text-subtle);
+    flex-wrap: wrap;
+  }
+  section { margin-bottom: 50px; }
+  h2 {
+    font-size: 1.5em;
+    font-weight: 700;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  h2 .num {
+    color: var(--accent);
+    font-size: 0.6em;
+    font-weight: 700;
+    background: rgba(59, 130, 246, 0.15);
+    padding: 4px 10px;
+    border-radius: 6px;
+  }
+  h3 { font-size: 1.1em; font-weight: 600; margin: 24px 0 12px; color: var(--text); }
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 12px;
+  }
+  .grid { display: grid; gap: 14px; }
+  .grid-2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  .grid-3 { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--bg-card);
+    border-radius: 12px; overflow: hidden; border: 1px solid var(--border); margin: 12px 0;
+  }
+  th, td { padding: 12px 14px; text-align: right; border-bottom: 1px solid var(--border); font-size: 0.88em; }
+  th { background: var(--bg-soft); color: var(--text-muted); font-size: 0.75em; font-weight: 600; }
+  tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--bg-soft); }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 5px; font-size: 0.7em; font-weight: 700; }
+  .badge-done { background: #052E16; color: #86EFAC; }
+  .badge-progress { background: #451A03; color: #FCD34D; }
+  .badge-todo { background: #18181B; color: #A1A1AA; border: 1px solid #27272A; }
+  .badge-defer { background: #1E1B4B; color: #A5B4FC; }
+  .callout { border-right: 3px solid var(--accent); background: var(--bg-soft); padding: 14px 18px; border-radius: 8px; margin: 14px 0; font-size: 0.9em; }
+  .callout-warn { border-right-color: var(--warn); }
+  .callout-success { border-right-color: var(--success); }
+  .callout-danger { border-right-color: var(--danger); }
+  .callout strong { color: var(--text); display: block; margin-bottom: 6px; }
+  .code { background: var(--bg-soft); padding: 2px 7px; border-radius: 4px; font-family: monospace; font-size: 0.82em; color: #93C5FD; direction: ltr; display: inline-block; }
+  ul, ol { padding-right: 20px; }
+  li { margin-bottom: 5px; color: var(--text-muted); font-size: 0.9em; }
+  footer { text-align: center; padding: 40px; color: var(--text-subtle); font-size: 0.82em; border-top: 1px solid var(--border); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>كوتش AI — خارطة الطريق الاستراتيجية</h1>
+  <p>من منصة تجريبية إلى التطبيق الطبي الأول في سوريا والشرق الأوسط</p>
+  <div class="meta">
+    <span>آخر تحديث: 19 أكتوبر 2026</span>
+    <span>الإصدار: v4.0 (مرحلة جمع البيانات والتخطيط للمستقبل)</span>
+    <span>الوضع الحالي: Beta مغلقة (Admin Only)</span>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- 1. الإنجازات -->
+  <section>
+    <h2><span class="num">01</span> ما تم إنجازه (البنية التحتية جاهزة)</h2>
+    <div class="callout callout-success">
+      <strong>المنصة الآن جاهزة تقنياً وتعمل بكفاءة عالية:</strong>
+      تم بناء نظام متكامل يمكن الطالب من الدراسة، والتطبيق يعمل بذكاء اصطناعي مخصص لكل كلية وكل دكتور.
+    </div>
+
+    <table>
+      <thead><tr><th>الميزة</th><th>التفاصيل</th><th>الحالة</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>نظام الحسابات والحماية</td>
+          <td>منصة مغلقة حالياً، والـ Waitlist مرتبط بإنشاء الحساب، والاستبيان الديناميكي.</td>
+          <td><span class="badge badge-done">مكتمل</span></td>
+        </tr>
+        <tr>
+          <td>الهوية البصرية (Branding)</td>
+          <td>تغيير ألوان الموقع تلقائياً حسب كلية الطالب (أزرق للطب، أخضر للأسنان، بنفسجي للصيدلة).</td>
+          <td><span class="badge badge-done">مكتمل</span></td>
+        </tr>
+        <tr>
+          <td>الـ AI المخصص لكل كلية</td>
+          <td>الذكاء الاصطناعي يتقمص شخصية "الطبيب" أو "طبيب الأسنان" أو "الصيدلي" في إجاباته.</td>
+          <td><span class="badge badge-done">مكتمل</span></td>
+        </tr>
+        <tr>
+          <td>الـ AI المخصص لكل دكتور</td>
+          <td>ربط أسلوب الشرح ونمط الأسئلة لكل دكتور في الشات والاختبارات ومحاكاة الامتحان.</td>
+          <td><span class="badge badge-done">مكتمل</span></td>
+        </tr>
+        <tr>
+          <td>لوحة الإدارة (Admin Panel)</td>
+          <td>إدارة الطلاب، المواد، الملفات، الدكاترة، وتدقيق المحتوى المرفوع (قبول/رفض).</td>
+          <td><span class="badge badge-done">مكتمل</span></td>
+        </tr>
+        <tr>
+          <td>تحسين تجربة المستخدم</td>
+          <td>استبدال الإيموجي بأيقونات احترافية، وتكبير الخطوط لراحة العين.</td>
+          <td><span class="badge badge-done">مكتمل</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 2. المهام المؤجلة -->
+  <section>
+    <h2><span class="num">02</span> المهام المؤجلة (Deferred Tasks)</h2>
+    <div class="card">
+      <ul>
+        <li><strong>إضافة المواد من واجهة الإدارة:</strong> زر لإضافة مادة جديدة (الكلية، السنة، اسم المادة) بدون الحاجة لاستخدام SQL. <em>(سيتم تفعيله بعد انتهاء مرحلة جمع البيانات).</em></li>
+        <li><strong>رفع الملفات الأصلية (PDF):</strong> حالياً يتم استخراج النص فقط. لاحقاً سيتم رفع ملف الـ PDF نفسه ليتيح للأدمن تحميله وفحصه بالكامل.</li>
+        <li><strong>تحسين التصميم (UI/UX Polish):</strong> إضافة حركات ناعمة (Framer Motion) وضبط المسافات في كل الصفحات.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 3. المرحلة الحالية -->
+  <section>
+    <h2><span class="num">03</span> المرحلة الحالية: جمع البيانات وبناء المحتوى</h2>
+    <div class="callout callout-warn">
+      <strong>أنت الآن في هذه المرحلة:</strong>
+      جمع كل المواد، الدكاترة، وطريقة الشرح لكلية الطب، الأسنان، والصيدلة (الفصل الأول والثاني) لرفعها على المنصة.
+    </div>
+  </section>
+
+  <!-- 4. مراحل التطوير المستقبلية -->
+  <section>
+    <h2><span class="num">04</span> خارطة الطريق المستقبلية (Roadmap)</h2>
+
+    <h3>المرحلة 8: الذكاء الاصطناعي متعدد الوسائط (Multimodal AI)</h3>
+    <table>
+      <thead><tr><th>الميزة</th><th>التفاصيل</th><th>الميزة التنافسية</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>التحدث والرد الصوتي (Voice AI)</td>
+          <td>تحويل كلام الطالب إلى نص (STT)، وقراءة ردود الـ AI بصوت طبيعي (TTS).</td>
+          <td><span class="badge badge-done">ميزة استوديوهات الدبلجة</span> (توفير التكلفة وتوليد أصوات بشرية واقعية).</td>
+        </tr>
+        <tr>
+          <td>قراءة الصور (Vision)</td>
+          <td>رفع صور (مخططات، أشعة، شرائح) وتحليلها بواسطة الـ AI.</td>
+          <td>يسمح للطالب بحل أسئلة الصور والرسوم التوضيحية.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>المرحلة 9: التدريب المستمر وتطوير الـ AI</h3>
+    <ul>
+      <li><strong>التدريب المستمر:</strong> تغذية النماذج ببيانات الأداء الفعلي للطلاب (أين يخطئون؟) لتطوير الإجابات.</li>
+      <li><strong>البحث عن مزودين مجانيين:</strong> إيجاد بدائل دائمة لـ Groq (مثل Together AI, Hugging Face) وبناء خوارزمية تبديل ذكية (Fallback) لا تتوقف أبداً.</li>
+      <li><strong>تطوير الشخصية:</strong> جعل الـ AI يتعلم من محادثات الطلاب (بعد إخفاء هويتهم) لتقديم نصائح دراسية مخصصة.</li>
+    </ul>
+
+    <h3>المرحلة 10: التوسع وتعدد الجامعات (Multi-University)</h3>
+    <div class="callout">
+      <strong>التحدي:</strong> مواد الطب متشابهة بين جامعة تشرين (اللاذقية) وجامعة حلب، لكن الدكاترة ونمط الأسئلة يختلفان.
+    </div>
+    <ul>
+      <li>إضافة حقل "الجامعة" في بروفايل الطالب.</li>
+      <li>ربط الدكتور بالجامعة (د. أحمد يدرس في تشرين، د. محمد يدرس في حلب).</li>
+      <li>تمكين الطالب من اختيار "جامعته" ليتم تصفية الدكاترة والأسئلة تلقائياً.</li>
+    </ul>
+
+    <h3>المرحلة 11: حلقة التغذية الراجعة والمجتمع (Feedback & Community)</h3>
+    <ul>
+      <li><strong>تقييم الطلاب:</strong> إضافة زر (إعجاب/عدم إعجاب) أسفل ردود الـ AI لتطوير النموذج.</li>
+      <li><strong>تدقيق البيانات عبر الطلاب (Crowdsourcing):</strong> إعطاء نقاط للطلاب مقابل تصحيح الأخطاء في المواد أو إضافة أسئلة دكتور معين (Gamification).</li>
+      <li><strong>استبيانات دورية:</strong> سؤال الطلاب عن الميزات التي يريدونها لتطوير المنصة بناءً على احتياجاتهم الحقيقية.</li>
+    </ul>
+
+    <h3>المرحلة 12: النموذج التجاري والنسخة المدفوعة (Monetization)</h3>
+    <div class="callout callout-success">
+      <strong>استراتيجية (Freemium):</strong> تقديم قيمة مجانية ضخمة، مع حجز الميزات المتقدمة للمشتركين.
+    </div>
+    <table>
+      <thead><tr><th>الميزات المجانية</th><th>الميزات المدفوعة (Premium)</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>
+            • محادثات AI محدودة يومياً.<br>
+            • اختبارات عامة (بدون دكتور).<br>
+            • رفع ملفات محدود.<br>
+            • تصفح مكتبة الملفات المعتمدة.
+          </td>
+          <td>
+            • <strong>الاختبارات المخصصة لكل دكتور (Professor-specific Exams).</strong><br>
+            • محادثات AI غير محدودة.<br>
+            • تحليل الأداء المتقدم (رسوم بيانية).<br>
+            • إزالة الإعلانات.<br>
+            • الاستفادة من تقنية الصوت (Voice AI).
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>المرحلة 13: الإطلاق والتطبيق (Launch & Mobile App)</h3>
+    <ul>
+      <li><strong>إطلاق الويب (Web Launch):</strong> فتح المنصة لأول 1000 طالب في قائمة الانتظار (Beta Testers).</li>
+      <li><strong>تطبيق الجوال (Mobile App):</strong> تحويل المنصة إلى تطبيق (React Native أو PWA) ليكون متاحاً على متجر Google Play و App Store لسهولة الاستخدام.</li>
+      <li><strong>التسويق:</strong> التعاون مع مجموعات التلغرام الطبية، وإعلانات ممولة، والشراكة مع نقابات الأطباء.</li>
+    </ul>
+  </section>
+
+  <!-- 5. اقتراحات إضافية من Coach -->
+  <section>
+    <h2><span class="num">05</span> اقتراحات إضافية من Coach (أفكار ذهبية)</h2>
+    <div class="grid grid-2">
+      <div class="card">
+        <h3 style="margin-top:0">📊 لوحة تحليلات الأداء (Analytics)</h3>
+        <p style="font-size:0.9em; color:var(--text-muted)">جمع بيانات (مجهولة الهوية) عن أكثر المواد التي يخطئ فيها الطلاب. هذه البيانات يمكن بيعها لاحقاً لشركات الأدوية أو المعاهد لمعرفة احتياجات السوق، أو استخدامها لتطوير المحتوى.</p>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">🤝 الشراكات الأكاديمية (B2B)</h3>
+        <p style="font-size:0.9em; color:var(--text-muted)">بدلاً من الاعتماد على الطلاب فقط، يمكنك تقديم المنصة للجامعات أو المراكز التعليمية الخاصة كأداة مساعدة لطلابها باشتراك سنوي (B2B).</p>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">🏆 نظام المكافآت (Gamification)</h3>
+        <p style="font-size:0.9em; color:var(--text-muted)">إضافة نظام نقاط (XP) وشارات للطلاب. من يجمع نقاطاً أكثر (بحل الأسئلة أو رفع ملفات مفيدة)، يحصل على شهر مجاني من النسخة المدفوعة. هذا سيزيد التفاعل بشكل جنوني.</p>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">🔔 التنبيهات الذكية (Push Notifications)</h3>
+        <p style="font-size:0.9em; color:var(--text-muted)">تذكير الطلاب بجدولهم الدراسي، أو مواعيد الامتحانات، أو تحفيزهم بالعودة للمنصة إذا غابوا (Streak Reminders).</p>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <p>كوتش AI — صُنع لطلاب الجامعات السورية</p>
+  <p style="margin-top: 6px;">الاستراتيجية الشاملة v4.0 — 19 أكتوبر 2026</p>
+</footer>
+
+</body>
+</html>

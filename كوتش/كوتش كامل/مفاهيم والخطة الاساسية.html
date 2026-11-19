@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>خطة انطلاق كوتش AI — الخطة الكاملة</title>
+<style>
+  :root {
+    --bg: #0A0A0A;
+    --bg-soft: #141414;
+    --bg-card: #1A1A1A;
+    --border: #262626;
+    --border-strong: #333;
+    --text: #FAFAFA;
+    --text-muted: #A1A1AA;
+    --text-subtle: #71717A;
+    --accent: #3B82F6;
+    --accent-soft: #1E3A8A;
+    --success: #22C55E;
+    --warn: #F59E0B;
+    --danger: #EF4444;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    font-size: 15px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .container { max-width: 980px; margin: 0 auto; padding: 60px 24px; }
+
+  /* Header */
+  header {
+    padding: 80px 24px 60px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+  }
+  header h1 {
+    font-size: 2.5em;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 12px;
+    background: linear-gradient(180deg, #FAFAFA 0%, #71717A 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  header p { color: var(--text-muted); font-size: 1.05em; }
+  header .meta {
+    margin-top: 24px;
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    font-size: 0.85em;
+    color: var(--text-subtle);
+    flex-wrap: wrap;
+  }
+
+  /* TOC */
+  .toc {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin: 40px 0;
+  }
+  .toc h3 {
+    color: var(--text-muted);
+    font-size: 0.75em;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 16px;
+    font-weight: 600;
+  }
+  .toc ol {
+    list-style: none;
+    counter-reset: item;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 8px;
+  }
+  .toc li {
+    counter-increment: item;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: background 0.15s;
+  }
+  .toc li:hover { background: var(--bg-card); }
+  .toc a {
+    color: var(--text-muted);
+    text-decoration: none;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    font-size: 0.92em;
+  }
+  .toc a::before {
+    content: counter(item, decimal-leading-zero);
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 0.8em;
+    font-variant-numeric: tabular-nums;
+  }
+  .toc a:hover { color: var(--text); }
+
+  /* Sections */
+  section {
+    margin-bottom: 60px;
+    scroll-margin-top: 20px;
+  }
+  h2 {
+    font-size: 1.6em;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  h2 .num {
+    color: var(--accent);
+    font-size: 0.65em;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0;
+  }
+  h3 {
+    font-size: 1.1em;
+    font-weight: 600;
+    margin: 28px 0 12px;
+    color: var(--text);
+  }
+
+  /* Cards */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px;
+    margin-bottom: 14px;
+  }
+  .card-title {
+    font-weight: 600;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .card-desc { color: var(--text-muted); font-size: 0.92em; }
+
+  .grid { display: grid; gap: 14px; }
+  .grid-2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  .grid-3 { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 0.9em;
+  }
+  th, td {
+    padding: 12px 14px;
+    text-align: right;
+    border-bottom: 1px solid var(--border);
+  }
+  th {
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.8em;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    background: var(--bg-soft);
+  }
+  tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--bg-soft); }
+
+  /* Badges */
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 0.72em;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  .badge-accent { background: var(--accent-soft); color: #93C5FD; }
+  .badge-success { background: #052E16; color: #86EFAC; }
+  .badge-warn { background: #451A03; color: #FCD34D; }
+  .badge-danger { background: #450A0A; color: #FCA5A5; }
+  .badge-muted { background: var(--bg-soft); color: var(--text-muted); }
+
+  /* Callout */
+  .callout {
+    border-right: 3px solid var(--accent);
+    background: var(--bg-soft);
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin: 16px 0;
+    font-size: 0.92em;
+  }
+  .callout-warn { border-right-color: var(--warn); }
+  .callout-danger { border-right-color: var(--danger); }
+  .callout-success { border-right-color: var(--success); }
+  .callout strong { color: var(--text); display: block; margin-bottom: 6px; }
+
+  /* Code */
+  code {
+    background: var(--bg-soft);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+    font-size: 0.85em;
+    color: #93C5FD;
+    direction: ltr;
+    display: inline-block;
+  }
+  pre {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    padding: 16px;
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82em;
+    direction: ltr;
+    text-align: left;
+    overflow-x: auto;
+    line-height: 1.6;
+    color: #E4E4E7;
+    margin: 12px 0;
+  }
+
+  /* Timeline */
+  .timeline {
+    position: relative;
+    padding-right: 32px;
+    margin-top: 20px;
+  }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    right: 10px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--border);
+  }
+  .phase {
+    position: relative;
+    margin-bottom: 32px;
+  }
+  .phase::before {
+    content: '';
+    position: absolute;
+    right: -28px;
+    top: 6px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 3px solid var(--bg);
+    box-shadow: 0 0 0 2px var(--accent);
+  }
+  .phase-title {
+    font-weight: 700;
+    font-size: 1.05em;
+    margin-bottom: 6px;
+  }
+  .phase-time {
+    font-size: 0.78em;
+    color: var(--accent);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+  .phase-body {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+  }
+
+  /* Design preview */
+  .design-preview {
+    background: #0A0A0A;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin: 16px 0;
+  }
+  .dp-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .dp-swatch {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+  .dp-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg-soft);
+    color: var(--text);
+    font-size: 0.85em;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .dp-btn-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  /* Stats */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin: 16px 0;
+  }
+  .stat {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+  }
+  .stat-value {
+    font-size: 1.8em;
+    font-weight: 800;
+    letter-spacing: -1px;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-label {
+    font-size: 0.75em;
+    color: var(--text-subtle);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 4px;
+    font-weight: 600;
+  }
+
+  /* Footer */
+  footer {
+    text-align: center;
+    padding: 60px 24px 40px;
+    color: var(--text-subtle);
+    font-size: 0.85em;
+    border-top: 1px solid var(--border);
+    margin-top: 60px;
+  }
+
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  ul, ol { padding-right: 20px; }
+  li { margin-bottom: 6px; color: var(--text-muted); }
+  li strong { color: var(--text); }
+
+  /* Responsive */
+  @media (max-width: 640px) {
+    .container { padding: 30px 16px; }
+    header { padding: 50px 16px 40px; }
+    header h1 { font-size: 1.8em; }
+    h2 { font-size: 1.3em; }
+    .toc ol { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>خطة انطلاق كوتش AI</h1>
+  <p>من مشروع طالب واحد → منصة جامعية شاملة لسوريا</p>
+  <div class="meta">
+    <span>📅 13 أكتوبر 2026</span>
+    <span>🎯 نسخة Beta: 4 أشهر</span>
+    <span>⏰ ساعة/يوم — ميزانية 0$</span>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- TOC -->
+  <div class="toc">
+    <h3>محتويات الخطة</h3>
+    <ol>
+      <li><a href="#vision">الرؤية والأهداف</a></li>
+      <li><a href="#status">الوضع الحالي</a></li>
+      <li><a href="#architecture">البنية التقنية الجديدة</a></li>
+      <li><a href="#design">نظام التصميم</a></li>
+      <li><a href="#roadmap">خارطة الطريق 12 شهر</a></li>
+      <li><a href="#plan90">خطة 90 يوم التفصيلية</a></li>
+      <li><a href="#content">استراتيجية المحتوى</a></li>
+      <li><a href="#tools">الأدوات المجانية</a></li>
+      <li><a href="#kpis">معايير النجاح</a></li>
+      <li><a href="#risks">المخاطر والحلول</a></li>
+      <li><a href="#learn">مصادر التعلم</a></li>
+      <li><a href="#next">الخطوات الفورية</a></li>
+    </ol>
+  </div>
+
+  <!-- 1. Vision -->
+  <section id="vision">
+    <h2><span class="num">01</span> الرؤية والأهداف</h2>
+
+    <div class="card">
+      <div class="card-title">🎯 الرؤية</div>
+      <div class="card-desc">
+        أن تصبح <strong>المنصة الأولى في سوريا</strong> التي تساعد كل طالب جامعي على الدراسة والتحضير للامتحانات بمساعدة الذكاء الاصطناعي، بدءاً من كليات الطب البشري والأسنان والصيدلة، ثم التوسع لكل الكليات.
+      </div>
+    </div>
+
+    <h3>الأهداف المحددة</h3>
+    <div class="stat-grid">
+      <div class="stat">
+        <div class="stat-value">3</div>
+        <div class="stat-label">كليات في Beta</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">1000</div>
+        <div class="stat-label">طالب أول 3 أشهر</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">6</div>
+        <div class="stat-label">كليات في 12 شهر</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">$100</div>
+        <div class="stat-label">دخل شهري مستهدف</div>
+      </div>
+    </div>
+
+    <div class="callout callout-success">
+      <strong>✅ معايير النجاح الفورية</strong>
+      • 500 طالب مسجل خلال الشهر الأول من Beta<br>
+      • 30% منهم يستخدم المنصة أسبوعياً<br>
+      • متوسط 5 محادثات/طالب/أسبوع<br>
+      • رضا > 4/5 في استبيان المغادرة
+    </div>
+  </section>
+
+  <!-- 2. Current Status -->
+  <section id="status">
+    <h2><span class="num">02</span> الوضع الحالي</h2>
+
+    <div class="grid grid-2">
+      <div class="card">
+        <div class="card-title">✅ ما هو موجود</div>
+        <ul style="margin-top: 8px;">
+          <li>التطبيق يعمل على Vercel</li>
+          <li>قاعدة بيانات Supabase كاملة</li>
+          <li>RAG + Chat + MCQ + Exam</li>
+          <li>Groq × 2 (1000 طلب/يوم)</li>
+          <li>PDF Export + Dark Mode</li>
+          <li>Streak + Dashboard + Weekly</li>
+          <li>مخصص لطلاب الطب فقط حالياً</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🎯 ما ينقص</div>
+        <ul style="margin-top: 8px;">
+          <li>تصميم احترافي (Tailwind + Design System)</li>
+          <li>بنية متعددة الكليات</li>
+          <li>نظام مشاركة المحتوى</li>
+          <li>Deduplication ذكي</li>
+          <li>لوحة Admin للمراجعة</li>
+          <li>نظام تقييم المحتوى</li>
+          <li>نموذج تجاري</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Architecture -->
+  <section id="architecture">
+    <h2><span class="num">03</span> البنية التقنية الجديدة</h2>
+
+    <h3>3 طبقات متسلسلة</h3>
+
+    <pre>┌──────────────────────────────────────────┐
+│  Layer 1: CORE (مشترك لكل الكليات)     │
+│  Auth + Chat + RAG + PDF + Dashboard    │
+└──────────────────────────────────────────┘
+                    ↓
+┌──────────────────────────────────────────┐
+│  Layer 2: FACULTY (لكل كلية)            │
+│  Medicine / Dentistry / Pharmacy        │
+│  + عزل المحتوى بين الكليات               │
+└──────────────────────────────────────────┘
+                    ↓
+┌──────────────────────────────────────────┐
+│  Layer 3: CONTENT (قابل للتحديث)        │
+│  محاضرات / ملخصات / أسئلة / Deduplication│
+└──────────────────────────────────────────┘</pre>
+
+    <h3>Schema جديد في Supabase</h3>
+
+    <pre>-- الكليات
+CREATE TABLE faculties (
+  id uuid PRIMARY KEY,
+  name text NOT NULL,
+  slug text UNIQUE,
+  icon text,
+  color text,
+  description text
+);
+
+-- التخصصات
+CREATE TABLE specialties (
+  id uuid PRIMARY KEY,
+  faculty_id uuid REFERENCES faculties(id),
+  name text,
+  years int -- عدد سنوات الدراسة
+);
+
+-- المواد
+CREATE TABLE subjects (
+  id uuid PRIMARY KEY,
+  specialty_id uuid REFERENCES specialties(id),
+  name text,
+  year int, -- السنة الدراسية
+  icon text
+);
+
+-- المواضيع
+CREATE TABLE topics (
+  id uuid PRIMARY KEY,
+  subject_id uuid REFERENCES subjects(id),
+  name text,
+  order_index int
+);
+
+-- المستندات (محدّث)
+ALTER TABLE documents
+  ADD COLUMN specialty_id uuid REFERENCES specialties(id),
+  ADD COLUMN subject_id uuid REFERENCES subjects(id),
+  ADD COLUMN topic_id uuid REFERENCES topics(id),
+  ADD COLUMN is_public boolean DEFAULT false,
+  ADD COLUMN approval_status text DEFAULT 'pending',
+  ADD COLUMN approved_by uuid REFERENCES auth.users(id),
+  ADD COLUMN quality_score int,
+  ADD COLUMN content_hash text; -- للمنع التكرار</pre>
+
+    <h3>Deduplication الذكي</h3>
+
+    <pre>-- عند رفع محاضرة جديدة:
+-- 1. احسب embedding
+-- 2. ابحث عن أقرب مستندات
+-- 3. إذا التشابه > 90% → رفض
+-- 4. إذا 70-90% → تحذير
+-- 5. إذا < 70% → اقبل
+
+CREATE OR REPLACE FUNCTION find_similar_documents(
+  query_embedding vector(1024),
+  filter_subject_id uuid,
+  similarity_threshold float DEFAULT 0.85
+)
+RETURNS TABLE (
+  doc_id uuid,
+  similarity float,
+  title text
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT
+    d.id,
+    (1 - (dc.embedding <=> query_embedding))::float,
+    d.filename
+  FROM documents d
+  JOIN document_chunks dc ON dc.document_id = d.id
+  WHERE d.subject_id = filter_subject_id
+    AND (1 - (dc.embedding <=> query_embedding)) > similarity_threshold
+  ORDER BY dc.embedding <=> query_embedding
+  LIMIT 5;
+END;
+$$ LANGUAGE plpgsql;</pre>
+  </section>
+
+  <!-- 4. Design System -->
+  <section id="design">
+    <h2><span class="num">04</span> نظام التصميم</h2>
+
+    <div class="callout">
+      <strong>🎨 الاتجاه: Professional / Minimalist</strong>
+      لا ألوان زاهية، لا أيقونات ملونة، لا gradients. تماماً مثل <strong>Linear</strong> و <strong>Vercel</strong> و <strong>Stripe</strong>. احترافي، نظيف، مركّز.
+    </div>
+
+    <h3>لوحة الألوان</h3>
+    <div class="design-preview">
+      <div class="dp-row">
+        <div class="dp-swatch" style="background:#0A0A0A"></div>
+        <div class="dp-swatch" style="background:#141414"></div>
+        <div class="dp-swatch" style="background:#1A1A1A"></div>
+        <div class="dp-swatch" style="background:#262626"></div>
+        <div class="dp-swatch" style="background:#FAFAFA"></div>
+      </div>
+      <div style="font-size:0.85em; color:#71717A;">
+        خلفيات داكنة متدرجة — أساس التصميم
+      </div>
+
+      <div class="dp-row" style="margin-top:20px;">
+        <div class="dp-swatch" style="background:#3B82F6"></div>
+        <div class="dp-swatch" style="background:#22C55E"></div>
+        <div class="dp-swatch" style="background:#F59E0B"></div>
+        <div class="dp-swatch" style="background:#EF4444"></div>
+      </div>
+      <div style="font-size:0.85em; color:#71717A;">
+        ألوان الحالة فقط — تُستخدم بحذر شديد
+      </div>
+    </div>
+
+    <h3>المبادئ الأساسية</h3>
+    <table>
+      <thead>
+        <tr><th>المبدأ</th><th>التفصيل</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Typography First</strong></td>
+          <td>الخط هو البطل — Inter لللاتيني، Tajawal للعربي</td>
+        </tr>
+        <tr>
+          <td><strong>Neutral Palette</strong></td>
+          <td>رمادي داكن + أبيض + لون accent واحد (أزرق)</td>
+        </tr>
+        <tr>
+          <td><strong>Monochrome Icons</strong></td>
+          <td>Lucide Icons — أحادية اللون، بسيطة، 1.5px stroke</td>
+        </tr>
+        <tr>
+          <td><strong>Generous Spacing</strong></td>
+          <td>مسافات واسعة، عناصر متنفسة</td>
+        </tr>
+        <tr>
+          <td><strong>Subtle Borders</strong></td>
+          <td>حدود رفيعة #262626 — لا ظلال ثقيلة</td>
+        </tr>
+        <tr>
+          <td><strong>No Decoration</strong></td>
+          <td>لا gradients، لا رسوم توضيحية، لا زخارف</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>معاينة عناصر التصميم</h3>
+    <div class="design-preview">
+      <div class="dp-row">
+        <button class="dp-btn dp-btn-primary">الزر الأساسي</button>
+        <button class="dp-btn">الزر الثانوي</button>
+        <span class="badge badge-accent">BADGE</span>
+        <span class="badge badge-success">مكتمل</span>
+        <span class="badge badge-warn">قيد التنفيذ</span>
+      </div>
+    </div>
+
+    <h3>التقنيات</h3>
+    <div class="grid grid-3">
+      <div class="card">
+        <div class="card-title">TailwindCSS</div>
+        <div class="card-desc">بدل inline styles</div>
+      </div>
+      <div class="card">
+        <div class="card-title">shadcn/ui</div>
+        <div class="card-desc">مكونات جاهزة</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Lucide Icons</div>
+        <div class="card-desc">أيقونات أحادية اللون</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Framer Motion</div>
+        <div class="card-desc">حركات ناعمة</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Inter + Tajawal</div>
+        <div class="card-desc">خطوط احترافية</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Radix UI</div>
+        <div class="card-desc">قوائم، dialogs، dropdowns</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. Roadmap -->
+  <section id="roadmap">
+    <h2><span class="num">05</span> خارطة الطريق — 12 شهر</h2>
+
+    <div class="timeline">
+      <div class="phase">
+        <div class="phase-time">الشهر 1-2</div>
+        <div class="phase-title">🎨 التصميم الاحترافي</div>
+        <div class="phase-body">
+          • تحويل إلى TailwindCSS<br>
+          • تصميم جديد لكل صفحة<br>
+          • Landing Page احترافية<br>
+          • Dark Mode شامل<br>
+          • Responsive للتابلت
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="phase-time">الشهر 3-4</div>
+        <div class="phase-title">🏗️ البنية متعددة الكليات</div>
+        <div class="phase-body">
+          • Schema جديد في Supabase<br>
+          • صفحة اختيار الكلية<br>
+          • عزل المحتوى بين الكليات<br>
+          • Navbar ديناميكي
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="phase-time">الشهر 5-6</div>
+        <div class="phase-title">🦷 محتوى الأسنان</div>
+        <div class="phase-body">
+          • إعداد بنك أسئلة الأسنان<br>
+          • 200+ سؤال أساسي<br>
+          • مصادر ومراجع<br>
+          • اختبارات أولية
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="phase-time">الشهر 7-8</div>
+        <div class="phase-title">💊 محتوى الصيدلة</div>
+        <div class="phase-body">
+          • بنك أسئلة الصيدلة<br>
+          • ربط المواد والمصادر<br>
+          • تحسينات على RAG
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="phase-time">الشهر 9-10</div>
+        <div class="phase-title">🔍 Deduplication + Approval</div>
+        <div class="phase-body">
+          • نظام منع التكرار<br>
+          • لوحة Admin<br>
+          • نظام الموافقة<br>
+          • إشعارات
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="phase-time">الشهر 11-12</div>
+        <div class="phase-title">💰 النموذج التجاري</div>
+        <div class="phase-body">
+          • تكامل الدفع<br>
+          • 3 خطط (مجاني/طالب/متقدم)<br>
+          • Analytics Dashboard<br>
+          • إطلاق رسمي
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. Plan 90 -->
+  <section id="plan90">
+    <h2><span class="num">06</span> خطة 90 يوم التفصيلية</h2>
+
+    <div class="callout callout-warn">
+      <strong>⏰ الوقت المتاح:</strong> ساعة واحدة يومياً = 7 ساعات أسبوعياً = <strong>90 ساعة في 90 يوم</strong>
+    </div>
+
+    <h3>الشهر 1: التصميم الأساسي</h3>
+    <table>
+      <thead>
+        <tr><th>الأسبوع</th><th>المهام</th><th>النتيجة</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>W1</strong></td>
+          <td>تعلم TailwindCSS + تثبيته</td>
+          <td>Tailwind يعمل</td>
+        </tr>
+        <tr>
+          <td><strong>W2</strong></td>
+          <td>تصميم Navbar + Sidebar جديد</td>
+          <td>شكل احترافي</td>
+        </tr>
+        <tr>
+          <td><strong>W3</strong></td>
+          <td>تصميم صفحة Login + Dashboard</td>
+          <td>صفحات جديدة</td>
+        </tr>
+        <tr>
+          <td><strong>W4</strong></td>
+          <td>تصميم Chat + Quiz</td>
+          <td>تجربة موحدة</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>الشهر 2: البنية متعددة</h3>
+    <table>
+      <thead>
+        <tr><th>الأسبوع</th><th>المهام</th><th>النتيجة</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>W5</strong></td>
+          <td>Schema جديد + SQL migrations</td>
+          <td>قاعدة بيانات جاهزة</td>
+        </tr>
+        <tr>
+          <td><strong>W6</strong></td>
+          <td>صفحة اختيار الكلية + التخصص</td>
+          <td>Onboarding جديد</td>
+        </tr>
+        <tr>
+          <td><strong>W7</strong></td>
+          <td>ربط المستندات بالكليات</td>
+          <td>عزل المحتوى</td>
+        </tr>
+        <tr>
+          <td><strong>W8</strong></td>
+          <td>اختبار + إصلاح Bugs</td>
+          <td>بنية مستقرة</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>الشهر 3: محتوى الأسنان + اختبار</h3>
+    <table>
+      <thead>
+        <tr><th>الأسبوع</th><th>المهام</th><th>النتيجة</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>W9</strong></td>
+          <td>بنك أسئلة الأسنان (100 سؤال)</td>
+          <td>محتوى أساسي</td>
+        </tr>
+        <tr>
+          <td><strong>W10</strong></td>
+          <td>+100 سؤال + مصادر</td>
+          <td>200 سؤال</td>
+        </tr>
+        <tr>
+          <td><strong>W11</strong></td>
+          <td>اختبار داخلي مع أصدقاء</td>
+          <td>Feedback</td>
+        </tr>
+        <tr>
+          <td><strong>W12</strong></td>
+          <td>إصلاح + إطلاق Beta</td>
+          <td>🚀 Beta Live</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 7. Content -->
+  <section id="content">
+    <h2><span class="num">07</span> استراتيجية المحتوى</h2>
+
+    <div class="callout">
+      <strong>🎯 النموذج المختلط:</strong> كل محتوى يرفعه الطالب يبدأ <strong>خاصاً</strong>، ثم يمكنه مشاركته علناً. المساهمون الأوائل يحصلون على ميزات مجانية.
+    </div>
+
+    <h3>دورة حياة المحتوى</h3>
+    <pre>طالب يرفع ملف
+       ↓
+   حفظ خاص (افتراضي)
+       ↓
+   الطالب يختار: "شارك"؟
+       ↓
+   AI يفحص الجودة والتفرد
+       ↓
+   صديق مشرف يراجع
+       ↓
+   ✓ ينشر | ✗ يُرفض مع أسباب</pre>
+
+    <h3>مصادر المحتوى</h3>
+    <table>
+      <thead>
+        <tr><th>المصدر</th><th>الكمية المتوقعة</th><th>الوقت</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>AI يولد أسئلة أساسية</td>
+          <td>500 سؤال/كلية</td>
+          <td>أسبوع</td>
+        </tr>
+        <tr>
+          <td>محاضرات الطلاب</td>
+          <td>50-200 ملف/شهر</td>
+          <td>مستمر</td>
+        </tr>
+        <tr>
+          <td>أصدقاء في كل كلية</td>
+          <td>20-50 سؤال/شخص</td>
+          <td>شهر</td>
+        </tr>
+        <tr>
+          <td>بنوك أسئلة سابقة</td>
+          <td>حسب التوفر</td>
+          <td>متغير</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>تحفيز المساهمين</h3>
+    <div class="grid grid-2">
+      <div class="card">
+        <div class="card-title">🎁 النقاط</div>
+        <div class="card-desc">
+          كل ملف مقبول = 10 نقاط<br>
+          كل سؤال معتمد = 2 نقاط<br>
+          100 نقطة = شهر مجاني
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🏆 الشارات</div>
+        <div class="card-desc">
+          "مساهم مبتدئ" (10 ملفات)<br>
+          "مشرف" (100 ملف)<br>
+          "أسطورة" (500 ملف)
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8. Tools -->
+  <section id="tools">
+    <h2><span class="num">08</span> الأدوات المجانية</h2>
+
+    <table>
+      <thead>
+        <tr><th>الأداة</th><th>الاستخدام</th><th>الحد المجاني</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Vercel</strong></td>
+          <td>النشر</td>
+          <td>100GB bandwidth</td>
+        </tr>
+        <tr>
+          <td><strong>Supabase</strong></td>
+          <td>DB + Auth + Storage</td>
+          <td>500MB + 1GB Storage</td>
+        </tr>
+        <tr>
+          <td><strong>Groq</strong></td>
+          <td>Chat AI</td>
+          <td>1000 طلب/يوم × 2 مفاتيح</td>
+        </tr>
+        <tr>
+          <td><strong>Jina AI</strong></td>
+          <td>Embeddings</td>
+          <td>10M توكن</td>
+        </tr>
+        <tr>
+          <td><strong>GitHub</strong></td>
+          <td>الكود</td>
+          <td>غير محدود</td>
+        </tr>
+        <tr>
+          <td><strong>Figma</strong></td>
+          <td>التصميم</td>
+          <td>3 مشاريع</td>
+        </tr>
+        <tr>
+          <td><strong>Cloudflare</strong></td>
+          <td>DNS + CDN</td>
+          <td>غير محدود</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-success">
+      <strong>✅ الحدود كافية لـ:</strong>
+      • 5,000 طالب مسجل<br>
+      • 500,000 محادثة شهرياً<br>
+      • 10,000 ملف مرفوع<br>
+      • حتى تصل لحاجة الدفع
+    </div>
+  </section>
+
+  <!-- 9. KPIs -->
+  <section id="kpis">
+    <h2><span class="num">09</span> معايير النجاح</h2>
+
+    <h3>KPIs في Beta (4 أشهر)</h3>
+    <div class="stat-grid">
+      <div class="stat">
+        <div class="stat-value">500</div>
+        <div class="stat-label">طالب مسجل</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">30%</div>
+        <div class="stat-label">نشط أسبوعياً</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">4/5</div>
+        <div class="stat-label">رضا الطلاب</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">50%</div>
+        <div class="stat-label">يعودون بعد 7 أيام</div>
+      </div>
+    </div>
+
+    <h3>KPIs بعد 12 شهر</h3>
+    <div class="stat-grid">
+      <div class="stat">
+        <div class="stat-value">5000</div>
+        <div class="stat-label">طالب مسجل</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">1000</div>
+        <div class="stat-label">نشط شهرياً</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">6</div>
+        <div class="stat-label">كليات</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">$100</div>
+        <div class="stat-label">دخل شهري</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10. Risks -->
+  <section id="risks">
+    <h2><span class="num">10</span> المخاطر والحلول</h2>
+
+    <table>
+      <thead>
+        <tr><th>المخاطرة</th><th>الاحتمال</th><th>الحل</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>عدم كفاية المحتوى</td>
+          <td><span class="badge badge-danger">عالية</span></td>
+          <td>AI يولّد + أصدقاء يساهمون + تحفيز بالنقاط</td>
+        </tr>
+        <tr>
+          <td>Groq Rate Limit</td>
+          <td><span class="badge badge-warn">متوسطة</span></td>
+          <td>5-10 مفاتيح إضافية + fallback لـ OpenRouter</td>
+        </tr>
+        <tr>
+          <td>عدم استخدام الطلاب</td>
+          <td><span class="badge badge-warn">متوسطة</span></td>
+          <td>تسويق عبر مجموعات تلغرام + سفراء</td>
+        </tr>
+        <tr>
+          <td>مشاكل تقنية</td>
+          <td><span class="badge badge-muted">منخفضة</span></td>
+          <td>اختبار مستمر + Community</td>
+        </tr>
+        <tr>
+          <td>عدم الدخل</td>
+          <td><span class="badge badge-warn">متوسطة</span></td>
+          <td>الرعاة + الإعلانات + خطة مجانية طويلة</td>
+        </tr>
+        <tr>
+          <td>Burnout الشخصي</td>
+          <td><span class="badge badge-danger">عالية</span></td>
+          <td>جدول واقعي (ساعة/يوم) + فترات راحة</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 11. Learn -->
+  <section id="learn">
+    <h2><span class="num">11</span> مصادر التعلم</h2>
+
+    <h3>TailwindCSS</h3>
+    <ul>
+      <li><a href="https://tailwindcss.com/docs" target="_blank">الوثائق الرسمية</a> — الأفضل للبدء</li>
+      <li><a href="https://www.youtube.com/watch?v=pfaSUYaSgRo" target="_blank">Traversy Media — Tailwind Crash Course</a></li>
+      <li><a href="https://tailwindcss.com/docs/utility-first" target="_blank">Utility-First Mindset</a></li>
+    </ul>
+
+    <h3>shadcn/ui</h3>
+    <ul>
+      <li><a href="https://ui.shadcn.com" target="_blank">الموقع الرسمي</a> — مع أمثلة تفاعلية</li>
+      <li><a href="https://ui.shadcn.com/docs/installation/vite" target="_blank">دليل التركيب مع Vite</a></li>
+    </ul>
+
+    <h3>التصميم الاحترافي</h3>
+    <ul>
+      <li><a href="https://linear.app" target="_blank">Linear</a> — ادرس تصميمهم</li>
+      <li><a href="https://vercel.com" target="_blank">Vercel</a> — minimalist مثالي</li>
+      <li><a href="https://stripe.com" target="_blank">Stripe</a> — typography أولاً</li>
+      <li><a href="https://refactoringui.com" target="_blank">Refactoring UI</a> — كتاب مصور (مهم)</li>
+    </ul>
+
+    <h3>أيقونات</h3>
+    <ul>
+      <li><a href="https://lucide.dev" target="_blank">Lucide Icons</a> — الموصى بها</li>
+    </ul>
+
+    <h3>أنيميشن</h3>
+    <ul>
+      <li><a href="https://www.framer.com/motion/" target="_blank">Framer Motion</a> — للـ React</li>
+    </ul>
+  </section>
+
+  <!-- 12. Next Steps -->
+  <section id="next">
+    <h2><span class="num">12</span> الخطوات الفورية</h2>
+
+    <div class="callout callout-warn">
+      <strong>📌 ابدأ بهذه الخطوة الآن:</strong>
+      تعلم TailwindCSS (3-4 أيام) قبل أي شيء.
+    </div>
+
+    <h3>هذا الأسبوع</h3>
+    <ol>
+      <li><strong>اليوم 1-2:</strong> قراءة وثائق Tailwind الأساسية</li>
+      <li><strong>اليوم 3-4:</strong> تجربة Tailwind في مشروع صغير</li>
+      <li><strong>اليوم 5-6:</strong> تثبيت Tailwind + shadcn في كوتش AI</li>
+      <li><strong>اليوم 7:</strong> تحويل أول مكون (Navbar)</li>
+    </ol>
+
+    <h3>الأسبوع القادم</h3>
+    <ol>
+      <li>تحويل Sidebar + Dashboard</li>
+      <li>تحويل Login + Chat</li>
+      <li>تحويل باقي المكونات</li>
+    </ol>
+
+    <h3>الشهر القادم</h3>
+    <ol>
+      <li>SQL جديد (faculties, specialties, subjects)</li>
+      <li>صفحة اختيار الكلية</li>
+      <li>ربط المستندات بالكليات</li>
+    </ol>
+  </section>
+
+  <div class="callout callout-success" style="margin-top:40px; text-align:center;">
+    <strong>🎯 تذكّر دائماً:</strong>
+    ساعة واحدة يومياً × 90 يوم = 90 ساعة = تطبيق احترافي كامل.<br>
+    <span style="color:#A1A1AA; font-size:0.9em;">لا تتوقف. السرعة تأتي من الاستمرارية.</span>
+  </div>
+
+</div>
+
+<footer>
+  <p>💙 كوتش AI — صُنع لطلاب الجامعات السورية</p>
+  <p style="margin-top:8px;">خطة الانطلاق — الإصدار 1.0 — 13 أكتوبر 2026</p>
+</footer>
+
+</body>
+</html>

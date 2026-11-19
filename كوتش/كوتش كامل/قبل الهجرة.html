@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>كوتش AI — خطة الانطلاق الشاملة v1.0</title>
+<style>
+  :root {
+    --bg: #0A0A0A;
+    --bg-soft: #141414;
+    --bg-card: #1A1A1A;
+    --border: #262626;
+    --text: #FAFAFA;
+    --text-muted: #A1A1AA;
+    --text-subtle: #71717A;
+    --accent: #3B82F6;
+    --success: #22C55E;
+    --warn: #F59E0B;
+    --danger: #EF4444;
+    --purple: #8B5CF6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    font-size: 15px;
+  }
+  .container { max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
+  header {
+    padding: 60px 24px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(59, 130, 246, 0.05) 0%, transparent 100%);
+  }
+  header h1 {
+    font-size: 2.4em;
+    font-weight: 800;
+    margin-bottom: 12px;
+    background: linear-gradient(180deg, #FAFAFA 0%, #71717A 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  header p { color: var(--text-muted); font-size: 1.1em; }
+  header .meta {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    font-size: 0.85em;
+    color: var(--text-subtle);
+    flex-wrap: wrap;
+  }
+  section { margin-bottom: 50px; }
+  h2 {
+    font-size: 1.5em;
+    font-weight: 700;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  h2 .num {
+    color: var(--accent);
+    font-size: 0.6em;
+    font-weight: 700;
+    background: rgba(59, 130, 246, 0.15);
+    padding: 4px 10px;
+    border-radius: 6px;
+  }
+  h3 { font-size: 1.1em; font-weight: 600; margin: 24px 0 12px; color: var(--text); }
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 12px;
+  }
+  .grid { display: grid; gap: 14px; }
+  .grid-2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  .grid-3 { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+  .grid-4 { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--bg-card);
+    border-radius: 12px; overflow: hidden; border: 1px solid var(--border); margin: 12px 0;
+  }
+  th, td { padding: 12px 14px; text-align: right; border-bottom: 1px solid var(--border); font-size: 0.88em; }
+  th { background: var(--bg-soft); color: var(--text-muted); font-size: 0.75em; font-weight: 600; }
+  tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--bg-soft); }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 5px; font-size: 0.7em; font-weight: 700; }
+  .badge-done { background: #052E16; color: #86EFAC; }
+  .badge-progress { background: #451A03; color: #FCD34D; }
+  .badge-todo { background: #18181B; color: #A1A1AA; border: 1px solid #27272A; }
+  .callout { border-right: 3px solid var(--accent); background: var(--bg-soft); padding: 14px 18px; border-radius: 8px; margin: 14px 0; font-size: 0.9em; }
+  .callout-warn { border-right-color: var(--warn); }
+  .callout-success { border-right-color: var(--success); }
+  .callout-danger { border-right-color: var(--danger); }
+  .callout strong { color: var(--text); display: block; margin-bottom: 6px; }
+  .code { background: var(--bg-soft); padding: 2px 7px; border-radius: 4px; font-family: monospace; font-size: 0.82em; color: #93C5FD; direction: ltr; display: inline-block; }
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 16px 0; }
+  .stat { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: center; }
+  .stat-value { font-size: 1.8em; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; }
+  .stat-label { font-size: 0.72em; color: var(--text-subtle); text-transform: uppercase; margin-top: 4px; font-weight: 600; }
+  .progress-wrap { background: var(--bg-soft); border-radius: 99px; height: 8px; overflow: hidden; margin: 8px 0; }
+  .progress-bar { background: linear-gradient(90deg, var(--accent) 0%, #60A5FA 100%); height: 100%; border-radius: 99px; }
+  ul, ol { padding-right: 20px; }
+  li { margin-bottom: 5px; color: var(--text-muted); font-size: 0.9em; }
+  footer { text-align: center; padding: 40px; color: var(--text-subtle); font-size: 0.82em; border-top: 1px solid var(--border); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🩺 كوتش AI — خطة الانطلاق الشاملة</h1>
+  <p>من مشروع طالب واحد إلى منصة تعليمية ذكية لكل الجامعات السورية</p>
+  <div class="meta">
+    <span>📅 آخر تحديث: 18 أكتوبر 2026</span>
+    <span>🟢 الإصدار: v1.0 (استراتيجية ما قبل الإطلاق)</span>
+    <span>🎯 الهدف: 1000 طالب في النسخة التجريبية</span>
+  </div>
+</header>
+
+<div class="container">
+
+  <section>
+    <h2><span class="num">01</span> الرؤية والهدف الحالي</h2>
+    <div class="card">
+      <p style="color: var(--text-muted); margin-bottom: 12px;">
+        <strong style="color: var(--text);">الرؤية:</strong> بناء المنصة الأولى في سوريا لمساعدة طلاب كليات (الطب البشري، طب الأسنان، والصيدلة) على الدراسة والتحضير للامتحانات باستخدام الذكاء الاصطناعي.
+      </p>
+      <p style="color: var(--text-muted);">
+        <strong style="color: var(--text);">الاستراتيجية الحالية:</strong> مرحلة "ما قبل الإطلاق" (Pre-Launch). لن يتم فتح الموقع للعامة فوراً، بل سيتم دعوة أول 1000 طالب لحجز مقاعدهم (Waitlist)، وإدخال بياناتهم الاستبيانية لتخصيص التجربة، ثم إطلاق النسخة التجريبية لهم أولاً.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">02</span> المكدس التقني (Tech Stack)</h2>
+    <div class="grid grid-4">
+      <div class="card"><div class="stat-label">الواجهة</div><div style="font-weight:bold; color:var(--text);">React 18 + Vite 5</div></div>
+      <div class="card"><div class="stat-label">التصميم</div><div style="font-weight:bold; color:var(--text);">TailwindCSS + Framer Motion</div></div>
+      <div class="card"><div class="stat-label">البيانات</div><div style="font-weight:bold; color:var(--text);">Supabase (Auth + DB + pgvector)</div></div>
+      <div class="card"><div class="stat-label">الذكاء الاصطناعي</div><div style="font-weight:bold; color:var(--text);">Groq + Jina AI + OpenRouter</div></div>
+      <div class="card"><div class="stat-label">الاستضافة</div><div style="font-weight:bold; color:var(--text);">Vercel Edge Runtime</div></div>
+      <div class="card"><div class="stat-label">أدوات إضافية</div><div style="font-weight:bold; color:var(--text);">jsPDF + html2canvas</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">03</span> الإنجازات (ما تم بناؤه)</h2>
+    
+    <div class="grid grid-3">
+      <div class="card"><div class="card-title">🔐 المصادقة</div><span class="badge badge-done">✅</span></div>
+      <div class="card"><div class="card-title">📝 استبيان 6 مراحل</div><span class="badge badge-done">✅</span></div>
+      <div class="card"><div class="card-title">🏠 لوحة تحكم متقدمة</div><span class="badge badge-done">✅</span></div>
+      <div class="card"><div class="card-title">👤 بروفايل + Avatar</div><span class="badge badge-done">✅</span></div>
+      <div class="card"><div class="card-title">💬 دردشة AI + Streaming</div><span class="badge badge-done">✅</span></div>
+      <div class="card"><div class="card-title">📂 صفحة "محادثاتي"</div><span class="badge badge-done">✅</span></div>
+      <div class="card"><div class="card-title">📚 رفع الملفات + RAG</div><span class="badge badge-done">✅</span></div>
+      <div class="card"><div class="card-title">🎯 توليد MCQ</div><span class="badge badge-done">✅</span></div>
+      <div class="card"><div class="card-title">⏱️ محاكاة امتحان</div><span class="badge badge-done">✅</span></div>
+      <div class="card"><div class="card-title">📖 بنك الأخطاء</div><span class="badge badge-done">✅</span></div>
+      <div class="card"><div class="card-title">📊 التقرير الأسبوعي</div><span class="badge badge-done">✅</span></div>
+      <div class="card"><div class="card-title">🔥 Streak Counter</div><span class="badge badge-done">✅</span></div>
+      <div class="card"><div class="card-title">⏱️ عدّاد الامتحان</div><span class="badge badge-done">✅</span></div>
+      <div class="card"><div class="card-title">🌙 Dark Mode كامل</div><span class="badge badge-done">✅</span></div>
+      <div class="card"><div class="card-title">📱 Mobile Bottom Tab</div><span class="badge badge-done">✅</span></div>
+      <div class="card"><div class="card-title">🖥️ Desktop Sidebar</div><span class="badge badge-done">✅</span></div>
+      <div class="card"><div class="card-title">🎨 Landing Page كاملة</div><span class="badge badge-done">✅</span></div>
+      <div class="card"><div class="card-title">✨ Framer Motion</div><span class="badge badge-done">✅</span></div>
+      <div class="card"><div class="card-title">📄 PDF Export (4 أنواع)</div><span class="badge badge-done">✅</span></div>
+      <div class="card"><div class="card-title">🔑 Multi-Key Groq</div><span class="badge badge-done">✅</span></div>
+      <div class="card"><div class="card-title">🦷 هيكل كلية الأسنان</div><span class="badge badge-done">✅</span></div>
+      <div class="card"><div class="card-title">💊 هيكل كلية الصيدلة</div><span class="badge badge-done">✅</span></div>
+      <div class="card"><div class="card-title">📝 صفحة Waitlist</div><span class="badge badge-done">✅</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">04</span> الخطوات القادمة (المرحلة الحالية)</h2>
+    
+    <div class="callout callout-warn">
+      <strong>🎯 المرحلة 8.5 - 8.10: إكمال استراتيجية ما قبل الإطلاق</strong>
+      <p style="margin-top: 8px;">نحن الآن في مرحلة ربط صفحة "حجز المقعد" بقاعدة البيانات (تم إنشاء الجدول)، وإصلاح أخطاء الكود البسيطة (Syntax Errors).</p>
+    </div>
+
+    <table>
+      <thead>
+        <tr><th>#</th><th>المهمة</th><th>التفاصيل</th><th>الحالة</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>8.6</code></td>
+          <td>صفحة حجز المقعد (Waitlist)</td>
+          <td>واجهة تسجيل تطلب (الاسم، الإيميل، الكلية، السنة) وتخزينها في Supabase</td>
+          <td><span class="badge badge-done">✅ مكتمل</span></td>
+        </tr>
+        <tr>
+          <td><code>8.7</code></td>
+          <td>شاشة "Coming Soon"</td>
+          <td>تظهر للطالب بعد حجز مقعده، تطمئنه وتخبره أننا نجهز المنصة</td>
+          <td><span class="badge badge-done">✅ مكتمل</span></td>
+        </tr>
+        <tr>
+          <td><code>8.8</code></td>
+          <td>ربط الاستبيان بالكلية</td>
+          <td>عند الإطلاق، يرى الطالب أسئلة استبيان مخصصة لكليته فقط</td>
+          <td><span class="badge badge-progress">⏳ قيد العمل</span></td>
+        </tr>
+        <tr>
+          <td><code>8.9</code></td>
+          <td>لوحة تحكم الأدمن (Admin)</td>
+          <td>صفحة محمية لك لرؤية (الإيميلات، الأسماء، الكليات) وإدارة البيانات</td>
+          <td><span class="badge badge-todo">لم يبدأ</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2><span class="num">05</span> الرؤية المستقبلية (المراحل القادمة)</h2>
+
+    <h3>📚 المرحلة 9: نظام المحتوى الذكي</h3>
+    <ul>
+      <li>دمج ميزة "التصويت" على الملفات التي يرفعها الطلاب.</li>
+      <li>منع التكرار (Deduplication): إذا رفع طالب ملفاً مشابهاً، يتم دمجه لتوفير المساحة.</li>
+      <li>نظام نقاط للطلاب الذين يشاركون ملخصات مفيدة.</li>
+    </ul>
+
+    <h3>🧠 المرحلة 10: تدريب الذكاء الاصطناعي</h3>
+    <ul>
+      <li>جمع تفاعلات الطلاب (ما يسألون عنه، أين يخطئون).</li>
+      <li>بناء نظام يخصص "شخصية" الـ AI لكل طالب (صارم، ودود، أكاديمي).</li>
+      <li>توليد خطط دراسية أسبوعية بناءً على أداء الطالب في بنك الأخطاء.</li>
+    </ul>
+
+    <h3>💰 المرحلة 11: النموذج التجاري</h3>
+    <ul>
+      <li>النسخة المجانية للجميع (محدودة الاستخدام).</li>
+      <li>اشتراك مدفوع (الطالب) بحدود أعلى ومزايا إضافية.</li>
+      <li>تكامل بوابات الدفع المحلية (أو Stripe إن توفر).</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="num">06</span> ملاحظات أمنية وتقنية هامة</h2>
+    
+    <div class="callout callout-danger">
+      <strong>🚨 تحذير خاص بمفاتيح Groq</strong>
+      <p style="margin-top: 6px;">لا تستخدم أكثر من حساب Groq واحد لتجنب الحظر. تم بناء التطبيق ليتحمل الضغط عبر توزيع الطلبات بين Groq (الأساسي)، ومزودين احتياطيين (OpenRouter / Jina AI) لضمان استمرارية الخدمة للطلاب الـ 1000 بأمان.</p>
+    </div>
+
+    <div class="callout callout-success">
+      <strong>🗄️ خطة Supabase المجانية</strong>
+      <p style="margin-top: 6px;">خطة Supabase المجانية (500MB DB + 1GB Storage + 50K MAU) كافية جداً لخدمة 1000 طالب في المرحلة التجريبية دون أي تكاليف مالية.</p>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <p>💙 كوتش AI — صُنع لطلاب الجامعات السورية</p>
+  <p style="margin-top: 6px;">v1.0 — استراتيجية ما قبل الإطلاق</p>
+</footer>
+
+</body>
+</html>

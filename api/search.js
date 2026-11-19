@@ -66,11 +66,11 @@ export default async function handler(req, res) {
     // 1. توليد embedding للسؤال
     const queryEmbedding = await embedQuery(query, jinaKey);
 
-    // 2. البحث في قاعدة البيانات
+    // 2. البحث في قاعدة البيانات (البحث الهجين)
     const supabaseUrl = process.env.VITE_SUPABASE_URL;
     const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
 
-    const searchRes = await fetch(`${supabaseUrl}/rest/v1/rpc/match_document_chunks`, {
+    const searchRes = await fetch(`${supabaseUrl}/rest/v1/rpc/hybrid_search`, {
       method: 'POST',
       headers: {
         apikey: supabaseAnonKey,
@@ -79,6 +79,7 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         query_embedding: queryEmbedding,
+        query_text: query,
         match_threshold: threshold,
         match_count: matchCount,
         filter_user_id: userId,

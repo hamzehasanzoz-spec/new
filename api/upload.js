@@ -1,16 +1,48 @@
 // Node.js Serverless Function (بدون Edge)
 
-function chunkText(text, chunkSize = 1000, overlap = 150) {
-  const clean = text.replace(/\s+/g, ' ').trim();
+// ⭐ التقطيع الهيكلي (Structural Chunking): يحترم الفقرات والعناوين والفواصل للحفاظ على اكتمال الفكرة الطبية
+function chunkText(text, maxChunkSize = 1000, overlap = 150) {
+  if (!text) return [];
+  
+  // تنظيف النص الأساسي والحفاظ على فواصل الفقرات
+  const cleanText = text.replace(/\r\n/g, '\n');
+  
+  // تقسيم النص أولاً حسب الفقرات الكبيرة أو العناوين
+  const paragraphs = cleanText.split(/\n\s*\n/).filter(Boolean);
   const chunks = [];
-  let start = 0;
-  while (start < clean.length) {
-    const end = Math.min(start + chunkSize, clean.length);
-    const chunk = clean.slice(start, end).trim();
-    if (chunk.length > 30) chunks.push(chunk);
-    if (end >= clean.length) break;
-    start = end - overlap;
+  
+  for (const para of paragraphs) {
+    if (para.length <= maxChunkSize) {
+      if (para.trim().length > 30) {
+        chunks.push(para.trim());
+      }
+    } else {
+      // إذا كانت الفقرة طويلة جداً، نقوم بتقسيمها بحذر مع الحفاظ على التداخل (overlap)
+      let start = 0;
+      while (start < para.length) {
+        const end = Math.min(start + maxChunkSize, para.length);
+        const chunk = para.slice(start, end).trim();
+        if (chunk.length > 30) {
+          chunks.push(chunk);
+        }
+        if (end >= para.length) break;
+        start = end - overlap;
+      }
+    }
   }
+  
+  // إذا لم يتم العثور على فقرات كافية، نعود للطريقة التقليدية المحسنة
+  if (chunks.length === 0) {
+    let start = 0;
+    while (start < cleanText.length) {
+      const end = Math.min(start + maxChunkSize, cleanText.length);
+      const chunk = cleanText.slice(start, end).trim();
+      if (chunk.length > 30) chunks.push(chunk);
+      if (end >= cleanText.length) break;
+      start = end - overlap;
+    }
+  }
+  
   return chunks;
 }
 

@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>كوتش AI — الخطة الاستراتيجية الشاملة v2.0</title>
+<style>
+  :root {
+    --bg: #0A0A0A;
+    --bg-soft: #141414;
+    --bg-card: #1A1A1A;
+    --border: #262626;
+    --text: #FAFAFA;
+    --text-muted: #A1A1AA;
+    --text-subtle: #71717A;
+    --accent: #3B82F6;
+    --success: #22C55E;
+    --warn: #F59E0B;
+    --danger: #EF4444;
+    --purple: #8B5CF6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    font-size: 15px;
+  }
+  .container { max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
+  header {
+    padding: 60px 24px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(59, 130, 246, 0.05) 0%, transparent 100%);
+  }
+  header h1 {
+    font-size: 2.4em;
+    font-weight: 800;
+    margin-bottom: 12px;
+    background: linear-gradient(180deg, #FAFAFA 0%, #71717A 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  header p { color: var(--text-muted); font-size: 1.1em; }
+  header .meta {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    font-size: 0.85em;
+    color: var(--text-subtle);
+    flex-wrap: wrap;
+  }
+  section { margin-bottom: 50px; }
+  h2 {
+    font-size: 1.5em;
+    font-weight: 700;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  h2 .num {
+    color: var(--accent);
+    font-size: 0.6em;
+    font-weight: 700;
+    background: rgba(59, 130, 246, 0.15);
+    padding: 4px 10px;
+    border-radius: 6px;
+  }
+  h3 { font-size: 1.1em; font-weight: 600; margin: 24px 0 12px; color: var(--text); }
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 12px;
+  }
+  .grid { display: grid; gap: 14px; }
+  .grid-2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  .grid-3 { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--bg-card);
+    border-radius: 12px; overflow: hidden; border: 1px solid var(--border); margin: 12px 0;
+  }
+  th, td { padding: 12px 14px; text-align: right; border-bottom: 1px solid var(--border); font-size: 0.88em; }
+  th { background: var(--bg-soft); color: var(--text-muted); font-size: 0.75em; font-weight: 600; }
+  tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--bg-soft); }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 5px; font-size: 0.7em; font-weight: 700; }
+  .badge-done { background: #052E16; color: #86EFAC; }
+  .badge-progress { background: #451A03; color: #FCD34D; }
+  .badge-todo { background: #18181B; color: #A1A1AA; border: 1px solid #27272A; }
+  .badge-critical { background: #450A0A; color: #FCA5A5; }
+  .callout { border-right: 3px solid var(--accent); background: var(--bg-soft); padding: 14px 18px; border-radius: 8px; margin: 14px 0; font-size: 0.9em; }
+  .callout-warn { border-right-color: var(--warn); }
+  .callout-success { border-right-color: var(--success); }
+  .callout-danger { border-right-color: var(--danger); }
+  .callout-purple { border-right-color: var(--purple); }
+  .callout strong { color: var(--text); display: block; margin-bottom: 6px; }
+  .code { background: var(--bg-soft); padding: 2px 7px; border-radius: 4px; font-family: monospace; font-size: 0.82em; color: #93C5FD; direction: ltr; display: inline-block; }
+  ul, ol { padding-right: 20px; }
+  li { margin-bottom: 5px; color: var(--text-muted); font-size: 0.9em; }
+  footer { text-align: center; padding: 40px; color: var(--text-subtle); font-size: 0.82em; border-top: 1px solid var(--border); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>كوتش AI — الخطة الاستراتيجية الشاملة</h1>
+  <p>من مشروع طالب واحد إلى المنصة الطبية الأولى في سوريا</p>
+  <div class="meta">
+    <span>آخر تحديث: 18 أكتوبر 2026</span>
+    <span>الإصدار: v2.0 (التأسيس للمرحلة القادمة)</span>
+    <span>الهدف: 1000 طالب (Beta)</span>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- 1. الرؤية والمكدس التقني -->
+  <section>
+    <h2><span class="num">01</span> الرؤية والمكدس التقني</h2>
+    <div class="card">
+      <p style="color: var(--text-muted); margin-bottom: 12px;">
+        <strong style="color: var(--text);">الرؤية:</strong> بناء منصة تعليمية ذكية لطلاب الكليات الطبية (طب بشري، أسنان، صيدلة)، تعتمد على الذكاء الاصطناعي لتخصيص تجربة الدراسة، وتكييفها لتشبه أسلوب كل أستاذ وطريقة شرحه وأسئلته.
+      </p>
+      <div class="grid grid-3" style="margin-top: 15px;">
+        <div class="card" style="margin:0; padding:12px;"><div style="font-weight:bold; color:var(--text);">الواجهة</div><div style="font-size:0.8em; color:var(--muted);">React + Vite + TailwindCSS</div></div>
+        <div class="card" style="margin:0; padding:12px;"><div style="font-weight:bold; color:var(--text);">البيانات</div><div style="font-size:0.8em; color:var(--muted);">Supabase (Auth + DB + Storage)</div></div>
+        <div class="card" style="margin:0; padding:12px;"><div style="font-weight:bold; color:var(--text);">الذكاء الاصطناعي</div><div style="font-size:0.8em; color:var(--muted);">Groq, OpenRouter, Jina AI (Fallback)</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. ما تم إنجازه (المراحل 1-7) -->
+  <section>
+    <h2><span class="num">02</span> الإنجازات (المراحل 1 - 7)</h2>
+    <div class="callout callout-success">
+      <strong>تم بناء الأساس المتين للمشروع:</strong>
+      المصادقة، استبيان 6 مراحل، لوحة التحكم، البروفايل، دردشة AI (Streaming + RAG)، محادثاتي، رفع الملفات، توليد MCQ، محاكاة الامتحان، بنك الأخطاء، التقرير الأسبوعي، Streak، Dark Mode، Sidebar، Bottom Bar، وتصميم Landing Page احترافي. وتم إنشاء جداول (faculties, specialties, subjects, topics).
+    </div>
+  </section>
+
+  <!-- 3. المرحلة 8: التأسيس وما قبل الإطلاق -->
+  <section>
+    <h2><span class="num">03</span> المرحلة 8: التأسيس وإصلاح المسار (ما قبل الإطلاق)</h2>
+    
+    <div class="callout callout-danger">
+      <strong>ملاحظة هامة (حل المشاكل العالقة):</strong>
+      يوجد خطأ برمجي حالياً عند محاولة إنشاء اختبار في صفحة محاكاة الامتحان. هذه المشكلة يجب أن تكون الأولوية رقم 1 قبل أي شيء آخر.
+    </div>
+
+    <table>
+      <thead><tr><th>#</th><th>المهمة</th><th>التفاصيل</th><th>الحالة</th></tr></thead>
+      <tbody>
+        <tr><td>8.1</td><td>إصلاح خطأ محاكاة الامتحان</td><td>مراجعة كود Exam.jsx و API المعني لحل مشكلة إنشاء الاختبار.</td><td><span class="badge badge-critical">عاجل</span></td></tr>
+        <tr><td>8.2</td><td>تأسيس لوحة الأدمن (Admin Panel)</td><td>إضافة تبويب مخفي يظهر فقط لمن دوره <code>admin</code>، وإضافة 3 حسابات أدمن للفريق.</td><td><span class="badge badge-todo">لم يبدأ</span></td></tr>
+        <tr><td>8.3</td><td>تطوير صفحة الـ Waitlist</td><td>تحويلها إلى استبيان شامل ومفصل، يتغير ديناميكياً حسب الكلية (طب، أسنان، صيدلة).</td><td><span class="badge badge-todo">لم يبدأ</span></td></tr>
+        <tr><td>8.4</td><td>ربط الاستبيان بالبيانات</td><td>تخزين إجابات الـ Waitlist في جدول جديد لتحليلها قبل الإطلاق.</td><td><span class="badge badge-todo">لم يبدأ</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 4. المرحلة 9: الاحترافية والهوية البصرية -->
+  <section>
+    <h2><span class="num">04</span> المرحلة 9: الاحترافية والهوية البصرية</h2>
+
+    <div class="callout">
+      <strong>الهدف:</strong> إزالة أي طابع "مبتدئ" أو "رخيص" من الموقع، وجعله يبدو كمنتج تجاري احترافي (مثل Linear أو Vercel).
+    </div>
+
+    <table>
+      <thead><tr><th>#</th><th>المهمة</th><th>التفاصيل</th><th>الحالة</th></tr></thead>
+      <tbody>
+        <tr><td>9.1</td><td>حذف الإيموجي بالكامل</td><td>استبدال جميع الإيموجي في الأزرار، القوائم، والبطاقات بأيقونات احترافية (مثل Lucide Icons).</td><td><span class="badge badge-todo">لم يبدأ</span></td></tr>
+        <tr><td>9.2</td><td>تخصيص واجهة الطالب حسب كليته</td><td>تغيير لون الـ Accent (الأزرق للطب، الأخضر للأسنان، البنفسجي للصيدلة)، وتغيير شكل الـ Landing Page، والـ Dashboard لتناسب كل كلية.</td><td><span class="badge badge-todo">لم يبدأ</span></td></tr>
+        <tr><td>9.3</td><td>تخصيص شخصية الـ AI Chat</td><td>تعديل System Prompt ليكون "طبيب بشري" لطلاب الطب، و"طبيب أسنان" للأسنان، إلخ.</td><td><span class="badge badge-todo">لم يبدأ</span></td></tr>
+        <tr><td>9.4</td><td>تنقية الـ UI/UX</td><td>تحسين المسافات (Spacing)، الظلال (Shadows)، والخطوط لتكون أكثر نعومة وثباتاً.</td><td><span class="badge badge-todo">لم يبدأ</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 5. المرحلة 10: البنية التحتية للذكاء الاصطناعي -->
+  <section>
+    <h2><span class="num">05</span> المرحلة 10: البنية التحتية وتطوير الـ AI</h2>
+
+    <div class="callout callout-warn">
+      <strong>نظام التبديل الذكي للمزودين (Fallback Logic):</strong>
+      بدلاً من الاختيار العشوائي بين مفتاحي Groq، سيتم استخدام المفتاح الأول حتى استهلاك حصته اليومية، ثم الانتقال تلقائياً للمفتاح الثاني. وإذا انتهى الاثنان، ينتقل النظام تلقائياً إلى OpenRouter أو Together AI لضمان عدم توقف الشات.
+    </div>
+
+    <table>
+      <thead><tr><th>#</th><th>المهمة</th><th>التفاصيل</th><th>الحالة</th></tr></thead>
+      <tbody>
+        <tr><td>10.1</td><td>تعديل خوارزمية مفاتيح Groq</td><td>كتابة Logic في الـ Backend يتتبع استهلاك المفاتيح وينتقل للتالي عند انتهاء الحد.</td><td><span class="badge badge-todo">لم يبدأ</span></td></tr>
+        <tr><td>10.2</td><td>إضافة مزودين احتياطيين</td><td>إضافة OpenRouter (بمفاتيح متعددة) و Hugging Face كخطوط دفاع أخيرة.</td><td><span class="badge badge-todo">لم يبدأ</span></td></tr>
+        <tr><td>10.3</td><td>تطوير الـ Medical Persona</td><td>جعل الشات يرد بأسلوب طبي أكاديمي دقيق، ويستخدم المصطلحات الطبية (بالإنجليزية بين قوسين).</td><td><span class="badge badge-todo">لم يبدأ</span></td></tr>
+        <tr><td>10.4</td><td>حلقة التغذية الراجعة (Feedback Loop)</td><td>إضافة زر (إعجاب/عدم إعجاب) تحت كل رد للـ AI. يتم تحليل الردود السيئة دورياً لتحديث الـ System Prompt.</td><td><span class="badge badge-todo">لم يبدأ</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 6. المرحلة 11: إدارة المحتوى والتدقيق -->
+  <section>
+    <h2><span class="num">06</span> المرحلة 11: إدارة المحتوى ومنع التكرار (البشري)</h2>
+
+    <div class="callout callout-purple">
+      <strong>استراتيجية التدقيق البشري:</strong>
+      بناءً على طلبك، لن نعتمد فقط على الخوارزميات لمنع التكرار. عندما يرفع طالب ملفاً، يتم وضعه في "قائمة الانتظار". يقوم الـ 3 أدمن بمراجعته (تدقيق بشري) ليقرروا إما قبوله، دمجه مع ملف موجود مسبقاً، أو رفضه إذا كان مكرراً.
+    </div>
+
+    <table>
+      <thead><tr><th>#</th><th>المهمة</th><th>التفاصيل</th><th>الحالة</th></tr></thead>
+      <tbody>
+        <tr><td>11.1</td><td>واجهة تدقيق الملفات للأدمن</td><td>صفحة تعرض الملفات المرفوعة (Pending)، مع إمكانية معاينتها، وقبولها، أو رفضها.</td><td><span class="badge badge-todo">لم يبدأ</span></td></tr>
+        <tr><td>11.2</td><td>تحذير التكرار (Automated Check)</td><td>عند رفع ملف، يفحص النظام اسم الملف وحجمه. إذا كان مشابهاً لملف موجود، يظهر تنبيه للأدمن بوجود تشابه.</td><td><span class="badge badge-todo">لم يبدأ</span></td></tr>
+        <tr><td>11.3</td><td>تصنيف الملفات تلقائياً</td><td>عند القبول، يقوم الأدمن بتحديد (الكلية، المادة، السنة، الموضوع) لربطها بقاعدة البيانات.</td><td><span class="badge badge-todo">لم يبدأ</span></td></tr>
+        <tr><td>11.4</td><td>مكتبة المحتوى العام</td><td>صفحة للطلاب تصبح فيها الملفات المقبولة متاحة للجميع للاستفادة منها في الـ RAG.</td><td><span class="badge badge-todo">لم يبدأ</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 7. المرحلة 12: ميزة الـ AI المخصص لكل دكتور (الميزة القاتلة) -->
+  <section>
+    <h2><span class="num">07</span> المرحلة 12: الـ AI المخصص لكل دكتور (Professor-Specific AI)</h2>
+
+    <div class="callout callout-success">
+      <strong>الميزة الأهم في المنصة:</strong>
+      طالب الطب لا يذاكر "المادة" فقط، بل يذاكر "طريقة دكتور المادة". سنقوم ببناء نظام يجعل الـ AI يشرح المادة، ويولد الأسئلة، ويحاكي الامتحان بناءً على "شخصية" الدكتور.
+    </div>
+
+    <h3>خطوات التنفيذ:</h3>
+    <table>
+      <thead><tr><th>#</th><th>المهمة</th><th>التفاصيل</th><th>الحالة</th></tr></thead>
+      <tbody>
+        <tr><td>12.1</td><td>جدول الأطباء/الدكاترة</td><td>إنشاء جدول <code>professors</code> يحتوي على: اسم الدكتور، المادة التي يدرسها، الكلية.</td><td><span class="badge badge-todo">لم يبدأ</span></td></tr>
+        <tr><td>12.2</td><td>جدول الأساليب (Styles)</td><td>كل دكتور له حقول: نمط الأسئلة (مباشر، حالات سريرية، صور)، نمط الشرح (تفصيلي، سريع)، وأهم النقاط التي يركز عليها.</td><td><span class="badge badge-todo">لم يبدأ</span></td></tr>
+        <tr><td>12.3</td><td>واجهة جمع البيانات</td><td>تسمح للطلاب (أو الأدمن) بإدخال "نمط دكتور معين" بناءً على تجاربهم في امتحاناته السابقة.</td><td><span class="badge badge-todo">لم يبدأ</span></td></tr>
+        <tr><td>12.4</td><td>حقن شخصية الدكتور في الـ Chat</td><td>عندما يسأل الطالب عن مادة معينة، يضيف الـ System Prompt: "أنت الآن تشرح مادة الباثولوجي بنفس أسلوب الدكتور أحمد، ركز على الجداول والمقارنات".</td><td><span class="badge badge-todo">لم يبدأ</span></td></tr>
+        <tr><td>12.5</td><td>توليد أسئلة تحاكي الدكتور</td><td>عند اختيار الطالب للدكتور في صفحة الاختبارات، يتم توجيه الـ AI لتوليد أسئلة مشابهة لأسئلة هذا الدكتور (مثلاً: دكتور يحب أسئلة "التشخيص التفريقي" فقط).</td><td><span class="badge badge-todo">لم يبدأ</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 8. المرحلة 13: النموذج التجاري والإعلانات -->
+  <section>
+    <h2><span class="num">08</span> المرحلة 13: النموذج التجاري (ما بعد الإطلاق)</h2>
+
+    <div class="callout">
+      <strong>استراتيجية الإعلانات:</strong> للحفاظ على مجانية المنصة، سيتم عرض إعلان واحد فقط (Banner غير مزعج) في بداية الجلسة اليومية للطالب، مع إمكانية إغلاقه. هذا يوفر دخلاً جيداً دون التأثير على تجربة المستخدم.
+    </div>
+
+    <table>
+      <thead><tr><th>#</th><th>المهمة</th><th>التفاصيل</th><th>الحالة</th></tr></thead>
+      <tbody>
+        <tr><td>13.1</td><td>دمج شبكة إعلانات</td><td>ربط Google AdSense أو إعلانات محلية (مثل إعلانات المعاهد الطبية).</td><td><span class="badge badge-todo">مؤجل</span></td></tr>
+        <tr><td>13.2</td><td>تحديد وتيرة الإعلان</td><td>برمجة النظام لعرض إعلان واحد فقط لكل مستخدم كل 24 ساعة (مثلاً في لوحة التحكم).</td><td><span class="badge badge-todo">مؤجل</span></td></tr>
+        <tr><td>13.3</td><td>الخطة المدفوعة (اختياري)</td><td>إذا تم استخدام نماذج AI قوية مدفوعة (مثل GPT-4 أو Claude 3.5)، يُعرض اشتراك لمن يريد استخدامها وإزالة الإعلانات.</td><td><span class="badge badge-todo">مؤجل</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 9. جداول قاعدة البيانات المقترحة للتحديثات -->
+  <section>
+    <h2><span class="num">09</span> التحديثات المقترحة على قاعدة البيانات (Supabase)</h2>
+    <div class="card">
+      <p style="margin-bottom:10px; color:var(--text-muted);">لتنفيذ المراحل القادمة، سنحتاج لإضافة هذه الجداول في المستقبل:</p>
+      <ul>
+        <li><code>professors</code> (لتخزين أسماء الدكاترة وموادهم).</li>
+        <li><code>professor_styles</code> (لتخزين أسلوب كل دكتور في الشرح ونمط أسئلته).</li>
+        <li><code>waitlist_questionnaire</code> (لتخزين إجابات الـ Waitlist بالتفصيل).</li>
+        <li><code>feedback</code> (لتخزين تقييم الطلاب لردود الـ AI - إعجاب/عدم إعجاب).</li>
+        <li>تعديل جدول <code>documents</code> لإضافة حالة التدقيق <code>status (pending, approved, rejected)</code>.</li>
+      </ul>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <p>كوتش AI — صُنع لطلاب الجامعات السورية</p>
+  <p style="margin-top: 6px;">الخطة الاستراتيجية v2.0 — 18 أكتوبر 2026</p>
+</footer>
+
+</body>
+</html>

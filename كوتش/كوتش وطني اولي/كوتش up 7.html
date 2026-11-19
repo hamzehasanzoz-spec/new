@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>كوتش AI — توثيق المشروع v0.7</title>
+<style>
+  :root {
+    --primary: #2A5C82;
+    --accent: #10B981;
+    --danger: #EF4444;
+    --warn: #F59E0B;
+    --purple: #7C3AED;
+    --bg: #F8FAFC;
+    --card: #FFFFFF;
+    --border: #E2E8F0;
+    --text: #1E293B;
+    --muted: #64748B;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Tahoma, system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
+  header { background: linear-gradient(135deg, #2A5C82 0%, #3B7BA8 100%); color: #fff; padding: 60px 24px; text-align: center; border-radius: 0 0 24px 24px; margin-bottom: 40px; }
+  header h1 { font-size: 2.4em; margin-bottom: 10px; }
+  header p { opacity: 0.9; font-size: 1.1em; }
+  header .meta { margin-top: 20px; font-size: 0.9em; opacity: 0.75; }
+  header .meta span { margin: 0 12px; }
+  section { margin-bottom: 50px; }
+  h2 { color: var(--primary); font-size: 1.6em; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 3px solid var(--primary); display: inline-block; }
+  h3 { color: var(--primary); font-size: 1.2em; margin: 24px 0 12px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 22px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+  .card-title { font-weight: bold; font-size: 1.1em; color: var(--primary); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+  .card-desc { color: var(--muted); font-size: 0.95em; }
+  .grid { display: grid; gap: 16px; }
+  .grid-2 { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+  .grid-3 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.78em; font-weight: bold; }
+  .badge-done { background: #D1FAE5; color: #065F46; }
+  .badge-progress { background: #FEF3C7; color: #92400E; }
+  .badge-todo { background: #FEE2E2; color: #991B1B; }
+  .badge-blocked { background: #FEE2E2; color: #7F1D1D; }
+  table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+  th, td { padding: 14px 16px; text-align: right; border-bottom: 1px solid var(--border); font-size: 0.94em; }
+  th { background: #F1F5F9; color: var(--primary); font-weight: bold; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover { background: #F8FAFC; }
+  code { background: #F1F5F9; padding: 3px 8px; border-radius: 6px; font-family: 'Consolas', monospace; font-size: 0.88em; direction: ltr; display: inline-block; }
+  .stack-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .stack-item { background: #EFF6FF; color: var(--primary); padding: 6px 14px; border-radius: 8px; font-size: 0.88em; font-weight: 600; }
+  footer { text-align: center; color: var(--muted); padding: 40px 24px; font-size: 0.9em; border-top: 1px solid var(--border); margin-top: 40px; }
+  .callout { background: #EFF6FF; border-right: 4px solid var(--primary); padding: 16px 20px; border-radius: 8px; margin: 16px 0; font-size: 0.95em; }
+  .callout-success { background: #F0FDF4; border-right-color: var(--accent); }
+  .callout-warn { background: #FFFBEB; border-right-color: var(--warn); }
+  .callout-danger { background: #FEF2F2; border-right-color: var(--danger); }
+  .callout-purple { background: #F5F3FF; border-right-color: var(--purple); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🩺 كوتش AI</h1>
+  <p>توثيق المشروع الكامل — منصة الامتحان الوطني للطب في سوريا</p>
+  <div class="meta">
+    <span>📅 آخر تحديث: 12 أكتوبر 2026</span>
+    <span>🟢 v0.7 (ميزات متكاملة)</span>
+    <span>🔗 <a href="https://new-theta-five-73.vercel.app" style="color:#fff;opacity:0.8;">new-theta-five-73.vercel.app</a></span>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- نظرة عامة -->
+  <section>
+    <h2>📌 نظرة عامة</h2>
+    <div class="card">
+      <p style="font-size:1.05em; margin-bottom:12px;">
+        <strong>كوتش AI</strong> — منصة ذكية متكاملة لطلاب الطب في سوريا للتحضير للامتحان الوطني (NMLE).
+        تجمع بين استبيان مخصص، دردشة AI مع RAG، توليد اختبارات MCQ، محاكاة امتحان، بنك أخطاء، تتبع أداء،
+        تصدير PDF، وضع ليلي، ودعم الجوال.
+      </p>
+      <div class="stack-list">
+        <span class="stack-item">React 18</span>
+        <span class="stack-item">Vite 5</span>
+        <span class="stack-item">Supabase (Auth + DB + pgvector)</span>
+        <span class="stack-item">Groq API ×2</span>
+        <span class="stack-item">OpenRouter (احتياطي)</span>
+        <span class="stack-item">Jina AI (Embeddings)</span>
+        <span class="stack-item">Vercel Edge</span>
+        <span class="stack-item">jsPDF + html2canvas</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- الميزات العاملة -->
+  <section>
+    <h2>✅ الميزات العاملة</h2>
+    <div class="grid grid-3">
+      <div class="card"><div class="card-title">🔐 المصادقة</div><div style="margin-top:10px;"><span class="badge badge-done">✅</span></div></div>
+      <div class="card"><div class="card-title">📝 استبيان 6 مراحل</div><div style="margin-top:10px;"><span class="badge badge-done">✅</span></div></div>
+      <div class="card"><div class="card-title">🏠 لوحة تحكم متقدمة</div><div style="margin-top:10px;"><span class="badge badge-done">✅</span></div></div>
+      <div class="card"><div class="card-title">👤 بروفايل</div><div style="margin-top:10px;"><span class="badge badge-done">✅</span></div></div>
+      <div class="card"><div class="card-title">💬 دردشة AI + Streaming</div><div style="margin-top:10px;"><span class="badge badge-done">✅</span></div></div>
+      <div class="card"><div class="card-title">💾 حفظ المحادثات</div><div style="margin-top:10px;"><span class="badge badge-done">✅</span></div></div>
+      <div class="card"><div class="card-title">📚 رفع الملفات</div><div style="margin-top:10px;"><span class="badge badge-done">✅</span></div></div>
+      <div class="card"><div class="card-title">🔍 RAG + عرض المصادر</div><div style="margin-top:10px;"><span class="badge badge-done">✅</span></div></div>
+      <div class="card"><div class="card-title">🎯 توليد MCQ</div><div style="margin-top:10px;"><span class="badge badge-done">✅</span></div></div>
+      <div class="card"><div class="card-title">⏱️ محاكاة امتحان (دفعات)</div><div style="margin-top:10px;"><span class="badge badge-done">✅</span></div></div>
+      <div class="card"><div class="card-title">📖 بنك الأخطاء</div><div style="margin-top:10px;"><span class="badge badge-done">✅</span></div></div>
+      <div class="card"><div class="card-title">📊 التقرير الأسبوعي</div><div style="margin-top:10px;"><span class="badge badge-done">✅</span></div></div>
+      <div class="card"><div class="card-title">🔥 Streak Counter</div><div style="margin-top:10px;"><span class="badge badge-done">✅</span></div></div>
+      <div class="card"><div class="card-title">⏱️ عدّاد الامتحان (20 ديسمبر)</div><div style="margin-top:10px;"><span class="badge badge-done">✅</span></div></div>
+      <div class="card"><div class="card-title">🌙 Dark Mode كامل</div><div style="margin-top:10px;"><span class="badge badge-done">✅</span></div></div>
+      <div class="card"><div class="card-title">📱 Mobile Bottom Tab Bar</div><div style="margin-top:10px;"><span class="badge badge-done">✅</span></div></div>
+      <div class="card"><div class="card-title">🎨 شعار + Tajawal</div><div style="margin-top:10px;"><span class="badge badge-done">✅</span></div></div>
+      <div class="card"><div class="card-title">🚦 Navigation Guard</div><div style="margin-top:10px;"><span class="badge badge-done">✅</span></div></div>
+      <div class="card"><div class="card-title">📄 PDF Export (4 أنواع)</div><div style="margin-top:10px;"><span class="badge badge-done">✅</span></div></div>
+      <div class="card"><div class="card-title">🔑 Multi-Key Groq ×2</div><div style="margin-top:10px;"><span class="badge badge-done">✅</span></div></div>
+      <div class="card"><div class="card-title">⚡ Groq يعمل من سوريا</div><div style="margin-top:10px;"><span class="badge badge-done">✅</span></div></div>
+    </div>
+  </section>
+
+  <!-- خارطة الطريق -->
+  <section>
+    <h2>🛣️ خارطة الطريق</h2>
+
+    <h3>🎯 المرحلة 1: الذكاء الاصطناعي</h3>
+    <table>
+      <thead><tr><th>#</th><th>المهمة</th><th>الحالة</th></tr></thead>
+      <tbody>
+        <tr><td>1.1</td><td>System Prompt مخصص</td><td><span class="badge badge-done">مكتمل</span></td></tr>
+        <tr><td>1.2</td><td>نماذج مجانية</td><td><span class="badge badge-done">مكتمل</span></td></tr>
+        <tr><td>1.3</td><td>Streaming</td><td><span class="badge badge-done">مكتمل</span></td></tr>
+        <tr><td>1.4</td><td>Prompt صارم (بلا ترحيب)</td><td><span class="badge badge-done">مكتمل</span></td></tr>
+        <tr><td>1.5</td><td>فرع نموذج مدفوع</td><td><span class="badge badge-todo">مؤجل</span></td></tr>
+        <tr><td>1.6.a-f</td><td>RAG كامل + عرض المصادر</td><td><span class="badge badge-done">مكتمل</span></td></tr>
+        <tr><td>1.7</td><td>Migration إلى Jina AI</td><td><span class="badge badge-done">مكتمل</span></td></tr>
+        <tr><td>1.8</td><td>Groq كمزوّد أساسي (Vercel Edge)</td><td><span class="badge badge-done">مكتمل</span></td></tr>
+        <tr><td>1.9</td><td>Multi-Key Rotation</td><td><span class="badge badge-progress">قيد التحسين</span></td></tr>
+      </tbody>
+    </table>
+
+    <h3>👤 المرحلة 2: المستخدم</h3>
+    <table>
+      <thead><tr><th>#</th><th>المهمة</th><th>الحالة</th></tr></thead>
+      <tbody>
+        <tr><td>2.1</td><td>صفحة البروفايل</td><td><span class="badge badge-done">مكتمل</span></td></tr>
+        <tr><td>2.2</td><td>Avatar + إعدادات متقدمة</td><td><span class="badge badge-todo">لم يبدأ</span></td></tr>
+      </tbody>
+    </table>
+
+    <h3>📊 المرحلة 3: التتبع</h3>
+    <table>
+      <thead><tr><th>#</th><th>المهمة</th><th>الحالة</th></tr></thead>
+      <tbody>
+        <tr><td>3.1</td><td>Weekly Check-in</td><td><span class="badge badge-done">مكتمل</span></td></tr>
+        <tr><td>3.2</td><td>لوحة تحكم متقدمة</td><td><span class="badge badge-done">مكتمل</span></td></tr>
+        <tr><td>3.3</td><td>Streak Counter</td><td><span class="badge badge-done">مكتمل</span></td></tr>
+      </tbody>
+    </table>
+
+    <h3>💾 المرحلة 4: حفظ البيانات</h3>
+    <table>
+      <thead><tr><th>#</th><th>المهمة</th><th>الحالة</th></tr></thead>
+      <tbody>
+        <tr><td>4.1</td><td>سجل المحادثات</td><td><span class="badge badge-done">مكتمل</span></td></tr>
+        <tr><td>4.2</td><td>صفحة "محادثاتي" محسّنة</td><td><span class="badge badge-todo">لم يبدأ</span></td></tr>
+        <tr><td>4.3</td><td>تصدير PDF/MD</td><td><span class="badge badge-done">مكتمل</span></td></tr>
+      </tbody>
+    </table>
+
+    <h3>🧠 المرحلة 5: الاختبارات الذكية</h3>
+    <table>
+      <thead><tr><th>#</th><th>المهمة</th><th>الحالة</th></tr></thead>
+      <tbody>
+        <tr><td>5.1</td><td>توليد MCQ</td><td><span class="badge badge-done">مكتمل</span></td></tr>
+        <tr><td>5.2</td><td>اختبار تفاعلي</td><td><span class="badge badge-done">مكتمل</span></td></tr>
+        <tr><td>5.3</td><td>محاكاة امتحان (دفعات)</td><td><span class="badge badge-done">مكتمل</span></td></tr>
+        <tr><td>5.4</td><td>بنك الأخطاء</td><td><span class="badge badge-done">مكتمل</span></td></tr>
+        <tr><td>5.5</td><td>تصدير نتائج PDF</td><td><span class="badge badge-done">مكتمل</span></td></tr>
+      </tbody>
+    </table>
+
+    <h3>🎨 المرحلة 6: UI/UX</h3>
+    <table>
+      <thead><tr><th>#</th><th>المهمة</th><th>الحالة</th></tr></thead>
+      <tbody>
+        <tr><td>6.1</td><td>Dark Mode كامل</td><td><span class="badge badge-done">مكتمل</span></td></tr>
+        <tr><td>6.2</td><td>Sidebar ثابت (ديسكتوب)</td><td><span class="badge badge-todo">لم يبدأ</span></td></tr>
+        <tr><td>6.3</td><td>شعار SVG</td><td><span class="badge badge-done">مكتمل</span></td></tr>
+        <tr><td>6.4</td><td>خطوط Tajawal</td><td><span class="badge badge-done">مكتمل</span></td></tr>
+        <tr><td>6.5</td><td>استجابة الجوال</td><td><span class="badge badge-done">مكتمل</span></td></tr>
+        <tr><td>6.6</td><td>حاجز التنقل</td><td><span class="badge badge-done">مكتمل</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- متغيرات البيئة -->
+  <section>
+    <h2>🔐 متغيرات البيئة (Vercel)</h2>
+    <table>
+      <thead><tr><th>الاسم</th><th>القيمة</th><th>ملاحظة</th></tr></thead>
+      <tbody>
+        <tr><td><code>VITE_SUPABASE_URL</code></td><td>https://tjmamvdduvmognjldvoao.supabase.co</td><td>عام (VITE_)</td></tr>
+        <tr><td><code>VITE_SUPABASE_ANON_KEY</code></td><td>eyJ...</td><td>Legacy anon</td></tr>
+        <tr><td><code>GROQ_API_KEYS</code></td><td>gsk_k1,gsk_k2</td><td>مفاتيح متعددة</td></tr>
+        <tr><td><code>OPENROUTER_KEY</code></td><td>sk-or-v1-...</td><td>احتياطي</td></tr>
+        <tr><td><code>JINA_API_KEY</code></td><td>jina_...</td><td>Embeddings</td></tr>
+        <tr><td><code>SITE_URL</code></td><td>https://new-theta-five-73.vercel.app</td><td>اختياري</td></tr>
+      </tbody>
+    </table>
+    <div class="callout callout-warn" style="margin-top:16px;">
+      <strong>⚠️ قواعد ذهبية:</strong>
+      <ul style="padding-right:20px; line-height:2;">
+        <li>متغيرات <code>VITE_*</code> تُدمج وقت البناء → أي تغيير يتطلب Redeploy كامل</li>
+        <li>مفاتيح AI <strong>بدون</strong> <code>VITE_</code> (سيرفر فقط)</li>
+        <li>حدّد كل متغير في: Production + Preview + Development</li>
+        <li>لا تشارك أي مفتاح في صورة أو رسالة</li>
+        <li>استخدم <code>git add .</code> بدل أسماء الملفات</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- جداول Supabase -->
+  <section>
+    <h2>🗄️ جداول Supabase (7 جداول)</h2>
+    <div class="grid grid-2">
+      <div class="card"><div class="card-title">profiles</div><div class="card-desc">بيانات الطالب (26 حقل)</div></div>
+      <div class="card"><div class="card-title">conversations</div><div class="card-desc">المحادثات</div></div>
+      <div class="card"><div class="card-title">messages</div><div class="card-desc">رسائل المحادثات</div></div>
+      <div class="card"><div class="card-title">documents</div><div class="card-desc">الملفات المرفوعة</div></div>
+      <div class="card"><div class="card-title">document_chunks</div><div class="card-desc">+ vector(1024)</div></div>
+      <div class="card"><div class="card-title">wrong_answers</div><div class="card-desc">بنك الأخطاء</div></div>
+      <div class="card"><div class="card-title">weekly_performance</div><div class="card-desc">التقارير الأسبوعية</div></div>
+      <div class="card"><div class="card-title">user_activity</div><div class="card-desc">Streak</div></div>
+    </div>
+  </section>
+
+  <!-- سجل الإصدارات -->
+  <section>
+    <h2>📜 سجل الإصدارات</h2>
+    <table>
+      <thead><tr><th>الإصدار</th><th>التاريخ</th><th>التغييرات</th></tr></thead>
+      <tbody>
+        <tr><td><strong>v0.1</strong></td><td>09-10</td><td>الإصدار الأول: استبيان + دردشة + نشر</td></tr>
+        <tr><td><strong>v0.2</strong></td><td>10-10</td><td>Streaming + Prompt مخصص + بروفايل + حفظ + رفع ملفات</td></tr>
+        <tr><td><strong>v0.3</strong></td><td>10-10</td><td>RAG كامل + عرض المصادر</td></tr>
+        <tr><td><strong>v0.4</strong></td><td>10-10</td><td>Prompt صارم + Nemotron 120B + سرعة 4x</td></tr>
+        <tr><td><strong>v0.5</strong></td><td>11-10</td><td>MCQ + Exam Batch + بنك الأخطاء + Weekly + Streak + Dashboard</td></tr>
+        <tr><td><strong>v0.6</strong></td><td>12-10</td><td>Dark Mode + Mobile + Logo + Tajawal + Navigation Guard + Jina AI</td></tr>
+        <tr><td><strong>v0.7</strong></td><td>12-10</td><td>PDF Export (4 أنواع) + Multi-Key Groq ×2 + Countdown</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- سجل الأخطاء -->
+  <section>
+    <h2>🐛 سجل الأخطاء المُصلَحة (20 خطأ)</h2>
+    <table>
+      <thead><tr><th>التاريخ</th><th>الخطأ</th><th>الحل</th></tr></thead>
+      <tbody>
+        <tr><td>10-09</td><td><code>vite: command not found</code></td><td>package-lock.json + Root Directory</td></tr>
+        <tr><td>10-09</td><td><code>Permission denied: vite</code></td><td>npx vite build</td></tr>
+        <tr><td>10-09</td><td><code>medical_background missing</code></td><td>تحديث schema</td></tr>
+        <tr><td>10-09</td><td><code>email rate limit</code></td><td>تعطيل تأكيد البريد</td></tr>
+        <tr><td>10-09</td><td>Gemini 2.0 unavailable</td><td>التحول لـ OpenRouter</td></tr>
+        <tr><td>10-09</td><td>App.jsx ملوّث بكود خادم</td><td>استرجاع النسخة</td></tr>
+        <tr><td>10-10</td><td>Reasoning Model بطيء</td><td>نماذج غير reasoning</td></tr>
+        <tr><td>10-10</td><td><code>req.headers.get</code></td><td>Node.js بدل Edge</td></tr>
+        <tr><td>10-10</td><td>Voyage Invalid API key</td><td>ضبط env vars</td></tr>
+        <tr><td>10-10</td><td>صفحة بيضاء (Supabase)</td><td>Legacy anon key</td></tr>
+        <tr><td>10-10</td><td>RAG لا يجد نتائج</td><td>threshold 0.35 → 0.1</td></tr>
+        <tr><td>10-10</td><td>ردود ضعيفة/مقطوعة</td><td>Nemotron 120B + 4000 tokens</td></tr>
+        <tr><td>10-11</td><td>Nav مكسور على الجوال</td><td>Bottom Tab Bar</td></tr>
+        <tr><td>10-11</td><td>Streak Card كبير</td><td>Popover</td></tr>
+        <tr><td>10-11</td><td>Exam Countdown كبير</td><td>Inline badge</td></tr>
+        <tr><td>10-11</td><td>Voyage يحتاج بطاقة</td><td>Migration → Jina AI</td></tr>
+        <tr><td>10-11</td><td>Groq محجوب في سوريا</td><td>Vercel Edge (IP أمريكي)</td></tr>
+        <tr><td>10-11</td><td><code>useMediaQuery not found</code></td><td>git add .</td></tr>
+        <tr><td>10-11</td><td><code>streak.js not found</code></td><td>git add .</td></tr>
+        <tr><td>10-12</td><td>Vercel Auth يحجب proxy</td><td>إزالة proxy + Edge مباشر</td></tr>
+        <tr><td>10-12</td><td><code>gsk_gsk_</code> مكرر</td><td>إصلاح env var</td></tr>
+        <tr><td>10-12</td><td>Git push rejected</td><td><code>git pull --rebase</code></td></tr>
+        <tr><td>10-12</td><td>Conflict في env.example</td><td><code>git rm env.example</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- الخطوات القادمة -->
+  <section>
+    <h2>🚀 الخطوات القادمة</h2>
+    <table>
+      <thead><tr><th>#</th><th>المهمة</th><th>الوقت</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>اختبار تعدد المفاتيح + توزيعها</td><td>15 د</td></tr>
+        <tr><td>2</td><td>صفحة "محادثاتي" محسّنة</td><td>45 د</td></tr>
+        <tr><td>3</td><td>Avatar + إعدادات متقدمة</td><td>30 د</td></tr>
+        <tr><td>4</td><td>Sidebar ثابت (ديسكتوب)</td><td>30 د</td></tr>
+        <tr><td>5</td><td>فرع النموذج المدفوع</td><td>1 س</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- روابط مهمة -->
+  <section>
+    <h2>🔗 روابط مهمة</h2>
+    <div class="grid grid-2">
+      <div class="card"><div class="card-title">🌐 الموقع</div><a href="https://new-theta-five-73.vercel.app" target="_blank">new-theta-five-73.vercel.app</a></div>
+      <div class="card"><div class="card-title">💻 GitHub</div><a href="https://github.com/hamzehasanzoz-spec/new" target="_blank">hamzehasanzoz-spec/new</a></div>
+      <div class="card"><div class="card-title">🎛️ Vercel</div><a href="https://vercel.com/dashboard" target="_blank">vercel.com/dashboard</a></div>
+      <div class="card"><div class="card-title">🗄️ Supabase</div><a href="https://supabase.com/dashboard" target="_blank">supabase.com/dashboard</a></div>
+      <div class="card"><div class="card-title">⚡ Groq</div><a href="https://console.groq.com" target="_blank">console.groq.com</a></div>
+      <div class="card"><div class="card-title">📚 Jina AI</div><a href="https://jina.ai" target="_blank">jina.ai</a></div>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <p>💙 كوتش AI — صُنع لطلاب الطب في سوريا</p>
+  <p style="margin-top:8px;">آخر تحديث: 12 أكتوبر 2026 — v0.7</p>
+</footer>
+
+</body>
+</html>

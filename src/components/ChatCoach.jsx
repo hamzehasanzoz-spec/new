@@ -155,6 +155,7 @@ export default function ChatCoach({ profile, session }) {
       const { data: { session: freshSession } } = await supabase.auth.getSession();
       if (!freshSession?.access_token) return [];
 
+      // استخدام البحث المتقدم والمنسق الجديد (Hybrid Search + GraphRAG + Reranking)
       const res = await fetch('/api/search', {
         method: 'POST',
         headers: {
@@ -212,7 +213,32 @@ export default function ChatCoach({ profile, session }) {
     let reader = null;
     try {
       setRagStatus('📚 جاري البحث في ملفاتك...');
-      const relevantChunks = await searchUserDocuments(userMessage);
+      let relevantChunks = await searchUserDocuments(userMessage);
+
+      // ⭐ دمج البحث المباشر في قاعدة المعرفة (Neo4j Graph Search)
+      try {
+        const graphSearchRes = await fetch('/api/graph-search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ keyword: userMessage, limit: 3 }),
+        });
+        if (graphSearchRes.ok) {
+          const graphData = await graphSearchRes.json();
+          if (graphData.found && graphData.graph_context?.length > 0) {
+            const graphText = graphData.graph_context
+              .map(item => `• الكيان: ${item.entity?.name || ''} | العلاقة: ${item.relation} | المرتبط: ${item.connected_entity?.name || ''}`)
+              .join('\n');
+            
+            relevantChunks.unshift({
+              filename: 'شبكة المعرفة المركزية (Neo4j Graph)',
+              similarity: 1.0,
+              content: `علاقات طبية موثقة مستخرجة من المنهج:\n${graphText}`
+            });
+          }
+        }
+      } catch (gErr) {
+        console.warn('Graph search integration warning:', gErr.message);
+      }
 
       // ⭐ هنا نجهز شخصية الدكتور المختار ⭐
       let professorStyle = null;
