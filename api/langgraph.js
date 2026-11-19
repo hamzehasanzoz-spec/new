@@ -20,21 +20,19 @@ const searchNode = async (state) => {
 };
 
 const generateNode = async (state) => {
-  console.log("✍️ [LangGraph] Generating...");
-  const contextText = state.retrievedChunks.map(c => c.content).join("\n\n");
+  console.log("✍️ [LangGraph] Generating final answer...");
   
-  // التوجيه الذكي: هل لدينا ملفات أم لا؟
+  // التوجيه الذكي (Routing)
   let systemPrompt = '';
-  if (state.retrievedChunks.length > 0) {
-    // إذا وجدنا ملفات، نطبق التعليمات الصارمة
+  if (state.retrievedChunks && state.retrievedChunks.length > 0) {
+    const contextText = state.retrievedChunks.map(c => c.content).join("\n\n");
     systemPrompt = `أنت مساعد طبي. أجب على السؤال بناءً على النصوص المرفقة فقط.
     النصوص: ${contextText}
     إذا لم تجد الإجابة في النصوص، قل: "المعلومة غير موجودة في الملفات".`;
   } else {
-    // إذا لم نجد ملفات، أجب من المعرفة الطبية العامة
-    systemPrompt = `أنت مساعد طبي ذكي لطلاب الطب. أجب على السؤال التالي من خلال معرفتك الطبية العامة، بأسلوب أكاديمي ومفصل.`;
+    systemPrompt = `أنت مساعد طبي ذكي. أجب على السؤال من خلال معرفتك الطبية العامة بأسلوب أكاديمي.`;
   }
-  
+
   const res = await fetch(`${state.baseUrl}/api/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${state.accessToken}` },
@@ -46,8 +44,34 @@ const generateNode = async (state) => {
     })
   });
   
-  const text = await res.text();
-  return { finalAnswer: text };
+  if (!res.ok) throw new Error("فشل الاتصال بالنموذج");
+
+  // ⭐ هنا السحر: قراءة البث وتنظيفه ⭐
+  const rawStream = await res.text();
+  let finalAnswer = '';
+  const lines = rawStream.split('\n');
+  
+  for (const line of lines) {
+    if (line.startsWith('data: ')) {
+      const dataStr = line.slice(6).trim();
+      if (dataStr === '[DONE]') continue;
+      try {
+        const parsed = JSON.parse(dataStr);
+        const delta = parsed.choices?.[0]?.delta;
+        // نأخذ فقط المحتوى (content) ونتجاهل الأفكار (reasoning)
+        if (delta && delta.content) {
+          finalAnswer += delta.content;
+        }
+      } catch (e) {
+        // تجاهل أي أسطر غير مكتملة
+      }
+    }
+  }
+
+  // إذا لم نجد إجابة بعد التنظيف
+  if (!finalAnswer) finalAnswer = "لم يتم استخراج إجابة صالحة من النموذج.";
+
+  return { finalAnswer: finalAnswer.trim() };
 };
 
 const workflow = new StateGraph(AgentState)
