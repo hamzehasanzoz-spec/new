@@ -225,9 +225,17 @@ export default function ChatCoach({ profile, session }) {
         }),
       });
 
+      // التحقق من نوع المحتوى لتجنب انهيار JSON
+      const contentType = res.headers.get('content-type');
+      
       if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.error || 'فشل الاتصال بالوكيل الذكي');
+        const errorText = await res.text(); // نقرأه كنص
+        throw new Error(`Server Error (${res.status}): ${errorText.slice(0, 100)}`);
+      }
+
+      if (!contentType || !contentType.includes('application/json')) {
+        const rawText = await res.text();
+        throw new Error(`الخادم لم يرجع JSON. الرد كان: ${rawText.slice(0, 100)}...`);
       }
 
       const data = await res.json();
