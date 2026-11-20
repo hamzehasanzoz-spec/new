@@ -63,19 +63,20 @@ export default function StreakCard({ userId }) {
 
       {/* Popover */}
       {open && (
-        <div style={{
-          position: 'absolute',
-          top: 'calc(100% + 8px)',
-          right: 0,
-          width: 320,
-          background: 'var(--bg-elevated)',
-          border: '1px solid var(--border)',
-          borderRadius: 16,
-          padding: 18,
-          boxShadow: 'var(--shadow-lg)',
-          zIndex: 200,
-          animation: 'fadeIn 0.15s ease',
-        }}>
+        // ابحث عن هذا الجزء داخل كود النافذة (div)
+<div style={{
+  position: 'absolute',
+  top: 'calc(100% + 8px)',
+  right: 0, // ستظهر في الجهة اليمنى بدلاً من الخروج عن الشاشة
+  width: 280, // تصغير العرض قليلاً
+  background: 'var(--bg-elevated)',
+  border: '1px solid var(--border)',
+  borderRadius: 16,
+  padding: 16,
+  boxShadow: 'var(--shadow-lg)',
+  zIndex: 9999, // رفع الطبقة لكي لا تختفي
+  animation: 'fadeIn 0.15s ease',
+}}>
           {/* رأس */}
           <div style={{
             display: 'flex',
