@@ -1,6 +1,20 @@
 // api/langgraph.js
 const GROQ_MODEL = 'openai/gpt-oss-20b';
 
+// دالة لفك تشفير الـ JWT واستخراج الـ userId
+function decodeJWT(token) {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const pad = base64.length % 4;
+    const padded = pad ? base64 + '='.repeat(4 - pad) : base64;
+    return JSON.parse(Buffer.from(padded, 'base64').toString('utf-8'));
+  } catch {
+    return null;
+  }
+}
+
 async function getEmbedding(text) {
   const jinaKey = process.env.JINA_API_KEY;
   const r = await fetch('https://api.jina.ai/v1/embeddings', {
@@ -17,40 +31,19 @@ async function searchDocuments(query, userId, accessToken) {
   const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
   const queryEmbedding = await getEmbedding(query);
 
-  // 1. محاولة البحث الهجين
-  let res = await fetch(`${supabaseUrl}/rest/v1/rpc/hybrid_search`, {
+  const res = await fetch(`${supabaseUrl}/rest/v1/rpc/match_document_chunks`, {
     method: 'POST',
     headers: { apikey: supabaseAnonKey, Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       query_embedding: queryEmbedding,
-      query_text: query,
       match_threshold: 0.1,
       match_count: 10,
-      filter_user_id: userId,
+      filter_user_id: userId, // الآن سيتم تمرير الـ ID الصحيح
     }),
   });
   
-  let data = await res.json();
-  let method = 'hybrid_search';
-
-  // 2. إذا فشلت الدالة، نستخدم match_document_chunks
-  if (!res.ok || !Array.isArray(data)) {
-    console.warn('hybrid_search failed, trying match_document_chunks...');
-    res = await fetch(`${supabaseUrl}/rest/v1/rpc/match_document_chunks`, {
-      method: 'POST',
-      headers: { apikey: supabaseAnonKey, Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        query_embedding: queryEmbedding,
-        match_threshold: 0.1,
-        match_count: 10,
-        filter_user_id: userId,
-      }),
-    });
-    data = await res.json();
-    method = 'match_document_chunks';
-  }
-
-  return { data: Array.isArray(data) ? data : [], method };
+  const data = await res.json();
+  return Array.isArray(data) ? data : [];
 }
 
 async function rerankChunks(query, chunks) {
@@ -100,12 +93,19 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const { query, userId, accessToken } = req.body;
+    const { query, accessToken } = req.body;
     if (!query || !accessToken) return res.status(400).json({ error: 'Missing data' });
 
+    // ⭐ استخراج الـ userId من التوكن ⭐
+    const payload = decodeJWT(accessToken);
+    const userId = payload?.sub;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'توكن غير صالح، لا يحتوي على معرف المستخدم' });
+    }
+
     // البحث
-    const searchResult = await searchDocuments(query, userId, accessToken);
-    let chunks = searchResult.data;
+    let chunks = await searchDocuments(query, userId, accessToken);
     
     // الترتيب
     chunks = await rerankChunks(query, chunks);
@@ -116,11 +116,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ 
       success: true, 
       finalAnswer,
-      debugInfo: {
-        methodUsed: searchResult.method,
-        chunksFound: chunks.length,
-        userId: userId
-      }
+      debugInfo: { chunksFound: chunks.length, userId: userId }
     });
 
   } catch (err) {
