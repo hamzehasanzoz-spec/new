@@ -1,20 +1,65 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>كوتش AI - الامتحان الوطني للطب في سوريا</title>
-    
-    <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    
-    <!-- Tajawal Font -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
-</html>
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* { box-sizing: border-box; }
+
+:root {
+  /* Light Mode */
+  --bg: #FCFCFD;
+  --bg-elevated: #FFFFFF;
+  --bg-subtle: #F4F4F5;
+  --border: #E4E4E7;
+  --text: #09090B;
+  --text-muted: #71717A;
+  --text-subtle: #A1A1AA;
+  --primary: #3B82F6;
+  --primary-hover: #2563EB;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+[data-theme="dark"] {
+  /* Dark Mode (Premium) */
+  --bg: #09090B;
+  --bg-elevated: #18181B;
+  --bg-subtle: #27272A;
+  --border: #27272A;
+  --text: #FAFAFA;
+  --text-muted: #A1A1AA;
+  --text-subtle: #71717A;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-md: 0 8px 24px rgba(0,0,0,0.4);
+}
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', 'Tajawal', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  transition: background 0.2s, color 0.2s;
+}
+
+input, select, textarea, button {
+  font-family: inherit;
+}
+
+/* شريط تمرير احترافي */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-subtle); }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in { animation: fadeIn 0.3s ease-out; }
+
+:root { --sidebar-width: 260px; }
+[data-sidebar-collapsed="true"] { --sidebar-width: 80px; }
