@@ -1,11 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { logActivity } from '../lib/streak';
-import { createConversation, listConversations, loadMessages, saveMessage, deleteConversation } from '../lib/chatStorage';
-import ConversationsSidebar from './ConversationsSidebar';
+import { createConversation, listConversations, loadMessages, saveMessage } from '../lib/chatStorage';
 import { useIsMobile } from '../hooks/useMediaQuery';
 import { exportConversationPDF } from '../lib/pdfExport';
-import { Send, Bot, User, Menu, Plus, Trash2, FileText } from 'lucide-react';
+import { Send, Bot, User, Menu, Plus, FileText } from 'lucide-react';
 
 export default function ChatCoach({ profile, session }) {
   const [messages, setMessages] = useState([]);
@@ -24,7 +23,6 @@ export default function ChatCoach({ profile, session }) {
   const userId = session?.user?.id;
 
   useEffect(() => { setShowSidebar(!isMobile); }, [isMobile]);
-
   useEffect(() => { if (userId) refreshConversations(); }, [userId]);
 
   useEffect(() => {
@@ -76,9 +74,7 @@ export default function ChatCoach({ profile, session }) {
     setMessages(prev => {
       const copy = [...prev];
       const lastIdx = copy.length - 1;
-      if (copy[lastIdx].role === 'assistant') {
-        copy[lastIdx] = { ...copy[lastIdx], content };
-      }
+      if (copy[lastIdx].role === 'assistant') copy[lastIdx] = { ...copy[lastIdx], content };
       return copy;
     });
   };
@@ -149,11 +145,11 @@ export default function ChatCoach({ profile, session }) {
           <div className={`${isMobile ? 'absolute right-0 w-72 h-full bg-surface flex flex-col' : 'flex-1 flex flex-col'}`}>
             <div className="p-4 border-b border-border flex items-center justify-between">
               <h2 className="font-bold text-sm">محادثاتي</h2>
-              <button onClick={handleNewChat} className="p-2 hover:bg-surface-subtle rounded-lg text-primary transition-colors"><Plus size={18} /></button>
+              <button onClick={handleNewChat} className="p-2 hover:bg-surface rounded-lg text-primary transition-colors"><Plus size={18} /></button>
             </div>
             <div className="flex-1 overflow-y-auto p-2 space-y-1">
               {conversations.map(conv => (
-                <div key={conv.id} onClick={() => handleSelectConversation(conv.id)} className={`p-3 rounded-lg text-sm cursor-pointer truncate transition-colors ${conversationId === conv.id ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-surface-subtle text-content-muted'}`}>
+                <div key={conv.id} onClick={() => handleSelectConversation(conv.id)} className={`p-3 rounded-lg text-sm cursor-pointer truncate transition-colors ${conversationId === conv.id ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-surface text-content-muted'}`}>
                   {conv.title}
                 </div>
               ))}
@@ -180,7 +176,7 @@ export default function ChatCoach({ profile, session }) {
           <select
             value={selectedProf?.id || ''}
             onChange={(e) => setSelectedProf(professors.find(p => p.id === e.target.value) || null)}
-            className="text-xs bg-surface-subtle border border-border rounded-lg px-3 py-1.5 text-content focus:outline-none focus:ring-1 focus:ring-primary max-w-[150px]"
+            className="text-xs bg-surface-soft border border-border rounded-lg px-3 py-1.5 text-content focus:outline-none focus:ring-1 focus:ring-primary max-w-[150px]"
           >
             <option value="">🤖 AI افتراضي</option>
             {professors.map(p => <option key={p.id} value={p.id}>د. {p.name}</option>)}
@@ -195,11 +191,11 @@ export default function ChatCoach({ profile, session }) {
 
             return (
               <div key={i} className={`flex gap-4 ${isUser ? 'flex-row-reverse' : ''}`}>
-                <div className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center ${isUser ? 'bg-surface-subtle text-content' : 'bg-primary text-white'}`}>
+                <div className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center ${isUser ? 'bg-surface-soft text-content' : 'bg-primary text-white'}`}>
                   {isUser ? <User size={16} /> : <Bot size={16} />}
                 </div>
                 <div className={`flex flex-col max-w-[85%] md:max-w-[75%] ${isUser ? 'items-end' : 'items-start'}`}>
-                  <div className={`px-5 py-3.5 rounded-2xl text-[15px] leading-relaxed ${isUser ? 'bg-primary text-white rounded-tr-sm' : 'bg-surface-subtle text-content border border-border rounded-tl-sm'}`}>
+                  <div className={`px-5 py-3.5 rounded-2xl text-[15px] leading-relaxed ${isUser ? 'bg-primary text-white rounded-tr-sm' : 'bg-surface-soft text-content border border-border rounded-tl-sm'}`}>
                     <p className="whitespace-pre-wrap">{isEmpty ? 'جاري الكتابة...' : msg.content}</p>
                   </div>
                   {!isUser && msg.content && (
@@ -221,7 +217,7 @@ export default function ChatCoach({ profile, session }) {
 
         {/* Input Area */}
         <div className="p-4 bg-surface border-t border-border">
-          <form onSubmit={(e) => { e.preventDefault(); sendMessage(); }} className="max-w-4xl mx-auto relative flex items-end gap-2 bg-surface-subtle border border-border rounded-2xl p-2 focus-within:ring-1 focus-within:ring-primary transition-all">
+          <form onSubmit={(e) => { e.preventDefault(); sendMessage(); }} className="max-w-4xl mx-auto relative flex items-end gap-2 bg-surface-soft border border-border rounded-2xl p-2 focus-within:ring-1 focus-within:ring-primary transition-all">
             <textarea
               ref={textareaRef}
               value={input}
