@@ -1,7 +1,6 @@
 // API Route for Agentic RAG (بدون LangGraph - متوافق 100% مع Vercel)
 
-const GROQ_MODEL = 'llama-3.1-8b-instant'; // نموذج سريع للعمليات المعقدة
-
+const GROQ_MODEL = 'openai/gpt-oss-120b'; 
 // 1. دالة مساعدة للاتصال بـ Groq
 async function askGroq(messages, responseFormat = 'text') {
   const groqKeys = process.env.GROQ_API_KEYS ? process.env.GROQ_API_KEYS.split(',') : [];
