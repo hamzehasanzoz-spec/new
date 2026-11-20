@@ -5,16 +5,16 @@
 * { box-sizing: border-box; }
 
 :root {
-  /* Light Mode */
-  --bg: #FCFCFD;
+  /* Light Mode (Warm & Professional) */
+  --bg: #FAFAF9; /* لون سكري مريح */
   --bg-elevated: #FFFFFF;
-  --bg-subtle: #F4F4F5;
-  --border: #E4E4E7;
-  --text: #09090B;
-  --text-muted: #71717A;
-  --text-subtle: #A1A1AA;
-  --primary: #3B82F6;
-  --primary-hover: #2563EB;
+  --bg-subtle: #F5F5F4;
+  --border: #E7E5E4;
+  --text: #1C1917; /* لون داكن جداً للوضوح */
+  --text-muted: #57534E;
+  --text-subtle: #A8A29E;
+  --primary: #F97316; /* برتقالي احترافي */
+  --primary-hover: #EA580C;
   --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
   --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
 }
