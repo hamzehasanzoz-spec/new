@@ -1,17 +1,9 @@
-import { StateGraph, Annotation, START, END } from "@langchain/langgraph";
+// API Route for Agentic RAG (بدون LangGraph - متوافق 100% مع Vercel)
 
-// 1. تعريف الحالة
-export const AgentState = Annotation.Root({
-  question: Annotation({ reducer: (_, update) => update, default: () => "" }),
-  originalQuestion: Annotation({ reducer: (_, update) => update, default: () => "" }),
-  retrievedChunks: Annotation({ reducer: (_, update) => update, default: () => [] }),
-  finalAnswer: Annotation({ reducer: (_, update) => update, default: () => "" }),
-  retryCount: Annotation({ reducer: (x, y) => y, default: () => 0 }),
-  grade: Annotation({ reducer: (_, update) => update, default: () => "" }),
-});
+const GROQ_MODEL = 'llama-3.1-8b-instant'; // نموذج سريع للعمليات المعقدة
 
-// دالة مساعدة لاستدعاء Groq مباشرة (لتجنب مشاكل fetch الداخلية)
-async function askGroq(prompt, systemPrompt) {
+// 1. دالة مساعدة للاتصال بـ Groq
+async function askGroq(messages, responseFormat = 'text') {
   const groqKeys = process.env.GROQ_API_KEYS ? process.env.GROQ_API_KEYS.split(',') : [];
   if (groqKeys.length === 0) throw new Error("GROQ_API_KEYS missing");
 
@@ -22,95 +14,111 @@ async function askGroq(prompt, systemPrompt) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'llama-3.1-8b-instant', // نموذج سريع جداً
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: prompt }
-      ],
+      model: GROQ_MODEL,
+      messages,
       temperature: 0.1,
+      ...(responseFormat === 'json' && { response_format: { type: 'json_object' } })
     }),
   });
 
-  if (!res.ok) throw new Error(`Groq HTTP ${res.status}`);
+  if (!res.ok) throw new Error(`Groq API Error: ${res.status}`);
   const data = await res.json();
   return data.choices?.[0]?.message?.content || '';
 }
 
-// العقدة 1: البحث
-const searchNode = async (state) => {
-  console.log("🔍 Searching for:", state.question);
-  // سنستخدم بحث مبسط هنا لتجنب مشاكل الاتصال
-  try {
-    const supabaseUrl = process.env.VITE_SUPABASE_URL;
-    const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
-    // بحث نصي بسيط (يمكنك تطويره لاحقاً لاستخدام pgvector)
-    const res = await fetch(`${supabaseUrl}/rest/v1/document_chunks?select=content&content=ilike.%25${state.question}%25&limit=5`, {
-      headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` }
-    });
-    const data = await res.json();
-    return { retrievedChunks: data.map(d => ({ content: d.content })) };
-  } catch (e) {
-    return { retrievedChunks: [] };
-  }
-};
-
-// العقدة 2: التقييم
-const gradeNode = async (state) => {
-  if (!state.retrievedChunks || state.retrievedChunks.length === 0) return { grade: "no" }; 
+// 2. دالة البحث في Supabase (Hybrid Search)
+async function searchDocuments(query, userId, accessToken) {
+  const supabaseUrl = process.env.VITE_SUPABASE_URL;
+  const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
   
-  const contextText = state.retrievedChunks.map(c => c.content).join("\n\n").slice(0, 2000);
-  const prompt = `هل النصوص التالية تجيب على السؤال: "${state.question}"؟\nالنصوص:\n${contextText}\nأجب بـ "yes" أو "no" فقط.`;
-  
-  const result = await askGroq(prompt, "أنت خبير تقييم.");
-  return { grade: result.toLowerCase().includes("yes") ? "yes" : "no" };
-};
+  // نستخدم RPC للبحث الهجين (يفترض أنك أنشأته مسبقاً)
+  // إذا لم يكن موجوداً، يمكنك استخدام بحث نصي بسيط كبديل مؤقت
+  const res = await fetch(`${supabaseUrl}/rest/v1/rpc/hybrid_search`, {
+    method: 'POST',
+    headers: {
+      apikey: supabaseAnonKey,
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      query_text: query,
+      match_count: 5,
+      filter_user_id: userId,
+    }),
+  });
 
-// العقدة 3: إعادة الصياغة
-const rewriteNode = async (state) => {
-  const prompt = `أعد صياغة السؤال التالي ليكون أفضل للبحث:\n"${state.question}"`;
-  const newQuestion = await askGroq(prompt, "أجب بالسؤال الجديد فقط.");
-  return { question: newQuestion, retryCount: state.retryCount + 1 };
-};
+  if (!res.ok) return [];
+  const matches = await res.json();
+  return matches || [];
+}
 
-// العقدة 4: التوليد
-const generateNode = async (state) => {
-  const contextText = state.retrievedChunks.map(c => c.content).join("\n\n");
-  let systemPrompt = contextText 
-    ? `أجب على السؤال بناءً على النصوص التالية فقط:\n${contextText}\nإذا لم تجد الإجابة، قل: "المعلومة غير موجودة".`
-    : `أجب على السؤال من خلال معرفتك الطبية العامة.`;
-    
-  const finalAnswer = await askGroq(state.originalQuestion, systemPrompt);
-  return { finalAnswer: finalAnswer };
-};
-
-// بناء الرسم البياني
-const workflow = new StateGraph(AgentState)
-  .addNode("search", searchNode)
-  .addNode("grade", gradeNode)
-  .addNode("rewrite", rewriteNode)
-  .addNode("generate", generateNode)
-  .addEdge(START, "search")
-  .addEdge("search", "grade")
-  .addConditionalEdges("grade", (state) => {
-    return (state.grade === "yes" || state.retryCount >= 1) ? "generate" : "rewrite";
-  })
-  .addEdge("rewrite", "search")
-  .addEdge("generate", END);
-
+// 3. الـ Handler الرئيسي
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const { query } = req.body;
-    if (!query) return res.status(400).json({ error: 'Missing query' });
+    const { query, userId, accessToken } = req.body;
+    if (!query || !accessToken) return res.status(400).json({ error: 'Missing data' });
 
-    const app = workflow.compile();
-    const result = await app.invoke({ question: query, originalQuestion: query, retryCount: 0 });
+    let currentQuery = query;
+    let retries = 0;
+    const maxRetries = 1; // محاولة إعادة صياغة واحدة فقط لتجنب البطء
+    let chunks = [];
+    let isGood = false;
 
-    return res.status(200).json({ success: true, finalAnswer: result.finalAnswer });
+    // الخطوة 1: حلقة البحث والتقييم
+    while (retries <= maxRetries && !isGood) {
+      // البحث
+      chunks = await searchDocuments(currentQuery, userId, accessToken);
+      
+      // التقييم
+      if (chunks.length === 0) {
+        isGood = false;
+      } else {
+        const contextText = chunks.map(c => c.content).join("\n\n").slice(0, 2000);
+        const gradePrompt = `هل النصوص التالية تجيب على السؤال: "${query}"؟\nالنصوص:\n${contextText}\nأجب بكلمة واحدة فقط: "yes" أو "no".`;
+        
+        const gradeResult = await askGroq([{ role: 'user', content: gradePrompt }]);
+        isGood = gradeResult.toLowerCase().includes('yes');
+      }
+
+      // إذا كانت النتائج سيئة، أعد الصياغة
+      if (!isGood && retries < maxRetries) {
+        const rewritePrompt = `أعد صياغة السؤال التالي ليكون أفضل للبحث الطبي، وأجب بالسؤال الجديد فقط:\n"${currentQuery}"`;
+        currentQuery = await askGroq([{ role: 'user', content: rewritePrompt }]);
+        retries++;
+      } else {
+        break;
+      }
+    }
+
+    // الخطوة 2: التوليد النهائي
+    let systemPrompt = '';
+    if (chunks.length > 0 && isGood) {
+      const contextText = chunks.map(c => c.content).join("\n\n");
+      systemPrompt = `أنت مساعد طبي. أجب على السؤال بناءً على النصوص التالية فقط:\n${contextText}\n\nإذا لم تجد الإجابة في النصوص، قل: "المعلومة غير موجودة في الملفات".`;
+    } else {
+      systemPrompt = `أنت مساعد طبي ذكي. أجب على السؤال من خلال معرفتك الطبية العامة بأسلوب أكاديمي.`;
+    }
+
+    const finalAnswer = await askGroq([
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: query }
+    ]);
+
+    // إرجاع النتيجة
+    return res.status(200).json({
+      success: true,
+      finalAnswer: finalAnswer,
+      retries: retries,
+      sourcesUsed: isGood ? 'files' : 'general'
+    });
+
   } catch (err) {
-    console.error("LangGraph Crash:", err);
-    // إرجاع الخطأ كـ JSON لكي لا تنهار الواجهة
-    return res.status(500).json({ error: err.message || 'Unknown error' });
+    console.error("Agent Error:", err);
+    return res.status(500).json({ 
+      error: err.message || 'Unknown error',
+      details: 'حدث خطأ في معالجة الطلب. الرجاء المحاولة مرة أخرى.'
+    });
   }
 }
