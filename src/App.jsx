@@ -19,6 +19,12 @@ import MyConversations from './components/MyConversations';
 import Landing from './components/Landing';
 import AdminDashboard from './components/AdminDashboard';
 import { Button, Input, Card } from './components/ui';
+import { ReactLenis } from 'lenis/react';
+import { 
+  Home, MessageSquare, FolderOpen, Target, BookOpen, 
+  Clock, AlertCircle, BarChart2, User, ShieldAlert, LogOut
+} from 'lucide-react';
+
 
 // استيراد الأيقونات الاحترافية
 import { 
@@ -199,10 +205,10 @@ export default function App() {
     </>
   );
 
-  if (loading) {
+    if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-surface gap-4">
-        <div className="w-12 h-12 border-2 border-border border-t-primary rounded-full animate-spin" />
+        <div className="w-10 h-10 border-4 border-brand/30 border-t-brand rounded-full animate-spin" />
         <p className="text-sm text-content-muted">جاري التحميل...</p>
       </div>
     );
@@ -384,25 +390,49 @@ export default function App() {
     );
   }
 
-  // ═════════════════════════════════════════════
+    // ═════════════════════════════════════════════
   // Desktop Layout
   // ═════════════════════════════════════════════
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg)', direction: 'rtl' }}>
-      <DesktopNav activeTab={activeTab} switchTab={switchTab} onSignOut={() => supabase.auth.signOut()} isAdmin={profile?.role === 'admin'} />
+    <ReactLenis root>
+      <div style={{
+        minHeight: '100vh',
+        background: 'var(--bg)',
+        direction: 'rtl',
+      }}>
+        <DesktopNav
+          activeTab={activeTab}
+          switchTab={switchTab}
+          onSignOut={() => supabase.auth.signOut()}
+          isAdmin={profile?.role === 'admin'}
+        />
 
-      <div style={{ paddingRight: 'var(--sidebar-width)', transition: 'padding-right 0.2s ease', minHeight: '100vh' }}>
-        {activeWork && (
-          <div style={{ background: '#FEF3C7', borderBottom: '1px solid #F59E0B', padding: '8px 16px', fontSize: '0.82em', color: '#92400E', textAlign: 'center', fontWeight: 600 }}>
-            ⏸️ {activeWork.type} قيد التنفيذ — لا تغادر الصفحة
-          </div>
-        )}
+        <div style={{
+          paddingRight: 'var(--sidebar-width)',
+          transition: 'padding-right 0.2s ease',
+          minHeight: '100vh',
+        }}>
+          {activeWork && (
+            <div style={{
+              background: 'rgba(245, 158, 11, 0.1)',
+              borderBottom: '1px solid rgba(245, 158, 11, 0.2)',
+              padding: '8px 16px', fontSize: '0.82em',
+              color: '#D97706', textAlign: 'center', fontWeight: 600,
+            }}>
+              ⏸️ {activeWork.type} قيد التنفيذ — لا تغادر الصفحة
+            </div>
+          )}
 
-        <main style={{ maxWidth: 1200, margin: '0 auto', padding: '20px 24px' }}>
-          {renderContent()}
-        </main>
+          <main style={{
+            maxWidth: 1200,
+            margin: '0 auto',
+            padding: '20px 24px',
+          }}>
+            {renderContent()}
+          </main>
+        </div>
       </div>
-    </div>
+    </ReactLenis>
   );
 }
 
@@ -492,9 +522,30 @@ function DesktopNav({ activeTab, switchTab, onSignOut, isAdmin }) {
           <ThemeToggle />
         </div>
 
-        <button onClick={onSignOut} title={collapsed ? 'خروج' : undefined} style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#EF4444', padding: collapsed ? '10px 8px' : '10px 12px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: '0.85em', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                <button
+          onClick={onSignOut}
+          title={collapsed ? 'خروج' : undefined}
+          style={{
+            background: 'rgba(239, 68, 68, 0.1)', // خلفية حمراء شفافة
+            border: '1px solid rgba(239, 68, 68, 0.2)',
+            color: '#EF4444', // نص أحمر
+            padding: collapsed ? '10px 8px' : '10px 12px',
+            borderRadius: 8,
+            cursor: 'pointer',
+            fontWeight: 600,
+            fontSize: '0.85em',
+            fontFamily: 'inherit',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+            transition: 'all 0.2s',
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)'}
+          onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
+        >
           <LogOut size={18} />
-          {!collapsed && <span>خروج</span>}
+          {!collapsed && <span>تسجيل الخروج</span>}
         </button>
       </div>
     </aside>

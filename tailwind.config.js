@@ -9,19 +9,18 @@ export default {
     extend: {
       colors: {
         brand: {
-          deep: '#30215F',
-          DEFAULT: '#7957D5',
-          light: '#BCA7F4',
-          soft: '#F8F7FC',
+          DEFAULT: 'var(--brand)', // بنفسجي أساسي
+          hover: 'var(--brand-hover)',
+          light: '#A78BFA', 
+          bg: 'rgba(139, 92, 246, 0.1)',
         },
         medical: {
-          teal: '#4FC7C4',
-          dark: '#3BA8A5',
+          teal: '#14B8A6', // تركواز طبي
         },
         surface: {
           DEFAULT: 'var(--bg)',
-          soft: 'var(--bg-subtle)',
-          card: 'var(--bg-elevated)',
+          card: 'var(--bg-card)',
+          soft: 'var(--bg-soft)',
         },
         border: {
           DEFAULT: 'var(--border)',
@@ -34,7 +33,6 @@ export default {
       },
       fontFamily: {
         sans: ['Inter', 'Tajawal', 'system-ui', 'sans-serif'],
-        arabic: ['Tajawal', 'sans-serif'],
       },
       borderRadius: {
         'sm': '6px',
@@ -44,7 +42,7 @@ export default {
         '2xl': '24px',
       },
       boxShadow: {
-        'brand': '0 4px 20px -2px rgba(121, 87, 213, 0.2)',
+        'brand': '0 4px 20px -2px rgba(139, 92, 246, 0.25)',
       }
     },
   },

@@ -5,33 +5,29 @@
 * { box-sizing: border-box; }
 
 :root {
-  /* Light Mode (Brand Colors) */
-  --bg: #F8F7FC; /* Soft White */
-  --bg-elevated: #FFFFFF;
-  --bg-subtle: #F1EDFA; /* Lavender light */
-  --border: #E2D9F3;
-  --text: #30215F; /* Deep Purple */
-  --text-muted: #7957D5; /* Coach Purple */
-  --text-subtle: #BCA7F4; /* Lavender */
-  --primary: #7957D5; /* Coach Purple */
-  --primary-hover: #5A3BB5;
-  --shadow-sm: 0 2px 4px rgba(121, 87, 213, 0.1);
-  --shadow-md: 0 8px 24px rgba(121, 87, 213, 0.15);
+  /* Light Mode (مريح للعين) */
+  --bg: #F4F4F5;
+  --bg-card: #FFFFFF;
+  --bg-soft: #E4E4E7;
+  --border: #D4D4D8;
+  --text: #18181B;
+  --text-muted: #52525B;
+  --text-subtle: #A1A1AA;
+  --brand: #8B5CF6;
+  --brand-hover: #7C3AED;
 }
 
 [data-theme="dark"] {
-  /* Dark Mode (Premium Brand) */
-  --bg: #1A103C; /* Darker Deep Purple */
-  --bg-elevated: #241552;
-  --bg-subtle: #30215F; /* Deep Purple */
-  --border: #4A358A;
-  --text: #F8F7FC; /* Soft White */
-  --text-muted: #BCA7F4; /* Lavender */
-  --text-subtle: #7957D5;
-  --primary: #4FC7C4; /* Medical Teal (للتأكيد في الوضع الليلي) */
-  --primary-hover: #3BA8A5;
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
+  /* Dark Mode (عميق واحترافي) */
+  --bg: #09090B;
+  --bg-card: #18181B;
+  --bg-soft: #27272A;
+  --border: #27272A;
+  --text: #FAFAFA;
+  --text-muted: #A1A1AA;
+  --text-subtle: #71717A;
+  --brand: #8B5CF6;
+  --brand-hover: #7C3AED;
 }
 
 html, body, #root {
@@ -40,10 +36,9 @@ html, body, #root {
   font-family: 'Inter', 'Tajawal', system-ui, sans-serif;
   background: var(--bg);
   color: var(--text);
-  font-size: 16px;
-  font-weight: 400;
+  font-size: 15px;
   -webkit-font-smoothing: antialiased;
-  transition: background 0.2s, color 0.2s;
+  transition: background 0.3s, color 0.3s;
 }
 
 input, select, textarea, button {
@@ -53,15 +48,8 @@ input, select, textarea, button {
 /* شريط تمرير احترافي */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+::-webkit-scrollbar-thumb { background: var(--bg-soft); border-radius: 10px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-subtle); }
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.animate-fade-in { animation: fadeIn 0.3s ease-out; }
 
 :root { --sidebar-width: 260px; }
 [data-sidebar-collapsed="true"] { --sidebar-width: 80px; }
