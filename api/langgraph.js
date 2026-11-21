@@ -31,21 +31,13 @@ async function generateAnswer(query, chunks) {
   const groqKeys = process.env.GROQ_API_KEYS ? process.env.GROQ_API_KEYS.split(',') : [];
   let systemPrompt = '';
 
-  // 1. التوجيه الذكي: إذا كان سؤالاً عاماً (تحية، كيفك، من أنت) لا تبحث في الملفات
-  const generalQueries = ['كيفك', 'مرحبا', 'اهلا', 'من انت', 'شو اسمك', 'صباح الخير', 'مساء الخير'];
-  const isGeneral = generalQueries.some(q => query.trim().includes(q));
-
-  if (isGeneral) {
-    systemPrompt = `أنت مساعد طبي ذكي وودود. رد على تحية المستخدم بأسلوب احترافي ولطيف، واعرض عليه المساعدة في دراسته الطبية.`;
-  } 
-  // 2. إذا كان سؤالاً طبياً ووجدنا ملفات
-  else if (chunks && chunks.length > 0) {
+  // التوجيه الذكي بناءً على وجود الملفات
+  if (chunks && chunks.length > 0) {
     const contextText = chunks.map(c => c.content).join("\n\n");
-    systemPrompt = `أنت مساعد طبي. أجب على السؤال بناءً على النصوص المرفقة فقط:\n${contextText}\n\nإذا لم تجد الإجابة، قل: "المعلومة غير موجودة في الملفات".`;
-  } 
-  // 3. إذا كان سؤالاً طبياً عاماً (لم نجد ملفات)
-  else {
-    systemPrompt = `أنت مساعد طبي أكاديمي محترف. أجب على السؤال بأسلوب علمي بحت من معرفتك الطبية.`;
+    systemPrompt = `أنت مساعد طبي. لقد تم العثور على النصوص التالية في ملفات الطالب. أجب على السؤال بناءً على هذه النصوص أولاً. إذا لم تجد إجابة كافية في النصوص، يمكنك إكمال الإجابة من معرفتك الطبية العامة.\n\nالنصوص:\n${contextText}`;
+  } else {
+    // الـ AI الطبيعي (مثل ChatGPT) عندما لا توجد ملفات
+    systemPrompt = `أنت مساعد طبي ذكي وشامل (AI). أجب على سؤال الطالب من خلال معرفتك الطبية العامة بأسلوب أكاديمي دقيق. لا ترفض الإجابة أبداً.`;
   }
 
   const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
