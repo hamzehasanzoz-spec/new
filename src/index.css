@@ -5,31 +5,33 @@
 * { box-sizing: border-box; }
 
 :root {
-  /* Light Mode (Warm & Professional) */
-  --bg: #FAFAF9; /* لون سكري مريح */
+  /* Light Mode (Brand Colors) */
+  --bg: #F8F7FC; /* Soft White */
   --bg-elevated: #FFFFFF;
-  --bg-subtle: #F5F5F4;
-  --border: #E7E5E4;
-  --text: #1C1917; /* لون داكن جداً للوضوح */
-  --text-muted: #57534E;
-  --text-subtle: #A8A29E;
-  --primary: #F97316; /* برتقالي احترافي */
-  --primary-hover: #EA580C;
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+  --bg-subtle: #F1EDFA; /* Lavender light */
+  --border: #E2D9F3;
+  --text: #30215F; /* Deep Purple */
+  --text-muted: #7957D5; /* Coach Purple */
+  --text-subtle: #BCA7F4; /* Lavender */
+  --primary: #7957D5; /* Coach Purple */
+  --primary-hover: #5A3BB5;
+  --shadow-sm: 0 2px 4px rgba(121, 87, 213, 0.1);
+  --shadow-md: 0 8px 24px rgba(121, 87, 213, 0.15);
 }
 
 [data-theme="dark"] {
-  /* Dark Mode (Premium) */
-  --bg: #09090B;
-  --bg-elevated: #18181B;
-  --bg-subtle: #27272A;
-  --border: #27272A;
-  --text: #FAFAFA;
-  --text-muted: #A1A1AA;
-  --text-subtle: #71717A;
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
-  --shadow-md: 0 8px 24px rgba(0,0,0,0.4);
+  /* Dark Mode (Premium Brand) */
+  --bg: #1A103C; /* Darker Deep Purple */
+  --bg-elevated: #241552;
+  --bg-subtle: #30215F; /* Deep Purple */
+  --border: #4A358A;
+  --text: #F8F7FC; /* Soft White */
+  --text-muted: #BCA7F4; /* Lavender */
+  --text-subtle: #7957D5;
+  --primary: #4FC7C4; /* Medical Teal (للتأكيد في الوضع الليلي) */
+  --primary-hover: #3BA8A5;
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
 }
 
 html, body, #root {

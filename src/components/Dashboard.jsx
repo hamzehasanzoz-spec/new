@@ -4,6 +4,7 @@ import { getDashboardStats } from '../lib/dashboardStats';
 import StreakCard from './StreakCard';
 import ExamCountdown from './ExamCountdown';
 import { MessageSquare, AlertCircle, FolderOpen, BookOpen, Star, AlertTriangle, Library } from 'lucide-react';
+import Mascot from './Mascot';
 
 export default function Dashboard({ profile, session }) {
   const [stats, setStats] = useState(null);
@@ -39,21 +40,21 @@ export default function Dashboard({ profile, session }) {
   return (
     <div className="max-w-6xl mx-auto space-y-6" dir="rtl">
       
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-content mb-1">لوحة التحكم</h1>
-          <p className="text-sm text-content-muted">نظرة عامة على تقدمك الدراسي</p>
+            {/* Header */}
+      <div className="flex items-center justify-between bg-surface-card p-4 rounded-2xl border border-border shadow-sm">
+        <div className="flex items-center gap-4">
+          <Mascot state="neutral" size={80} />
+          <div>
+            <h1 className="text-2xl font-bold text-content mb-1">لوحة التحكم</h1>
+            <p className="text-sm text-content-muted">مرحباً بك يا بطل، جاهز لدراسة اليوم؟</p>
+          </div>
         </div>
         <div className="flex items-center gap-2">
-          {((profile?.faculty_slug === 'medicine' && profile?.year === '6') || 
-            ((profile?.faculty_slug === 'dentistry' || profile?.faculty_slug === 'pharmacy') && profile?.year === '5')) && (
-            <ExamCountdown />
-          )}
+          {/* العدادات هنا */}
           <StreakCard userId={session?.user?.id} />
         </div>
       </div>
-
+      
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard icon={<FolderOpen size={20} />} value={stats?.documentsCount || 0} label="ملف مرفوع" color="text-primary" />
