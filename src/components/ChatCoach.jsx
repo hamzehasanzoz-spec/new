@@ -169,7 +169,7 @@ export default function ChatCoach({ profile, session }) {
                   {isUser ? <User size={16} /> : <Bot size={16} />}
                 </div>
                 <div className={`flex flex-col max-w-[85%] md:max-w-[75%] ${isUser ? 'items-end' : 'items-start'}`}>
-                  <div className={`px-5 py-3.5 rounded-2xl text-[15px] leading-relaxed ${isUser ? 'bg-primary text-white rounded-tr-sm' : 'bg-surface-soft text-content border border-border rounded-tl-sm'}`}>
+                  <div className={`px-5 py-3.5 rounded-2xl text-[15px] leading-relaxed ${isUser ? 'bg-brand text-white rounded-tr-sm' : 'bg-surface-card text-content border border-border rounded-tl-sm'}`}>
                     {isEmpty ? (
                       <div className="flex gap-1 items-center h-5">
                         <span className="w-1.5 h-1.5 bg-content-muted rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
@@ -200,7 +200,7 @@ export default function ChatCoach({ profile, session }) {
               rows={1}
               className="flex-1 bg-transparent px-3 py-2 text-sm text-content resize-none placeholder:text-content-muted focus:outline-none max-h-[150px]"
             />
-            <button type="submit" disabled={loading || !input.trim()} className="p-2.5 bg-primary text-white rounded-xl disabled:opacity-50 transition-opacity">
+            <button type="submit" disabled={loading || !input.trim()} className="p-2.5 bg-brand hover:bg-brand-hover text-white rounded-xl disabled:opacity-50 transition-opacity">
               <Send size={18} />
             </button>
           </form>
