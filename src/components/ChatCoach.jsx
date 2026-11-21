@@ -4,7 +4,7 @@ import { logActivity } from '../lib/streak';
 import { createConversation, listConversations, loadMessages, saveMessage } from '../lib/chatStorage';
 import { useIsMobile } from '../hooks/useMediaQuery';
 import { Send, Bot, User, Menu, Plus, Square } from 'lucide-react';
-
+import Mascot from './Mascot';
 export default function ChatCoach({ profile, session }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -165,8 +165,12 @@ export default function ChatCoach({ profile, session }) {
 
             return (
               <div key={i} className={`flex gap-4 ${isUser ? 'flex-row-reverse' : ''}`}>
-                <div className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center ${isUser ? 'bg-surface-soft text-content' : 'bg-primary text-white'}`}>
-                  {isUser ? <User size={16} /> : <Bot size={16} />}
+                <div className={`w-10 h-10 shrink-0 flex items-center justify-center ${isUser ? 'bg-surface-soft text-content rounded-full' : ''}`}>
+                  {isUser ? (
+                    <User size={18} />
+                  ) : (
+                    <Mascot state={isEmpty ? 'thinking' : 'happy'} size={40} />
+                  )}
                 </div>
                 <div className={`flex flex-col max-w-[85%] md:max-w-[75%] ${isUser ? 'items-end' : 'items-start'}`}>
                   <div className={`px-5 py-3.5 rounded-2xl text-[15px] leading-relaxed ${isUser ? 'bg-brand text-white rounded-tr-sm' : 'bg-surface-card text-content border border-border rounded-tl-sm'}`}>
