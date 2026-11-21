@@ -25,13 +25,6 @@ import {
   Clock, AlertCircle, BarChart2, User, ShieldAlert, LogOut
 } from 'lucide-react';
 
-
-// استيراد الأيقونات الاحترافية
-import { 
-  Home, MessageSquare, FolderOpen, Target, BookOpen, 
-  Clock, AlertCircle, BarChart2, User, ShieldAlert, LogOut
-} from 'lucide-react';
-
 const MAIN_TABS = [
   { id: 'dashboard', label: 'الرئيسية', icon: <Home size={20} /> },
   { id: 'chat', label: 'الدردشة', icon: <MessageSquare size={20} /> },
