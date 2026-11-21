@@ -8,18 +8,16 @@ export default {
   theme: {
     extend: {
       colors: {
-        // ═══ ألوان ثابتة (لا تتغير مع الثيم) ═══
-        primary: {
-          DEFAULT: 'var(--primary)',
-          light: 'var(--primary-hover)',
-          dark: '#1E40AF',
+        brand: {
+          deep: '#30215F',
+          DEFAULT: '#7957D5',
+          light: '#BCA7F4',
+          soft: '#F8F7FC',
         },
-        success: '#22C55E',
-        warn: '#F59E0B',
-        danger: '#EF4444',
-        info: '#3B82F6',
-
-        // ═══ ألوان تتغير مع الثيم (CSS Variables) ═══
+        medical: {
+          teal: '#4FC7C4',
+          dark: '#3BA8A5',
+        },
         surface: {
           DEFAULT: 'var(--bg)',
           soft: 'var(--bg-subtle)',
@@ -27,7 +25,6 @@ export default {
         },
         border: {
           DEFAULT: 'var(--border)',
-          strong: 'var(--border)',
         },
         content: {
           DEFAULT: 'var(--text)',
@@ -38,29 +35,17 @@ export default {
       fontFamily: {
         sans: ['Inter', 'Tajawal', 'system-ui', 'sans-serif'],
         arabic: ['Tajawal', 'sans-serif'],
-        mono: ['JetBrains Mono', 'Consolas', 'monospace'],
       },
       borderRadius: {
         'sm': '6px',
         'md': '10px',
         'lg': '14px',
         'xl': '20px',
+        '2xl': '24px',
       },
-      animation: {
-        'fade-in': 'fadeIn 0.2s ease-out',
-        'slide-up': 'slideUp 0.3s ease-out',
-        'spin-slow': 'spin 2s linear infinite',
-      },
-      keyframes: {
-        fadeIn: {
-          '0%': { opacity: '0', transform: 'translateY(8px)' },
-          '100%': { opacity: '1', transform: 'translateY(0)' },
-        },
-        slideUp: {
-          '0%': { transform: 'translateY(100%)' },
-          '100%': { transform: 'translateY(0)' },
-        },
-      },
+      boxShadow: {
+        'brand': '0 4px 20px -2px rgba(121, 87, 213, 0.2)',
+      }
     },
   },
   plugins: [],

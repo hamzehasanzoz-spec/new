@@ -34,10 +34,10 @@ const MAIN_TABS = [
 ];
 
 const MORE_TABS = [
-  { id: 'admin', label: 'لوحة الإدارة', icon: <ShieldAlert size={20} />, color: '#EF4444' },
+  { id: 'admin', label: 'لوحة الإدارة', icon: <ShieldAlert size={20} />, color: 'text-brand' },
   { id: 'files', label: 'ملفاتي', icon: <BookOpen size={20} />, color: '#2A5C82' },
   { id: 'exam', label: 'محاكاة امتحان', icon: <Clock size={20} />, color: '#7C3AED' },
-  { id: 'bank', label: 'بنك الأخطاء', icon: <AlertCircle size={20} />, color: '#EF4444' },
+  { id: 'bank', label: 'بنك الأخطاء', icon: <AlertCircle size={20} />, color: 'text-brand' },
   { id: 'weekly', label: 'التقرير الأسبوعي', icon: <BarChart2 size={20} />, color: '#10B981' },
   { id: 'profile', label: 'حسابي', icon: <User size={20} />, color: '#2A5C82' },
 ];
