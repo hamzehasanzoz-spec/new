@@ -24,7 +24,7 @@ import {
   Home, MessageSquare, FolderOpen, Target, BookOpen, 
   Clock, AlertCircle, BarChart2, User, ShieldAlert, LogOut
 } from 'lucide-react';
-
+import { Mail, Lock, LogIn, UserPlus, ArrowRight } from 'lucide-react';
 const MAIN_TABS = [
   { id: 'dashboard', label: 'الرئيسية', icon: <Home size={20} /> },
   { id: 'chat', label: 'الدردشة', icon: <MessageSquare size={20} /> },
@@ -254,12 +254,19 @@ export default function App() {
             </p>
           </div>
 
-          <form onSubmit={handleAuth} className="flex flex-col gap-4">
-            <Input type="email" label="البريد الإلكتروني" placeholder="you@example.com" icon="📧" value={email} onChange={e => setEmail(e.target.value)} required />
-            <Input type="password" label="كلمة المرور" placeholder="••••••••" icon="🔒" value={password} onChange={e => setPassword(e.target.value)} required />
+                    <form onSubmit={handleAuth} className="flex flex-col gap-4">
+            <div className="relative">
+              <Mail className="absolute right-3 top-1/2 -translate-y-1/2 text-content-muted" size={18} />
+              <Input type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required className="pr-10" />
+            </div>
+            <div className="relative">
+              <Lock className="absolute right-3 top-1/2 -translate-y-1/2 text-content-muted" size={18} />
+              <Input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required className="pr-10" />
+            </div>
             
-            <Button type="submit" variant="primary" size="lg" fullWidth loading={loading} className="mt-2">
-              {isSignUp ? '✨ إنشاء حساب جديد' : '🚀 تسجيل الدخول'}
+            <Button type="submit" variant="primary" size="lg" fullWidth loading={loading} className="mt-2 flex items-center justify-center gap-2">
+              {isSignUp ? <UserPlus size={18} /> : <LogIn size={18} />}
+              {isSignUp ? 'إنشاء حساب جديد' : 'تسجيل الدخول'}
             </Button>
           </form>
 

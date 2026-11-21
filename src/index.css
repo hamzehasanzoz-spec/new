@@ -53,3 +53,17 @@ input, select, textarea, button {
 
 :root { --sidebar-width: 260px; }
 [data-sidebar-collapsed="true"] { --sidebar-width: 80px; }
+/* إجبار جميع الحقول والنصوص على استخدام لون النص الصحيح */
+input, textarea, select, p, h1, h2, h3, span, div {
+  color: inherit;
+}
+
+input, textarea, select {
+  color: var(--text) !important;
+  background-color: var(--bg-soft) !important;
+  border-color: var(--border) !important;
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--text-muted) !important;
+}
